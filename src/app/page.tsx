@@ -32,7 +32,7 @@ function Nav() {
           >
             FAQ
           </Link>
-          <Link href="/contact" className={cn(buttonVariants({}))}>
+          <Link href="/auth" className={cn(buttonVariants({}))}>
             Get Started
           </Link>
         </div>
@@ -55,7 +55,7 @@ function Hero() {
           trust issues.
         </p>
         <div className="flex flex-col gap-3 sm:flex-row">
-          <Link href="/contact" className={cn(buttonVariants({ size: "lg" }))}>
+          <Link href="/auth" className={cn(buttonVariants({ size: "lg" }))}>
             Start Saving
           </Link>
           <Link href="/about" className={cn(buttonVariants({ variant: "outline", size: "lg" }))}>

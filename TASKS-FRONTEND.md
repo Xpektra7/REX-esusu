@@ -1,11 +1,11 @@
 # Frontend Tasks — Esusu
 
 ## Setup & Foundation (User)
-- [X] `npm create next-app` with TypeScript, App Router, Tailwind, src/ directory
-- [X] `npx shadcn@latest init` — pick preset
-- [X] Install additional deps: zustand, @tanstack/react-query, lucide-react, sonner, date-fns
-- [X] Add shadcn components as needed (button, card, input, form, dialog, sheet, table, badge, avatar, separator, toast, dropdown-menu, tabs, skeleton)
-- [X] Set up globals.css with Nomba gold (#FFCC00) theme
+- [ ] `npm create next-app` with TypeScript, App Router, Tailwind, src/ directory
+- [ ] `npx shadcn@latest init` — pick preset
+- [ ] Install additional deps: zustand, @tanstack/react-query, lucide-react, sonner, date-fns
+- [ ] Add shadcn components as needed (button, card, input, form, dialog, sheet, table, badge, avatar, separator, toast, dropdown-menu, tabs, skeleton)
+- [ ] Set up globals.css with Nomba gold (#FFCC00) theme
 - [ ] Create `tailwind.config.ts` with nomba color tokens
 - [ ] Create `src/types/index.ts` — all TS interfaces
 - [ ] Create `src/lib/utils.ts` — cn(), currency format, date format, phone/BVN masking, trust score colors
@@ -15,7 +15,7 @@
 - [ ] Create `src/lib/validations.ts` — Zod schemas for all forms
 - [ ] Create `src/stores/auth-store.ts` — Zustand + persist for auth state
 - [ ] Create `src/hooks/use-auth.ts` — auth hooks (login, logout, refresh, PIN)
-- [X] Create PWA manifest + service worker registration
+- [ ] Create PWA manifest + service worker registration
 
 ## Auth Pages (User)
 - [ ] Phone input page — `/(auth)/auth/page.tsx`
@@ -48,14 +48,14 @@
 - [ ] Referrals page — `/(dashboard)/referrals/page.tsx`
 
 ## Static Pages (coderheem)
-- [+] Landing page — `/(public)/page.tsx`
-- [+] About page — `/(public)/about/page.tsx`
-- [X] FAQ page — `/(public)/faq/page.tsx`
-- [+] Contact page — `/(public)/contact/page.tsx`
-- [X] Terms page — `/(public)/legal/terms/page.tsx`
-- [X] Privacy page — `/(public)/legal/privacy/page.tsx`
-- [X] Security page — `/(public)/legal/security/page.tsx`
-- [+] Public layout with header/footer
+- [ ] Landing page — `/(public)/page.tsx`
+- [ ] About page — `/(public)/about/page.tsx`
+- [ ] FAQ page — `/(public)/faq/page.tsx`
+- [ ] Contact page — `/(public)/contact/page.tsx`
+- [ ] Terms page — `/(public)/legal/terms/page.tsx`
+- [ ] Privacy page — `/(public)/legal/privacy/page.tsx`
+- [ ] Security page — `/(public)/legal/security/page.tsx`
+- [ ] Public layout with header/footer
 
 ## Components
 - [ ] `src/components/ui/` — base shadcn components
