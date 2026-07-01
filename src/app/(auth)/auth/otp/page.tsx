@@ -47,9 +47,14 @@ function OtpForm() {
   const email = searchParams.get("email") || "";
 
   const [otp, setOtp] = useState("");
-  const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  // Password was stored in sessionStorage by the /auth page (not in URL).
+  const password =
+    typeof window !== "undefined"
+      ? sessionStorage.getItem("pending_password") || ""
+      : "";
 
   // If someone navigates here directly without a phone, kick them back.
   useEffect(() => {
@@ -84,6 +89,9 @@ function OtpForm() {
         needs_bvn: boolean;
         pin_set: boolean;
       };
+
+      // Clean up password from sessionStorage.
+      sessionStorage.removeItem("pending_password");
 
       // Persist auth state (tokens + user + onboarding flags).
       setAuth({
@@ -123,9 +131,9 @@ function OtpForm() {
       </CardHeader>
 
       <form onSubmit={handleSubmit}>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-4 mb-4">
           {/* OTP input — 6 digits, split 3+3 */}
-          <div>
+          <div className="space-y-4">
             <div className="flex items-center justify-between">
               <label htmlFor="otp" className="mb-1 block text-sm font-medium">
                 Verification code
@@ -147,44 +155,25 @@ function OtpForm() {
               </Button>
             </div>
 
-            <InputOTP maxLength={6} value={otp} onChange={setOtp} required>
-              <InputOTPGroup className="*:data-[slot=input-otp-slot]:h-12 *:data-[slot=input-otp-slot]:w-11 *:data-[slot=input-otp-slot]:text-xl">
+            <InputOTP
+              maxLength={6}
+              value={otp}
+              onChange={setOtp}
+              required
+              containerClassName="w-full"
+            >
+              <InputOTPGroup className="flex-1 *:data-[slot=input-otp-slot]:flex-1 *:data-[slot=input-otp-slot]:h-12 *:data-[slot=input-otp-slot]:text-xl">
                 <InputOTPSlot index={0} />
                 <InputOTPSlot index={1} />
                 <InputOTPSlot index={2} />
               </InputOTPGroup>
-              <InputOTPSeparator className="mx-2" />
-              <InputOTPGroup className="*:data-[slot=input-otp-slot]:h-12 *:data-[slot=input-otp-slot]:w-11 *:data-[slot=input-otp-slot]:text-xl">
+              <InputOTPSeparator className="mx-3" />
+              <InputOTPGroup className="flex-1 *:data-[slot=input-otp-slot]:flex-1 *:data-[slot=input-otp-slot]:h-12 *:data-[slot=input-otp-slot]:text-xl">
                 <InputOTPSlot index={3} />
                 <InputOTPSlot index={4} />
                 <InputOTPSlot index={5} />
               </InputOTPGroup>
             </InputOTP>
-          </div>
-
-          {/* Password */}
-          <div>
-            <label
-              htmlFor="password"
-              className="mb-1 block text-sm font-medium"
-            >
-              Password
-            </label>
-            <input
-              id="password"
-              type="password"
-              placeholder="Enter your password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
-              required
-              minLength={8}
-            />
-            {flow === "signup" && (
-              <p className="mt-1 text-xs text-muted-foreground">
-                At least 8 characters
-              </p>
-            )}
           </div>
 
           {error && <p className="text-sm text-destructive">{error}</p>}

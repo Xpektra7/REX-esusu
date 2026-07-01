@@ -100,8 +100,8 @@ export default function KycPage() {
         {/* Step 1 — BVN input */}
         {step === "input" && (
           <div className="space-y-4">
-            <div>
-              <label htmlFor="bvn" className="mb-1 block text-sm font-medium">
+            <div className="space-y-4">
+              <label htmlFor="bvn" className="block text-sm font-medium">
                 Bank Verification Number (BVN)
               </label>
               <input
@@ -114,7 +114,7 @@ export default function KycPage() {
                 onChange={(e) => setBvn(e.target.value.replace(/\D/g, ""))}
                 className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm tracking-widest"
               />
-              <p className="mt-1 text-xs text-muted-foreground">
+              <p className="text-xs text-muted-foreground">
                 Your BVN is encrypted and never shared. Only last 4 digits are
                 stored.
               </p>

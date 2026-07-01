@@ -12,20 +12,28 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { phoneSchema } from "@/lib/validations";
+import { passwordSchema, phoneSchema } from "@/lib/validations";
 import { api } from "@/lib/api";
+import { SavingsIcon } from "hugeicons-react";
 
-/**
- * Landing page for the auth flow.
- *
- * Shows a phone input (signup also shows name + email).
- * On submit, normalises the phone number, sends OTP, and redirects
- * to /auth/otp with phone, flow, name, and email as query params.
- */
+// ------------------------------------------------------------------
+// Constants for the avatar stack
+// ------------------------------------------------------------------
+const avatarInitials = [
+  { initials: "CO", bg: "bg-blue-100", text: "text-blue-800" },
+  { initials: "AA", bg: "bg-green-100", text: "text-green-800" },
+  { initials: "TO", bg: "bg-amber-100", text: "text-amber-800" },
+];
+
+// ------------------------------------------------------------------
+// Auth Page
+// ------------------------------------------------------------------
 export default function AuthPage() {
   const router = useRouter();
   const [flow, setFlow] = useState<"login" | "signup">("login");
   const [error, setError] = useState<string | null>(null);
+
+  const [password, setPassword] = useState("");
 
   const form = useForm({
     defaultValues: {
@@ -37,20 +45,27 @@ export default function AuthPage() {
     onSubmit: async ({ value }) => {
       setError(null);
 
-      // Validate + normalise phone number.
-      const result = phoneSchema.safeParse({ phone: value.phone });
-      if (!result.success) {
+      const phoneResult = phoneSchema.safeParse({ phone: value.phone });
+      if (!phoneResult.success) {
         setError("Enter a valid Nigerian phone number (+234...)");
         return;
       }
 
-      // Use the normalised version (e.g. +2348012345678).
-      const phone = result.data.phone;
+      const passwordResult = passwordSchema.safeParse({ password });
+      if (!passwordResult.success) {
+        setError("Password must be at least 8 characters");
+        return;
+      }
+
+      const phone = phoneResult.data.phone;
 
       try {
         await api.auth.sendOtp(phone);
 
-        // Forward data to the OTP page via query params.
+        // Store password in sessionStorage so the OTP page can use it
+        // without exposing it in URL params (see rule 83).
+        sessionStorage.setItem("pending_password", password);
+
         const params = new URLSearchParams({ phone, flow });
         if (flow === "signup") {
           params.set("name", value.name);
@@ -68,9 +83,17 @@ export default function AuthPage() {
   // Render
   // ------------------------------------------------------------------
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{flow === "login" ? "Sign In" : "Create Account"}</CardTitle>
+    <Card className="relative w-full max-w-md">
+      <CardHeader className="text-center">
+        {/* Brand logo box */}
+        <div className="mx-auto mb-4 flex size-14 items-center justify-center rounded-2xl bg-primary">
+          <SavingsIcon className="size-7 text-primary-foreground" />
+        </div>
+
+        <CardTitle className="text-2xl">
+          {flow === "login" ? "Welcome back" : "Welcome to Esusu"}
+        </CardTitle>
+
         <CardDescription>
           {flow === "login"
             ? "Enter your phone number to continue."
@@ -85,31 +108,68 @@ export default function AuthPage() {
             e.stopPropagation();
             form.handleSubmit();
           }}
-          className="space-y-4"
+          className="space-y-5"
         >
-          {/* Phone number */}
+          {/* Phone number with Nigerian flag + +234 prefix */}
           <form.Field
             name="phone"
             children={(field) => (
               <div>
                 <label
                   htmlFor={field.name}
-                  className="mb-1 block text-sm font-medium"
+                  className="mb-1.5 block text-xs font-semibold uppercase tracking-widest text-muted-foreground"
                 >
                   Phone Number
                 </label>
-                <input
-                  id={field.name}
-                  type="tel"
-                  placeholder="+234 801 234 5678"
-                  value={field.state.value}
-                  onBlur={field.handleBlur}
-                  onChange={(e) => field.handleChange(e.target.value)}
-                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
-                />
+
+                <div className="flex items-center rounded-xl border border-border bg-background px-4 py-3.5 focus-within:ring-2 focus-within:ring-ring transition-all">
+                  {/* Flag + prefix */}
+                  <div className="flex items-center gap-2 pr-4 border-r border-border">
+                    <div className="flex w-6 h-4 overflow-hidden rounded-sm shrink-0">
+                      <div className="w-1/3 bg-green-700" />
+                      <div className="w-1/3 bg-white" />
+                      <div className="w-1/3 bg-green-700" />
+                    </div>
+
+                    <span className="text-base font-semibold text-foreground">
+                      +234
+                    </span>
+                  </div>
+
+                  {/* Actual input */}
+                  <input
+                    id={field.name}
+                    type="tel"
+                    placeholder="801 234 5678"
+                    value={field.state.value}
+                    onBlur={field.handleBlur}
+                    onChange={(e) => field.handleChange(e.target.value)}
+                    className="flex-1 bg-transparent border-none focus:ring-0 px-3 text-base tracking-widest placeholder:tracking-normal placeholder:text-muted-foreground/50 outline-none"
+                  />
+                </div>
               </div>
             )}
           />
+
+          {/* Password — shown for both login and signup */}
+          <div>
+            <label
+              htmlFor="password"
+              className="mb-1.5 block text-xs font-semibold uppercase tracking-widest text-muted-foreground"
+            >
+              Password
+            </label>
+            <input
+              id="password"
+              type="password"
+              placeholder={flow === "signup" ? "At least 8 characters" : "Enter your password"}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full rounded-xl border border-border bg-background px-4 py-3.5 text-base outline-none focus:ring-2 focus:ring-ring transition-all"
+              required
+              minLength={8}
+            />
+          </div>
 
           {/* Name + Email (signup only) */}
           {flow === "signup" && (
@@ -120,7 +180,7 @@ export default function AuthPage() {
                   <div>
                     <label
                       htmlFor={field.name}
-                      className="mb-1 block text-sm font-medium"
+                      className="mb-1.5 block text-xs font-semibold uppercase tracking-widest text-muted-foreground"
                     >
                       Full Name
                     </label>
@@ -131,7 +191,7 @@ export default function AuthPage() {
                       value={field.state.value}
                       onBlur={field.handleBlur}
                       onChange={(e) => field.handleChange(e.target.value)}
-                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                      className="w-full rounded-xl border border-border bg-background px-4 py-3.5 text-base outline-none focus:ring-2 focus:ring-ring transition-all"
                     />
                   </div>
                 )}
@@ -143,7 +203,7 @@ export default function AuthPage() {
                   <div>
                     <label
                       htmlFor={field.name}
-                      className="mb-1 block text-sm font-medium"
+                      className="mb-1.5 block text-xs font-semibold uppercase tracking-widest text-muted-foreground"
                     >
                       Email
                     </label>
@@ -154,7 +214,7 @@ export default function AuthPage() {
                       value={field.state.value}
                       onBlur={field.handleBlur}
                       onChange={(e) => field.handleChange(e.target.value)}
-                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                      className="w-full rounded-xl border border-border bg-background px-4 py-3.5 text-base outline-none focus:ring-2 focus:ring-ring transition-all"
                     />
                   </div>
                 )}
@@ -162,16 +222,15 @@ export default function AuthPage() {
             </>
           )}
 
-          {/* Error message */}
           {error && <p className="text-sm text-destructive">{error}</p>}
 
-          <Button type="submit" className="w-full">
-            Send OTP
+          <Button type="submit" size="lg" className="w-full py-4 text-base">
+            Continue
           </Button>
         </form>
       </CardContent>
 
-      {/* Toggle between login / signup */}
+      {/* Toggle login / signup */}
       <CardContent className="pt-0">
         <button
           type="button"
@@ -186,6 +245,31 @@ export default function AuthPage() {
             : "Already have an account? Sign in"}
         </button>
       </CardContent>
+
+      {/* Social proof — shown only on login flow */}
+      {flow === "login" && (
+        <CardContent className="pt-0 text-center">
+          <div className="border-t border-border pt-6">
+            <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground">
+              Trusted by savers across Nigeria
+            </p>
+
+            <div className="flex justify-center -space-x-2">
+              {avatarInitials.map((a) => (
+                <div
+                  key={a.initials}
+                  className={`flex size-8 items-center justify-center rounded-full border-2 border-background text-[10px] font-bold ${a.bg} ${a.text}`}
+                >
+                  {a.initials}
+                </div>
+              ))}
+              <div className="flex size-8 items-center justify-center rounded-full border-2 border-background bg-primary/10 text-[10px] font-bold text-primary">
+                +4k
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      )}
     </Card>
   );
 }

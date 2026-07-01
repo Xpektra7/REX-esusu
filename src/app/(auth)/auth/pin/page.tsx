@@ -139,7 +139,7 @@ function PinForm() {
               }
             }}
           >
-            <InputOTPGroup className="*:data-[slot=input-otp-slot]:h-14 *:data-[slot=input-otp-slot]:w-14 *:data-[slot=input-otp-slot]:text-2xl">
+            <InputOTPGroup className="*:data-[slot=input-otp-slot]:h-14 *:data-[slot=input-otp-slot]:w-21 *:data-[slot=input-otp-slot]:text-2xl">
               <InputOTPSlot index={0} />
               <InputOTPSlot index={1} />
               <InputOTPSlot index={2} />
@@ -150,10 +150,11 @@ function PinForm() {
           {error && <p className="text-sm text-destructive">{error}</p>}
         </CardContent>
 
-        <CardFooter className="flex-col gap-2">
+        <CardFooter className="flex-col mt-4 gap-2">
           <Button
             type="submit"
             className="w-full"
+            size="lg"
             disabled={
               loading || (mode === "set" && step === "enter" && pin.length < 4)
             }

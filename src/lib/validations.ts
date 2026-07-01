@@ -23,7 +23,11 @@ export function normalizePhone(phone: string): string {
   }
   // Bare "234..." (no +) → add +.
   if (cleaned.startsWith("234") && !cleaned.startsWith("+234")) {
-    cleaned = "+" + cleaned;
+    cleaned = `+${cleaned}`;
+  }
+  // Bare 10-digit number like "8129546723" → prepend +234.
+  if (/^\d{10}$/.test(cleaned)) {
+    cleaned = `+234${cleaned}`;
   }
 
   return cleaned;
