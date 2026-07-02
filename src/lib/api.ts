@@ -4,6 +4,7 @@ import type {
   CircleDetail,
   CycleContribution,
 } from "@/types";
+import { useAuthStore } from "@/stores/auth-store";
 
 const mockMembers = [
   {
@@ -112,7 +113,7 @@ const BASE_URL = "/api/v1";
 
 // Mock mode — when true, returns fake data so the UI works without a backend.
 // Call setMockMode(false) once the real API is ready.
-let mockMode = true;
+let mockMode = false;
 
 export function setMockMode(enabled: boolean) {
   mockMode = enabled;
@@ -603,6 +604,7 @@ async function mockRequest<T>(
 /**
  * Core request function.
  * In mock mode it returns fake data; in live mode it calls the real API.
+ * Automatically attaches the JWT from auth-store and refreshes on 401.
  */
 async function request<T>(
   path: string,
@@ -613,15 +615,48 @@ async function request<T>(
     return mockRequest<T>(path, options);
   }
 
+  // Attach auth token from zustand store
+  const { accessToken, refreshToken } = useAuthStore.getState();
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    ...(options.headers as Record<string, string>),
+  };
+  if (accessToken) {
+    headers["Authorization"] = `Bearer ${accessToken}`;
+  }
+
   // Live mode — real HTTP call.
   const url = `${BASE_URL}${path}`;
-  const res = await fetch(url, {
-    headers: {
-      "Content-Type": "application/json",
-      ...options.headers,
-    },
+  let res = await fetch(url, {
     ...options,
+    headers,
   });
+
+  // Token expired — try refreshing
+  if (res.status === 401 && refreshToken) {
+    const refreshRes = await fetch(`${BASE_URL}/auth/refresh`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ refresh_token: refreshToken }),
+    });
+    if (refreshRes.ok) {
+      const refreshJson = await refreshRes.json();
+      const newToken = refreshJson.data?.token;
+      if (newToken) {
+        useAuthStore.getState().setAuth({
+          access_token: newToken,
+          refresh_token: refreshToken,
+          user: useAuthStore.getState().user!,
+          needs_bvn: useAuthStore.getState().needsBvn,
+          pin_set: useAuthStore.getState().pinSet,
+        });
+        headers["Authorization"] = `Bearer ${newToken}`;
+        res = await fetch(url, { ...options, headers });
+      }
+    } else {
+      useAuthStore.getState().clearAuth();
+    }
+  }
 
   const json: ApiResponse<T> = await res.json();
 

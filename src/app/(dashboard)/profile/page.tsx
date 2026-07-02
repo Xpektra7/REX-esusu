@@ -1,4 +1,17 @@
+"use client";
+
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/lib/api";
+import { Skeleton } from "@/components/ui/skeleton";
+
 export default function ProfilePage() {
+  const { data, isLoading } = useQuery({
+    queryKey: ["profile"],
+    queryFn: () => api.users.me(),
+  });
+
+  const user = data?.data as any;
+
   return (
     <div>
       <h1 className="text-2xl font-bold">Profile</h1>
@@ -9,21 +22,29 @@ export default function ProfilePage() {
       <section className="mt-8 max-w-md space-y-4">
         <div>
           <label className="mb-1 block text-sm font-medium">Name</label>
-          <p className="text-sm text-muted-foreground">
-            Update your display name.
-          </p>
+          {isLoading ? (
+            <Skeleton className="h-4 w-32" />
+          ) : (
+            <p className="text-sm text-muted-foreground">{user?.name}</p>
+          )}
         </div>
         <div>
           <label className="mb-1 block text-sm font-medium">Phone</label>
-          <p className="text-sm text-muted-foreground">
-            Your registered phone number.
-          </p>
+          {isLoading ? (
+            <Skeleton className="h-4 w-32" />
+          ) : (
+            <p className="text-sm text-muted-foreground">{user?.phone}</p>
+          )}
         </div>
         <div>
           <label className="mb-1 block text-sm font-medium">BVN</label>
-          <p className="text-sm text-muted-foreground">
-            Only last 4 digits displayed.
-          </p>
+          {isLoading ? (
+            <Skeleton className="h-4 w-16" />
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              {user?.bvn_last4 ? `****${user.bvn_last4}` : "Not provided"}
+            </p>
+          )}
         </div>
       </section>
     </div>

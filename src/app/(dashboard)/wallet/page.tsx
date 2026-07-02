@@ -1,8 +1,20 @@
+"use client";
+
 import Link from "next/link";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/lib/api";
 import { buttonVariants } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { cn, formatNaira } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function WalletPage() {
+  const { data, isLoading } = useQuery({
+    queryKey: ["wallet"],
+    queryFn: () => api.wallet.get(),
+  });
+
+  const wallet = data?.data as any;
+
   return (
     <div>
       <div className="flex items-center justify-between">
@@ -17,7 +29,17 @@ export default function WalletPage() {
 
       <div className="mt-6 rounded-xl border border-border p-6">
         <p className="text-sm text-muted-foreground">Available Balance</p>
-        <p className="mt-1 text-3xl font-bold">₦0.00</p>
+        {isLoading ? (
+          <Skeleton className="mt-1 h-9 w-48" />
+        ) : (
+          <p className="mt-1 text-3xl font-bold">{formatNaira(wallet?.balanceKobo ?? 0)}</p>
+        )}
+        {wallet?.virtualAccount && (
+          <div className="mt-4 border-t border-border pt-4 text-xs text-muted-foreground">
+            <p>Account: {wallet.virtualAccount.accountNumber}</p>
+            <p>Bank: {wallet.virtualAccount.bankCode}</p>
+          </div>
+        )}
       </div>
 
       <section className="mt-10">
