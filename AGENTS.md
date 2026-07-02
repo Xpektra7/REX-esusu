@@ -19,4 +19,12 @@ Read `UI-RULES.md` before writing any frontend code. Key constraints:
 - shadcn components first, hugeicons only
 - Flat design, clean borders, generous spacing
 - PWA: serwist configured, manifest at `/manifest.json`
+
+## Backend Rules
+Read `BACKEND-RULES.md` before writing any backend code. Key constraints:
+- When replacing static stubs with live API data, **never modify the HTML structure, CSS classes, CSS IDs, or styling** — the frontend dev's markup is final
+- Only swap the data source — leave the template untouched
+- All API calls go through `src/lib/api.ts` — no inline fetch/axios in components
+- Drizzle ORM for all database work; proper Zod validation on all inputs
+- Consistent `ApiResponse` format for every endpoint
 <!-- END:project-rules -->
