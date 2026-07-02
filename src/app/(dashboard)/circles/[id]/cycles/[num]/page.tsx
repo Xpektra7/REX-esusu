@@ -3,22 +3,18 @@
 import { use } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ContributionStatusBadge } from "@/components/circles/status-badge";
-import { DiceBearAvatar } from "@/components/shared/dicebear-avatar";
+import { Separator } from "@/components/ui/separator";
+import { RecipientHeroCard } from "@/components/circles/recipient-hero-card";
+import { ShortfallAlert } from "@/components/circles/shortfall-alert";
+import { ContributionRow } from "@/components/circles/contribution-row";
+import { CycleActions } from "@/components/circles/cycle-actions";
+import { PageBreadcrumbs } from "@/components/shared/page-breadcrumbs";
 import { formatNaira } from "@/lib/utils";
-import type { CycleDetailData } from "@/types";
-import {
-  AlertCircleIcon,
-  Notification03Icon,
-  FileDownloadIcon,
-} from "hugeicons-react";
+import type { CycleDetailData, CirclePageData } from "@/types";
+import { AlertCircleIcon } from "hugeicons-react";
 import Link from "next/link";
-import { cn } from "@/lib/utils";
 
 export default function CycleDetailPage(props: {
   params: Promise<{ id: string; num: string }>;
@@ -26,11 +22,17 @@ export default function CycleDetailPage(props: {
   const { id, num } = use(props.params);
   const cycleNum = parseInt(num, 10);
 
+  const { data: circleRes } = useQuery({
+    queryKey: ["circle", id],
+    queryFn: () => api.circles.get(id),
+  });
+
   const { data: res, isLoading } = useQuery({
     queryKey: ["circle", id, "cycle", cycleNum],
     queryFn: () => api.cycles.getByCircleAndNumber(id, cycleNum),
   });
 
+  const circle = circleRes?.data as CirclePageData | undefined;
   const cycle = res?.data as CycleDetailData | undefined;
 
   if (isLoading) {
@@ -50,9 +52,9 @@ export default function CycleDetailPage(props: {
         <AlertCircleIcon className="size-10 text-muted-foreground" />
         <p className="text-sm text-muted-foreground">Cycle not found.</p>
         <Link href={`/circles/${id}`}>
-          <Button variant="outline" size="sm">
+          <button className="rounded-lg border border-border px-4 py-2 text-sm">
             Back to Circle
-          </Button>
+          </button>
         </Link>
       </div>
     );
@@ -78,48 +80,31 @@ export default function CycleDetailPage(props: {
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <Link
-          href={`/circles/${id}`}
-          className="text-xs tracking-wider text-muted-foreground hover:text-foreground"
-        >
-          &larr; Circle
-        </Link>
-        <h1 className="mt-1 text-xl font-bold">
-          Cycle #{cycle.cycle_number} Contribution
-        </h1>
-      </div>
+      <PageBreadcrumbs
+        items={[
+          { label: "Home", href: "/dashboard" },
+          { label: "Circles", href: "/circles" },
+          { label: circle?.name ?? "Circle", href: `/circles/${id}` },
+          { label: `Cycle #${cycle.cycle_number}` },
+        ]}
+      />
+
+      <h1 className="text-xl font-bold">
+        Cycle #{cycle.cycle_number} Contribution
+      </h1>
 
       {recipient && (
-        <section className="relative overflow-hidden rounded-xl bg-primary p-5">
-          <div className="relative z-10 flex flex-col gap-3">
-            <span className="text-[10px] font-semibold tracking-[0.05em] text-card-foreground/70 uppercase">
-              {recipient.member_name} is receiving
-            </span>
-            <span className="font-heading text-3xl font-bold text-card-foreground">
-              {formatNaira(cycle.expected_total_kobo)}
-            </span>
-            <div className="flex flex-col gap-1">
-              <div className="h-1.5 w-full rounded-full bg-card-foreground/20">
-                <div
-                  className="h-full rounded-full bg-card-foreground transition-all"
-                  style={{ width: `${Math.min(100, progress)}%` }}
-                />
-              </div>
-              <div className="flex items-center justify-between text-[10px] text-card-foreground/70">
-                <span className="font-semibold tracking-wider uppercase">
-                  {formatNaira(cycle.actual_total_kobo)} collected
-                </span>
-                <span>{Math.round(progress)}%</span>
-              </div>
-            </div>
-          </div>
-        </section>
+        <RecipientHeroCard
+          recipientName={recipient.member_name}
+          expectedTotal={cycle.expected_total_kobo}
+          actualTotal={cycle.actual_total_kobo}
+          progress={progress}
+        />
       )}
 
       <div className="grid grid-cols-2 gap-3">
         <Card className="flex flex-col gap-1 p-4">
-          <span className="text-[10px] font-semibold tracking-[0.05em] text-muted-foreground uppercase">
+          <span className="text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
             Contribution
           </span>
           <span className="font-heading text-lg font-bold">
@@ -129,7 +114,7 @@ export default function CycleDetailPage(props: {
           </span>
         </Card>
         <Card className="flex flex-col gap-1 p-4">
-          <span className="text-[10px] font-semibold tracking-[0.05em] text-muted-foreground uppercase">
+          <span className="text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
             Total Payout
           </span>
           <span className="font-heading text-lg font-bold">
@@ -138,22 +123,11 @@ export default function CycleDetailPage(props: {
         </Card>
       </div>
 
-      {shortfall > 0 && (
-        <div className="flex items-start gap-3 rounded-xl border border-foreground/10 bg-foreground/5 px-4 py-3">
-          <AlertCircleIcon className="mt-0.5 size-5 shrink-0 text-foreground" />
-          <div>
-            <p className="text-sm font-semibold text-foreground">
-              {pendingCount + defaultedCount > 0
-                ? `${pendingCount + defaultedCount} Pending Contribution${pendingCount + defaultedCount > 1 ? "s" : ""}`
-                : "Shortfall Detected"}
-            </p>
-            <p className="text-xs text-foreground/70">
-              {formatNaira(shortfall)} outstanding
-              {defaultedCount > 0 && " — default(s) may need resolution"}
-            </p>
-          </div>
-        </div>
-      )}
+      <ShortfallAlert
+        shortfall={shortfall}
+        pendingCount={pendingCount}
+        defaultedCount={defaultedCount}
+      />
 
       <div className="flex gap-3 text-center text-xs text-muted-foreground">
         <span className="flex items-center gap-1">
@@ -182,69 +156,23 @@ export default function CycleDetailPage(props: {
           </p>
         ) : (
           <div className="flex flex-col gap-2">
-            {cycle.contributions.map((c) => {
-              const isRecipient =
-                c.member_id === cycle.recipient_member_id;
-              return (
-                <div
-                  key={c.member_id}
-                  className={cn(
-                    "flex items-center justify-between rounded-xl border px-4 py-3",
-                    isRecipient
-                      ? "border-primary/30 bg-primary/5"
-                      : "border-border",
-                  )}
-                >
-                  <div className="flex items-center gap-3">
-                    <DiceBearAvatar name={c.member_name} />
-                    <div>
-                      <div className="flex items-center gap-1.5">
-                        <p className="text-sm font-medium">
-                          {c.member_name}
-                        </p>
-                        {isRecipient && (
-                          <Badge
-                            variant="outline"
-                            className="h-4 border-primary/40 px-1.5 py-0 text-[9px] text-primary"
-                          >
-                            Recipient
-                          </Badge>
-                        )}
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        {formatNaira(c.amount_kobo)}
-                        {c.paid_at && (
-                          <>
-                            {" · "}
-                            {new Date(c.paid_at).toLocaleDateString("en-NG", {
-                              day: "numeric",
-                              month: "short",
-                            })}
-                          </>
-                        )}
-                      </p>
-                    </div>
-                  </div>
-                  <ContributionStatusBadge status={c.status} />
-                </div>
-              );
-            })}
+            {cycle.contributions.map((c) => (
+              <ContributionRow
+                key={c.member_id}
+                memberName={c.member_name}
+                amountKobo={c.amount_kobo}
+                status={c.status as "paid" | "pending" | "defaulted"}
+                paidAt={c.paid_at}
+                isRecipient={c.member_id === cycle.recipient_member_id}
+              />
+            ))}
           </div>
         )}
       </section>
 
       <Separator />
 
-      <div className="flex flex-col gap-3">
-        <Button className="w-full">
-          <Notification03Icon className="size-4" />
-          Remind Pending Members
-        </Button>
-        <Button variant="outline" className="w-full">
-          <FileDownloadIcon className="size-4" />
-          Download Cycle Report
-        </Button>
-      </div>
+      <CycleActions />
     </div>
   );
 }

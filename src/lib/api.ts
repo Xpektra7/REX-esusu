@@ -546,7 +546,40 @@ async function mockRequest<T>(
 
   // --- Notifications ---
   if (path === "/notifications" && method === "GET") {
-    return { code: "00", description: "OK", data: [] as T };
+    return {
+      code: "00",
+      description: "OK",
+      data: [
+        {
+          id: "notif_001",
+          title: "Payout Received",
+          body: "You received ₦50,000 from Weekend Travelers cycle #4.",
+          read_at: null,
+          created_at: new Date(Date.now() - 3600000).toISOString(),
+        },
+        {
+          id: "notif_002",
+          title: "Contribution Due",
+          body: "Your ₦25,000 contribution to Rent Savers is due tomorrow.",
+          read_at: new Date(Date.now() - 86400000).toISOString(),
+          created_at: new Date(Date.now() - 172800000).toISOString(),
+        },
+        {
+          id: "notif_003",
+          title: "Member Joined",
+          body: "Tunde Balogun has joined Weekend Travelers.",
+          read_at: null,
+          created_at: new Date(Date.now() - 604800000).toISOString(),
+        },
+        {
+          id: "notif_004",
+          title: "Circle Completed",
+          body: "Weekly Savers has completed all 12 cycles. Congratulations!",
+          read_at: new Date(Date.now() - 1209600000).toISOString(),
+          created_at: new Date(Date.now() - 1209600000).toISOString(),
+        },
+      ] as T,
+    };
   }
 
   if (path.includes("/read") && (method === "PATCH" || method === "POST")) {

@@ -5,6 +5,7 @@ import { api } from "@/lib/api";
 import { CircleCard, type CircleData } from "@/components/shared/circle-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import { PageBreadcrumbs } from "@/components/shared/page-breadcrumbs";
 import { PlusSignIcon } from "hugeicons-react";
 import Link from "next/link";
 
@@ -18,6 +19,13 @@ export default function CirclesPage() {
 
   return (
     <div className="flex flex-col gap-6">
+      <PageBreadcrumbs
+        items={[
+          { label: "Home", href: "/dashboard" },
+          { label: "Circles" },
+        ]}
+      />
+
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold">Circles</h1>
         <span className="text-xs text-muted-foreground">

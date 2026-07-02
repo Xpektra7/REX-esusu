@@ -6,12 +6,11 @@ import type { MemberItem } from "@/types";
 export type { MemberItem };
 
 function MemberStatusBadge({ status }: { status: string }) {
-  const s =
-    MEMBER_STATUS[status as keyof typeof MEMBER_STATUS] ?? {
-      className: "bg-muted text-muted-foreground",
-      label: status.charAt(0).toUpperCase() + status.slice(1),
-      icon: MEMBER_STATUS.invited.icon,
-    };
+  const s = MEMBER_STATUS[status as keyof typeof MEMBER_STATUS] ?? {
+    className: "bg-muted text-muted-foreground",
+    label: status.charAt(0).toUpperCase() + status.slice(1),
+    icon: MEMBER_STATUS.invited.icon,
+  };
   const Icon = s.icon;
   return (
     <span
@@ -42,7 +41,7 @@ export function MemberList({ members }: { members: MemberItem[] }) {
         return (
           <div
             key={member.id}
-            className="flex items-center justify-between rounded-xl border border-border px-4 py-3"
+            className="flex items-center justify-between rounded-xl bg-card px-4 py-3"
           >
             <div className="flex items-center gap-3">
               <DiceBearAvatar name={name} />

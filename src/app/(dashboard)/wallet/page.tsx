@@ -1,69 +1,161 @@
 "use client";
 
-import Link from "next/link";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { buttonVariants } from "@/components/ui/button";
-import { cn, formatNaira } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Separator } from "@/components/ui/separator";
+import { PageBreadcrumbs } from "@/components/shared/page-breadcrumbs";
+import { DiceBearAvatar } from "@/components/shared/dicebear-avatar";
+import { formatNaira } from "@/lib/utils";
+import {
+  ViewIcon,
+  ViewOffIcon,
+  PlusSignIcon,
+  ArrowUp01Icon,
+} from "hugeicons-react";
+import Link from "next/link";
+import { cn } from "@/lib/utils";
+
+interface Transaction {
+  type: "credit" | "debit";
+  amount: number;
+  description: string;
+  date: string;
+}
+
+type WalletData = { balance: number; transactions: Transaction[] };
 
 export default function WalletPage() {
-  const { data, isLoading } = useQuery({
+  const [hidden, setHidden] = useState(false);
+
+  const { data: res, isLoading } = useQuery({
     queryKey: ["wallet"],
     queryFn: () => api.wallet.get(),
   });
 
-  const wallet = data?.data as any;
+  const wallet = res?.data as WalletData | undefined;
+  const transactions = wallet?.transactions ?? [];
 
   return (
-    <div>
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Wallet</h1>
-        <Link
-          href="/wallet/withdraw"
-          className={cn(buttonVariants({ size: "sm" }))}
-        >
-          Withdraw
-        </Link>
-      </div>
+    <div className="flex flex-col gap-6">
+      <PageBreadcrumbs
+        items={[
+          { label: "Home", href: "/dashboard" },
+          { label: "Wallet" },
+        ]}
+      />
 
-      <div className="mt-6 rounded-xl border border-border p-6">
-        <p className="text-sm text-muted-foreground">Available Balance</p>
-        {isLoading ? (
-          <Skeleton className="mt-1 h-9 w-48" />
+      {isLoading ? (
+        <Skeleton className="h-44 rounded-xl" />
+      ) : (
+        <section className="relative overflow-hidden rounded-xl bg-primary p-5">
+          <div className="relative z-10">
+            <div className="flex items-center justify-between">
+              <p className="text-xs tracking-widest text-card-foreground/80">
+                Available Balance
+              </p>
+              <button
+                type="button"
+                onClick={() => setHidden(!hidden)}
+                aria-label={hidden ? "Show balance" : "Hide balance"}
+              >
+                {hidden ? (
+                  <ViewOffIcon className="size-4 text-card-foreground/60" />
+                ) : (
+                  <ViewIcon className="size-4 text-card-foreground/60" />
+                )}
+              </button>
+            </div>
+
+            <p className="py-3 font-heading text-3xl font-semibold text-card-foreground">
+              {hidden ? "****" : formatNaira(wallet?.balance ?? 0, 2)}
+            </p>
+
+            <div className="flex gap-3">
+              <Link
+                href="/wallet"
+                className={cn(
+                  "flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-3",
+                  "bg-card-foreground text-card text-xs font-bold tracking-wider hover:opacity-90 transition-opacity",
+                )}
+              >
+                <PlusSignIcon className="size-4" />
+                Top Up
+              </Link>
+              <Link
+                href="/wallet/withdraw"
+                className={cn(
+                  "flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-3",
+                  "bg-background text-card-foreground text-xs font-bold tracking-wider hover:opacity-90 transition-opacity",
+                )}
+              >
+                <ArrowUp01Icon className="size-4" />
+                Send
+              </Link>
+            </div>
+          </div>
+        </section>
+      )}
+
+      <section>
+        <h2 className="mb-3 text-sm font-bold uppercase tracking-wider">
+          Transaction History
+        </h2>
+
+        {transactions.length === 0 ? (
+          <Card className="flex flex-col items-center gap-3 p-8 text-center">
+            <p className="text-sm text-muted-foreground">
+              No transactions yet.
+            </p>
+          </Card>
         ) : (
-          <p className="mt-1 text-3xl font-bold">{formatNaira(wallet?.balanceKobo ?? 0)}</p>
-        )}
-        {wallet?.virtualAccount && (
-          <div className="mt-4 border-t border-border pt-4 text-xs text-muted-foreground">
-            <p>Account: {wallet.virtualAccount.accountNumber}</p>
-            <p>Bank: {wallet.virtualAccount.bankCode}</p>
+          <div className="flex flex-col gap-2">
+            {transactions.map((tx, i) => {
+              const isCredit = tx.type === "credit";
+              return (
+                <div
+                  key={i}
+                  className="flex items-center justify-between rounded-xl border border-border px-4 py-3"
+                >
+                  <div className="flex items-center gap-3">
+                    <DiceBearAvatar name={tx.description} />
+                    <div>
+                      <p className="text-sm font-medium">{tx.description}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(tx.date).toLocaleDateString("en-NG", {
+                          day: "numeric",
+                          month: "short",
+                        })}
+                      </p>
+                    </div>
+                  </div>
+                  <p
+                    className={cn(
+                      "font-heading text-sm font-bold",
+                      isCredit ? "text-primary" : "text-muted-foreground",
+                    )}
+                  >
+                    {isCredit ? "+" : "-"}
+                    {formatNaira(tx.amount)}
+                  </p>
+                </div>
+              );
+            })}
           </div>
         )}
-      </div>
-
-      <section className="mt-10">
-        <h2 className="text-lg font-semibold">Transaction History</h2>
-        <div className="mt-2 rounded-xl border border-border">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border text-left text-muted-foreground">
-                <th className="p-3">Date</th>
-                <th className="p-3">Description</th>
-                <th className="p-3">Amount</th>
-                <th className="p-3">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td className="p-3" colSpan={4}>
-                  <p className="text-muted-foreground">No transactions yet.</p>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
       </section>
+
+      <Separator />
+
+      <Link href="/wallet/withdraw">
+        <Button className="w-full">
+          <ArrowUp01Icon className="size-4" />
+          Withdraw Funds
+        </Button>
+      </Link>
     </div>
   );
 }

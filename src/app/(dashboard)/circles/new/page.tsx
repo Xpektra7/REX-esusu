@@ -8,6 +8,7 @@ import { createCircleSchema } from "@/lib/validations";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
+import { PageBreadcrumbs } from "@/components/shared/page-breadcrumbs";
 import { Loading01Icon, InformationCircleIcon } from "hugeicons-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -76,6 +77,14 @@ export default function CreateCirclePage() {
 
   return (
     <div className="flex flex-col gap-6">
+      <PageBreadcrumbs
+        items={[
+          { label: "Home", href: "/dashboard" },
+          { label: "Circles", href: "/circles" },
+          { label: "New Circle" },
+        ]}
+      />
+
       <div>
         <h1 className="text-xl font-bold">Circle Basics</h1>
         <p className="mt-1 text-sm text-muted-foreground">

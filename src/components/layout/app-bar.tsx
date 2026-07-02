@@ -15,7 +15,7 @@ export function AppBar() {
     <header className="fixed inset-0 z-50 flex w-full h-16 items-center justify-between bg-background px-5 py-3">
       <div className="flex items-center gap-2">
         <DiceBearAvatar name={name} />
-        <p className="text-xs tracking-wide">{getGreeting(firstName)}</p>
+        <p className="text-sm tracking-wide">{getGreeting(firstName)}</p>
       </div>
       <Link
         href="/notifications"

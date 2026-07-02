@@ -2,51 +2,180 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
+import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Separator } from "@/components/ui/separator";
+import { PageBreadcrumbs } from "@/components/shared/page-breadcrumbs";
+import { DiceBearAvatar } from "@/components/shared/dicebear-avatar";
+import { cn } from "@/lib/utils";
+import {
+  IdVerifiedIcon,
+  Shield01Icon,
+  UserIcon,
+  Mail01Icon,
+  Logout01Icon,
+  Share08Icon,
+} from "hugeicons-react";
+import Link from "next/link";
+
+interface UserProfile {
+  id: string;
+  name: string;
+  phone: string;
+  email: string;
+  bvn_last4: string;
+  trust_score: number;
+}
+
+function SettingsRow({
+  icon,
+  label,
+  href,
+  variant,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  href: string;
+  variant?: "danger";
+}) {
+  return (
+    <Link
+      href={href}
+      className={cn(
+        "flex items-center gap-3 rounded-xl border border-border px-4 py-3 transition-colors hover:bg-muted/50",
+        variant === "danger" && "border-destructive/30",
+      )}
+    >
+      <div
+        className={cn(
+          "flex size-9 items-center justify-center rounded-full",
+          variant === "danger"
+            ? "bg-destructive/10 text-destructive"
+            : "bg-primary/10 text-primary",
+        )}
+      >
+        {icon}
+      </div>
+      <span
+        className={cn(
+          "text-sm font-medium",
+          variant === "danger" && "text-destructive",
+        )}
+      >
+        {label}
+      </span>
+    </Link>
+  );
+}
 
 export default function ProfilePage() {
-  const { data, isLoading } = useQuery({
+  const { data: res, isLoading } = useQuery({
     queryKey: ["profile"],
     queryFn: () => api.users.me(),
   });
 
-  const user = data?.data as any;
+  const user = res?.data as UserProfile | undefined;
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold">Profile</h1>
-      <p className="mt-1 text-sm text-muted-foreground">
-        Manage your account settings.
-      </p>
+    <div className="flex flex-col gap-6">
+      <PageBreadcrumbs
+        items={[
+          { label: "Home", href: "/dashboard" },
+          { label: "Profile" },
+        ]}
+      />
 
-      <section className="mt-8 max-w-md space-y-4">
-        <div>
-          <label className="mb-1 block text-sm font-medium">Name</label>
-          {isLoading ? (
-            <Skeleton className="h-4 w-32" />
-          ) : (
-            <p className="text-sm text-muted-foreground">{user?.name}</p>
-          )}
+      {isLoading ? (
+        <div className="flex flex-col items-center gap-3">
+          <Skeleton className="size-16 rounded-full" />
+          <Skeleton className="h-5 w-32 rounded" />
         </div>
-        <div>
-          <label className="mb-1 block text-sm font-medium">Phone</label>
-          {isLoading ? (
-            <Skeleton className="h-4 w-32" />
-          ) : (
-            <p className="text-sm text-muted-foreground">{user?.phone}</p>
-          )}
+      ) : (
+        <div className="flex flex-col items-center gap-3">
+          <DiceBearAvatar name={user?.name ?? "User"} className="size-16" />
+          <div className="text-center">
+            <h1 className="text-lg font-bold">{user?.name ?? "User"}</h1>
+            <p className="text-xs text-muted-foreground">{user?.phone}</p>
+          </div>
         </div>
-        <div>
-          <label className="mb-1 block text-sm font-medium">BVN</label>
-          {isLoading ? (
-            <Skeleton className="h-4 w-16" />
-          ) : (
-            <p className="text-sm text-muted-foreground">
-              {user?.bvn_last4 ? `****${user.bvn_last4}` : "Not provided"}
-            </p>
-          )}
-        </div>
-      </section>
+      )}
+
+      {user && (
+        <Card className="p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex size-10 items-center justify-center rounded-full bg-primary/10 text-primary">
+                <IdVerifiedIcon className="size-5" />
+              </div>
+              <div>
+                <p className="text-[10px] font-semibold tracking-[0.05em] text-muted-foreground uppercase">
+                  KYC Status
+                </p>
+                <p className="text-sm font-medium">Verified</p>
+              </div>
+            </div>
+            <div className="text-right">
+              <p className="text-[10px] font-semibold tracking-[0.05em] text-muted-foreground uppercase">
+                Trust Score
+              </p>
+              <p className="font-heading text-lg font-bold text-primary">
+                {user.trust_score}
+              </p>
+            </div>
+          </div>
+          <div className="mt-3 h-1.5 w-full rounded-full bg-muted">
+            <div
+              className="h-full rounded-full bg-primary transition-all"
+              style={{ width: `${user.trust_score}%` }}
+            />
+          </div>
+          <p className="mt-2 text-[10px] text-muted-foreground">
+            BVN verified · Last 4 digits: {user.bvn_last4}
+          </p>
+        </Card>
+      )}
+
+      <Separator />
+
+      <div className="flex flex-col gap-2">
+        <h2 className="text-sm font-bold uppercase tracking-wider">
+          Account Settings
+        </h2>
+        <SettingsRow
+          icon={<UserIcon className="size-4" />}
+          label="Edit Name"
+          href="/profile"
+        />
+        <SettingsRow
+          icon={<Mail01Icon className="size-4" />}
+          label="Edit Email"
+          href="/profile"
+        />
+        <SettingsRow
+          icon={<Shield01Icon className="size-4" />}
+          label="Change PIN"
+          href="/auth/pin?mode=set"
+        />
+      </div>
+
+      <Separator />
+
+      <div className="flex flex-col gap-2">
+        <h2 className="text-sm font-bold uppercase tracking-wider">
+          More
+        </h2>
+        <SettingsRow
+          icon={<Share08Icon className="size-4" />}
+          label="Refer & Earn"
+          href="/referrals"
+        />
+        <SettingsRow
+          icon={<Logout01Icon className="size-4" />}
+          label="Log Out"
+          href="/auth"
+          variant="danger"
+        />
+      </div>
     </div>
   );
 }
