@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { cn } from "@/lib/utils";
+import { cn, formatNaira } from "@/lib/utils";
 import {
   ViewIcon,
   ViewOffIcon,
@@ -9,14 +9,6 @@ import {
   ArrowUp01Icon,
 } from "hugeicons-react";
 import Link from "next/link";
-
-function formatNaira(kobo: number): string {
-  return (kobo / 100).toLocaleString("en-NG", {
-    style: "currency",
-    currency: "NGN",
-    minimumFractionDigits: 2,
-  });
-}
 
 export function WalletCard({ balance }: { balance: number }) {
   const [hidden, setHidden] = useState(false);
@@ -43,7 +35,7 @@ export function WalletCard({ balance }: { balance: number }) {
         </div>
 
         <p className="py-3 text-3xl font-heading font-semibold text-card-foreground">
-          {hidden ? "****" : formatNaira(balance)}
+          {hidden ? "****" : formatNaira(balance, 2)}
         </p>
 
         <div className="flex gap-3">
@@ -51,7 +43,7 @@ export function WalletCard({ balance }: { balance: number }) {
             href="/wallet"
             className={cn(
               "flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-3",
-              "bg-card-foreground text-card text-xs font-bold  tracking-wider",
+              "bg-card-foreground text-card text-xs font-bold tracking-wider",
               "hover:opacity-90 transition-opacity",
             )}
           >
@@ -62,7 +54,7 @@ export function WalletCard({ balance }: { balance: number }) {
             href="/wallet/withdraw"
             className={cn(
               "flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-3",
-              "bg-background text-card-foreground text-xs font-bold  tracking-wider",
+              "bg-background text-card-foreground text-xs font-bold tracking-wider",
               "hover:opacity-90 transition-opacity",
             )}
           >

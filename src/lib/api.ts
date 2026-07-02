@@ -1,4 +1,112 @@
-import type { ApiResponse } from "@/types";
+import type {
+  ApiResponse,
+  CircleListItem,
+  CircleDetail,
+  CycleContribution,
+} from "@/types";
+
+const mockMembers = [
+  {
+    id: "cm_mock_001",
+    user_id: "user_mock_001",
+    role: "admin",
+    status: "active",
+    rotation_order: 1,
+    missed_cycles: 0,
+    joined_at: "2025-01-15T00:00:00Z",
+    left_at: null,
+    user: {
+      id: "user_mock_001",
+      name: "Chioma Okafor",
+      phone: "+2348012345678",
+      email: "chioma@example.com",
+      trust_score: 85,
+      bvn_last4: "1234",
+      created_at: "",
+      updated_at: "",
+    },
+  },
+  {
+    id: "cm_mock_002",
+    user_id: "user_mock_002",
+    role: "member",
+    status: "invited",
+    rotation_order: 2,
+    missed_cycles: 0,
+    joined_at: "2025-01-15T00:00:00Z",
+    left_at: null,
+    user: {
+      id: "user_mock_002",
+      name: "Emeka Nwosu",
+      phone: "+2348123456789",
+      email: "emeka@example.com",
+      trust_score: 72,
+      bvn_last4: "5678",
+      created_at: "",
+      updated_at: "",
+    },
+  },
+  {
+    id: "cm_mock_003",
+    user_id: "user_mock_003",
+    role: "member",
+    status: "active",
+    rotation_order: 3,
+    missed_cycles: 0,
+    joined_at: "2025-01-15T00:00:00Z",
+    left_at: null,
+    user: {
+      id: "user_mock_003",
+      name: "Aisha Bello",
+      phone: "+2348034567890",
+      email: "aisha@example.com",
+      trust_score: 91,
+      bvn_last4: "9012",
+      created_at: "",
+      updated_at: "",
+    },
+  },
+  {
+    id: "cm_mock_004",
+    user_id: "user_mock_004",
+    role: "member",
+    status: "completed",
+    rotation_order: 4,
+    missed_cycles: 1,
+    joined_at: "2025-01-20T00:00:00Z",
+    left_at: null,
+    user: {
+      id: "user_mock_004",
+      name: "Tunde Balogun",
+      phone: "+2348055555555",
+      email: "tunde@example.com",
+      trust_score: 45,
+      bvn_last4: "3456",
+      created_at: "",
+      updated_at: "",
+    },
+  },
+  {
+    id: "cm_mock_005",
+    user_id: "user_mock_005",
+    role: "member",
+    status: "defaulted",
+    rotation_order: 5,
+    missed_cycles: 3,
+    joined_at: "2025-01-15T00:00:00Z",
+    left_at: null,
+    user: {
+      id: "user_mock_005",
+      name: "Funke Adeyemi",
+      phone: "+2348166666666",
+      email: "funke@example.com",
+      trust_score: 28,
+      bvn_last4: "7890",
+      created_at: "",
+      updated_at: "",
+    },
+  },
+];
 
 const BASE_URL = "/api/v1";
 
@@ -147,31 +255,59 @@ async function mockRequest<T>(
   }
 
   if (path === "/circles" && method === "POST") {
+    const body = options.body ? JSON.parse(options.body as string) : {};
     return {
       code: "00",
       description: "Circle created",
-      data: { id: "circle_mock_001", invite_code: "ESUSU-XYZ" } as T,
+      data: { id: "circle_mock_001", invite_code: "ESUSU-XYZ", ...body } as T,
     };
   }
 
-  if (path.startsWith("/circles/") && method === "GET") {
+  // Check specific paths BEFORE the generic /circles/{id} catch-all
+  if (path.endsWith("/report") && method === "GET") {
+    const circleId = path.split("/")[2];
     return {
       code: "00",
       description: "OK",
       data: {
-        id: "circle_mock_001",
-        creator_id: "user_mock_001",
-        name: "My Savings Circle",
-        contribution_amount: 5000,
-        frequency: "weekly",
-        cycle_period_days: 7,
-        cycle_count: 12,
-        current_cycle: 1,
-        default_resolution_rule: "absorb",
-        grace_period_hours: 24,
-        status: "active",
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
+        total_contributions_kobo: 5000000,
+        total_payouts_kobo: 4500000,
+        default_rate: 2.5,
+        members: 8,
+        cycles: [
+          {
+            cycle_number: 1,
+            status: "paid_out",
+            total_kobo: 5000000,
+            completed_at: "2025-02-15T00:00:00Z",
+          },
+          {
+            cycle_number: 2,
+            status: "paid_out",
+            total_kobo: 4900000,
+            completed_at: "2025-03-15T00:00:00Z",
+          },
+          {
+            cycle_number: 3,
+            status: "active",
+            total_kobo: 4500000,
+            completed_at: null,
+          },
+        ],
+        debts: [
+          {
+            member_name: "Funke Adeyemi",
+            amount_kobo: 500000,
+            cycle: 3,
+            status: "active",
+          },
+          {
+            member_name: "Tunde Balogun",
+            amount_kobo: 250000,
+            cycle: 2,
+            status: "cleared",
+          },
+        ],
       } as T,
     };
   }
@@ -192,19 +328,122 @@ async function mockRequest<T>(
     return {
       code: "00",
       description: "Invite generated",
-      data: { invite_code: "ESUSU-XYZ", link: "https://esusu.app/join/ESUSU-XYZ" } as T,
+      data: {
+        invite_code: "ESUSU-XYZ",
+        link: "https://esusu.app/join/ESUSU-XYZ",
+      } as T,
     };
   }
 
-  if (path.endsWith("/report") && method === "GET") {
+  // Circle detail with members — matches /circles/{id} but NOT /circles/{id}/cycles/{num}
+  const circlesDetailMatch = path.match(/^\/circles\/([^/]+)$/);
+  if (circlesDetailMatch && method === "GET") {
+    const circleId = circlesDetailMatch[1];
     return {
       code: "00",
       description: "OK",
       data: {
-        total_contributions_kobo: 5000000,
-        total_payouts_kobo: 4500000,
-        default_rate: 2.5,
-        members: 8,
+        id: circleId,
+        creator_id: "user_mock_001",
+        name: "Weekend Travelers",
+        contribution_amount: 500000,
+        frequency: "weekly",
+        cycle_period_days: 7,
+        cycle_count: 12,
+        current_cycle: 4,
+        default_resolution_rule: "absorb",
+        grace_period_hours: 24,
+        status: "active",
+        created_at: "2025-01-15T00:00:00Z",
+        updated_at: new Date().toISOString(),
+        invite_code: "ESUSU-XYZ",
+        members: mockMembers,
+      } as T,
+    };
+  }
+
+  // Cycle by circle + number — matches /circles/{id}/cycles/{num}
+  const cycleByCircleMatch = path.match(/^\/circles\/([^/]+)\/cycles\/(\d+)$/);
+  if (cycleByCircleMatch && method === "GET") {
+    const cycleNum = parseInt(cycleByCircleMatch[2], 10);
+    return {
+      code: "00",
+      description: "OK",
+      data: {
+        id: `cycle_mock_00${cycleNum}`,
+        circle_id: cycleByCircleMatch[1],
+        recipient_member_id:
+          cycleNum <= 3 ? mockMembers[cycleNum - 1]?.user_id : "user_mock_001",
+        cycle_number: cycleNum,
+        expected_total_kobo: 5000000,
+        actual_total_kobo: cycleNum <= 2 ? 5000000 : 4500000,
+        status:
+          cycleNum <= 2 ? "paid_out" : cycleNum === 3 ? "active" : "pending",
+        starts_at: new Date(
+          Date.now() - (12 - cycleNum) * 7 * 86400000,
+        ).toISOString(),
+        deadline_at: new Date(
+          Date.now() + (cycleNum - 3) * 7 * 86400000,
+        ).toISOString(),
+        closed_at:
+          cycleNum <= 2
+            ? new Date(
+                Date.now() - (12 - cycleNum) * 7 * 86400000 + 86400000,
+              ).toISOString()
+            : null,
+        contributions: [
+          {
+            member_id: "user_mock_001",
+            member_name: "Chioma Okafor",
+            amount_kobo: 500000,
+            status: "paid" as const,
+            paid_at: new Date(
+              Date.now() - (12 - cycleNum) * 7 * 86400000,
+            ).toISOString(),
+          },
+          {
+            member_id: "user_mock_002",
+            member_name: "Emeka Nwosu",
+            amount_kobo: 500000,
+            status: "paid" as const,
+            paid_at: new Date(
+              Date.now() - (12 - cycleNum) * 7 * 86400000,
+            ).toISOString(),
+          },
+          {
+            member_id: "user_mock_003",
+            member_name: "Aisha Bello",
+            amount_kobo: 500000,
+            status: "paid" as const,
+            paid_at: new Date(
+              Date.now() - (12 - cycleNum) * 7 * 86400000,
+            ).toISOString(),
+          },
+          {
+            member_id: "user_mock_004",
+            member_name: "Tunde Balogun",
+            amount_kobo: 500000,
+            status: cycleNum >= 4 ? ("defaulted" as const) : ("paid" as const),
+            paid_at:
+              cycleNum < 4
+                ? new Date(
+                    Date.now() - (12 - cycleNum) * 7 * 86400000,
+                  ).toISOString()
+                : undefined,
+          },
+          {
+            member_id: "user_mock_005",
+            member_name: "Funke Adeyemi",
+            amount_kobo: 500000,
+            status: cycleNum >= 2 ? ("defaulted" as const) : ("paid" as const),
+            paid_at:
+              cycleNum === 1
+                ? new Date(
+                    Date.now() - (12 - cycleNum) * 7 * 86400000,
+                  ).toISOString()
+                : undefined,
+          },
+        ] as CycleContribution[],
       } as T,
     };
   }
@@ -263,10 +502,30 @@ async function mockRequest<T>(
       data: {
         balance: 45000000,
         transactions: [
-          { type: "credit", amount: 5000000, description: "Received Payout — Weekend Travelers", date: new Date().toISOString() },
-          { type: "debit", amount: 2500000, description: "Contribution — Rent Savers", date: new Date(Date.now() - 86400000).toISOString() },
-          { type: "credit", amount: 1500000, description: "Top-up via Wema Bank", date: new Date(Date.now() - 2 * 86400000).toISOString() },
-          { type: "debit", amount: 750000, description: "Withdrawal to GTBank", date: new Date(Date.now() - 3 * 86400000).toISOString() },
+          {
+            type: "credit",
+            amount: 5000000,
+            description: "Received Payout — Weekend Travelers",
+            date: new Date().toISOString(),
+          },
+          {
+            type: "debit",
+            amount: 2500000,
+            description: "Contribution — Rent Savers",
+            date: new Date(Date.now() - 86400000).toISOString(),
+          },
+          {
+            type: "credit",
+            amount: 1500000,
+            description: "Top-up via Wema Bank",
+            date: new Date(Date.now() - 2 * 86400000).toISOString(),
+          },
+          {
+            type: "debit",
+            amount: 750000,
+            description: "Withdrawal to GTBank",
+            date: new Date(Date.now() - 3 * 86400000).toISOString(),
+          },
         ],
       } as unknown as T,
     };
@@ -467,19 +726,33 @@ export const api = {
 
     /** Generates an invite link for a circle. */
     invite: (id: string) =>
-      request<{ invite_code: string; link: string }>(
-        `/circles/${id}/invite`,
-        { method: "POST" },
-      ),
+      request<{ invite_code: string; link: string }>(`/circles/${id}/invite`, {
+        method: "POST",
+      }),
 
     /** Returns a report on circle health, contributions, and defaults. */
-    report: (id: string) =>
-      request<unknown>(`/circles/${id}/report`),
+    report: (id: string) => request<unknown>(`/circles/${id}/report`),
   },
 
   cycles: {
     /** Gets cycle details including recipient and status. */
     get: (id: string) => request<unknown>(`/cycles/${id}`),
+
+    /** Gets cycle by circle ID + cycle number. Returns cycle + member contributions. */
+    getByCircleAndNumber: (circleId: string, cycleNum: number) =>
+      request<{
+        id: string;
+        circle_id: string;
+        recipient_member_id: string;
+        cycle_number: number;
+        expected_total_kobo: number;
+        actual_total_kobo: number;
+        status: string;
+        starts_at: string;
+        deadline_at: string;
+        closed_at: string | null;
+        contributions: import("@/types").CycleContribution[];
+      }>(`/circles/${circleId}/cycles/${cycleNum}`),
 
     /** Manually closes a cycle (admin only). */
     close: (id: string) =>
@@ -512,8 +785,7 @@ export const api = {
 
   wallet: {
     /** Wallet balance + recent transactions. */
-    get: () =>
-      request<{ balance: number; transactions: unknown[] }>("/wallet"),
+    get: () => request<{ balance: number; transactions: unknown[] }>("/wallet"),
 
     /** Full transaction history. */
     transactions: () => request<unknown[]>("/wallet/transactions"),
@@ -557,17 +829,14 @@ export const api = {
 
   referrals: {
     /** Gets the user's referral code and referred users. */
-    list: () =>
-      request<{ code: string; referred: unknown[] }>("/referrals"),
+    list: () => request<{ code: string; referred: unknown[] }>("/referrals"),
   },
 
   debts: {
     /** Lists debts the user owes and is owed. */
-    list: () =>
-      request<{ outgoing: unknown[]; incoming: unknown[] }>("/debts"),
+    list: () => request<{ outgoing: unknown[]; incoming: unknown[] }>("/debts"),
 
     /** Pays a specific debt. */
-    pay: (id: string) =>
-      request<{}>(`/debts/${id}/pay`, { method: "POST" }),
+    pay: (id: string) => request<{}>(`/debts/${id}/pay`, { method: "POST" }),
   },
 };

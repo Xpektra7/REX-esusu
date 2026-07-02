@@ -1,40 +1,31 @@
+"use client";
+
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Progress } from "@/components/ui/progress";
-import { cn } from "@/lib/utils";
-import { UserGroupIcon, Calendar01Icon, SavingsIcon } from "hugeicons-react";
+import { cn, formatNaira } from "@/lib/utils";
+import {
+  PiggyBankIcon,
+  Calendar01Icon,
+  SavingsIcon,
+  Wallet01Icon,
+} from "hugeicons-react";
 import Link from "next/link";
+import type { CircleListItem as CircleData } from "@/types";
 
-export interface CircleData {
-  id: string;
-  name: string;
-  status: "active" | "inactive";
-  contribution_amount: number;
-  frequency: string;
-  current_cycle: number;
-  cycle_count: number;
-  member_position?: number;
-  total_members?: number;
-}
+const iconSet = [
+  { icon: PiggyBankIcon },
+  { icon: Calendar01Icon },
+  { icon: SavingsIcon },
+  { icon: Wallet01Icon },
+];
 
-function formatNaira(kobo: number): string {
-  return (kobo / 100).toLocaleString("en-NG", {
-    style: "currency",
-    currency: "NGN",
-    minimumFractionDigits: 0,
-  });
-}
-
-const iconMap = [
-  { icon: UserGroupIcon, bg: "bg-blue-100 text-blue-800" },
-  { icon: Calendar01Icon, bg: "bg-amber-100 text-amber-800" },
-  { icon: SavingsIcon, bg: "bg-green-100 text-green-800" },
-] as const;
+export { type CircleData };
 
 export function CircleCard({ circle }: { circle: CircleData }) {
-  const idx = circle.name.length % iconMap.length;
-  const Icon = iconMap[idx].icon;
+  const idx = circle.name.length % iconSet.length;
+  const Icon = iconSet[idx].icon;
   const progress =
     circle.cycle_count > 0
       ? (circle.current_cycle / circle.cycle_count) * 100
@@ -49,22 +40,19 @@ export function CircleCard({ circle }: { circle: CircleData }) {
         <CardHeader className="px-4">
           <div className="flex items-start justify-between p-0!">
             <div className="flex items-center gap-3">
-              <div
-                className={cn(
-                  "flex size-8 items-center justify-center rounded-full",
-                  iconMap[idx].bg,
-                )}
-              >
-                <Icon className="size-4" />
+              <div className="flex size-9 items-center justify-center rounded-full bg-primary/10 text-primary">
+                <Icon className="size-4.5" />
               </div>
               <div>
                 <CardTitle>{circle.name}</CardTitle>
                 <p className="text-xs text-muted-foreground">
-                  Rotating Savings Group
+                  {circle.type ?? "Rotating Savings Group"}
                 </p>
               </div>
             </div>
-            <Badge variant={circle.status === "active" ? "default" : "outline"}>
+            <Badge
+              variant={circle.status === "active" ? "default" : "outline"}
+            >
               {circle.status === "active" ? "Active" : "Inactive"}
             </Badge>
           </div>
@@ -75,19 +63,19 @@ export function CircleCard({ circle }: { circle: CircleData }) {
         <CardContent>
           <div className="flex items-end justify-between">
             <div>
-              <p className="text-xs tracking-wider text-muted-foreground">
+              <p className="text-[10px] font-semibold tracking-[0.05em] text-muted-foreground uppercase">
                 Contribution
               </p>
-              <p className="text-base font-bold">
+              <p className="font-heading text-base font-bold">
                 {formatNaira(circle.contribution_amount)}
               </p>
             </div>
             {circle.member_position != null && circle.total_members != null && (
               <div className="text-right">
-                <p className="text-xs tracking-wider text-muted-foreground">
+                <p className="text-[10px] font-semibold tracking-[0.05em] text-muted-foreground uppercase">
                   Position
                 </p>
-                <p className="text-base font-bold">
+                <p className="font-heading text-base font-bold">
                   {circle.member_position} / {circle.total_members}
                 </p>
               </div>
@@ -95,8 +83,8 @@ export function CircleCard({ circle }: { circle: CircleData }) {
           </div>
 
           <Progress value={progress} className="mt-4">
-            <div className="flex w-full items-center justify-between text-xs text-muted-foreground">
-              <span>
+            <div className="flex w-full items-center justify-between text-[10px] text-muted-foreground">
+              <span className="font-semibold tracking-wider uppercase">
                 Cycle {circle.current_cycle} of {circle.cycle_count}
               </span>
               <span>{Math.round(progress)}%</span>

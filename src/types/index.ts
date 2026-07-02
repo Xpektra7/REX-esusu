@@ -146,6 +146,92 @@ export interface Referral {
   created_at: string;
 }
 
+export interface CircleListItem {
+  id: string;
+  name: string;
+  status: "active" | "inactive" | "pending" | "completed" | "dissolved";
+  contribution_amount: number;
+  frequency: "weekly" | "monthly";
+  type: string;
+  current_cycle: number;
+  cycle_count: number;
+  member_position?: number;
+  total_members?: number;
+}
+
+export interface CircleDetail extends Circle {
+  members: CircleMember[];
+  invite_code?: string;
+}
+
+export interface CycleContribution {
+  member_id: string;
+  member_name: string;
+  amount_kobo: number;
+  status: "paid" | "pending" | "defaulted";
+  paid_at?: string;
+}
+
+export interface CycleDetailData {
+  id: string;
+  circle_id: string;
+  recipient_member_id: string;
+  cycle_number: number;
+  expected_total_kobo: number;
+  actual_total_kobo: number;
+  status: string;
+  starts_at: string;
+  deadline_at: string;
+  closed_at: string | null;
+  contributions: CycleContribution[];
+}
+
+export interface ReportData {
+  total_contributions_kobo: number;
+  total_payouts_kobo: number;
+  default_rate: number;
+  members: number;
+  cycles: Array<{
+    cycle_number: number;
+    status: string;
+    total_kobo: number;
+    completed_at: string | null;
+  }>;
+  debts: Array<{
+    member_name: string;
+    amount_kobo: number;
+    cycle: number;
+    status: string;
+  }>;
+}
+
+export interface MemberItem {
+  id: string;
+  role: string;
+  status: string;
+  rotation_order?: number | null;
+  missed_cycles?: number;
+  user?: {
+    name: string;
+    phone?: string;
+    trust_score?: number;
+  } | null;
+}
+
+export interface CirclePageData {
+  id: string;
+  name: string;
+  status: string;
+  contribution_amount: number;
+  frequency: string;
+  cycle_count: number;
+  current_cycle: number;
+  invite_code?: string;
+  cycle_period_days?: number;
+  deadline_at?: string;
+  members?: MemberItem[];
+}
+
 export interface ApiResponse<T> {
   code: string;
   description: string;
