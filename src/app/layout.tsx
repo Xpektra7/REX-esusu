@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { IBM_Plex_Sans, Inter, Manrope } from "next/font/google";
+import { Inter, Manrope } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { SerwistProvider } from "@serwist/next/react";
@@ -7,18 +7,12 @@ import { Toaster } from "sonner";
 
 const inter = Inter({
   subsets: ["latin"],
-  variable: "--font-heading",
-});
-
-const ibmPlexSans = IBM_Plex_Sans({
-  subsets: ["latin"],
-  weight: ["400", "500", "700"],
-  variable: "--font-sans-alt",
+  variable: "--font-sans",
 });
 
 const manrope = Manrope({
   subsets: ["latin"],
-  variable: "--font-sans",
+  variable: "--font-heading",
 });
 
 export const viewport: Viewport = {
@@ -55,9 +49,8 @@ export default function RootLayout({
       className={cn(
         "h-full",
         "antialiased",
-        manrope.variable,
-        ibmPlexSans.variable,
         inter.variable,
+        manrope.variable,
       )}
     >
       <body className="min-h-full flex flex-col">

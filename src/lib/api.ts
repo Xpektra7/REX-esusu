@@ -117,7 +117,32 @@ async function mockRequest<T>(
     return {
       code: "00",
       description: "OK",
-      data: [] as T,
+      data: [
+        {
+          id: "circle_mock_001",
+          name: "Weekend Travelers",
+          status: "active",
+          contribution_amount: 500000,
+          frequency: "weekly",
+          type: "Rotating Savings Group",
+          current_cycle: 4,
+          cycle_count: 12,
+          member_position: 3,
+          total_members: 10,
+        },
+        {
+          id: "circle_mock_002",
+          name: "Rent Savers",
+          status: "active",
+          contribution_amount: 2500000,
+          frequency: "monthly",
+          type: "Annual Contribution",
+          current_cycle: 2,
+          cycle_count: 10,
+          member_position: 1,
+          total_members: 5,
+        },
+      ] as T,
     };
   }
 
@@ -235,7 +260,15 @@ async function mockRequest<T>(
     return {
       code: "00",
       description: "OK",
-      data: { balance: 2500000, transactions: [] } as unknown as T,
+      data: {
+        balance: 45000000,
+        transactions: [
+          { type: "credit", amount: 5000000, description: "Received Payout — Weekend Travelers", date: new Date().toISOString() },
+          { type: "debit", amount: 2500000, description: "Contribution — Rent Savers", date: new Date(Date.now() - 86400000).toISOString() },
+          { type: "credit", amount: 1500000, description: "Top-up via Wema Bank", date: new Date(Date.now() - 2 * 86400000).toISOString() },
+          { type: "debit", amount: 750000, description: "Withdrawal to GTBank", date: new Date(Date.now() - 3 * 86400000).toISOString() },
+        ],
+      } as unknown as T,
     };
   }
 
