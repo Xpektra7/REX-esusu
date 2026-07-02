@@ -8,6 +8,7 @@ import { joinCircleSchema } from "@/lib/validations";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PageBreadcrumbs } from "@/components/shared/page-breadcrumbs";
 import { toast } from "sonner";
 import { Loading01Icon } from "hugeicons-react";
 
@@ -59,6 +60,15 @@ export default function JoinCirclePage(props: {
 
   return (
     <div className="flex flex-col gap-6">
+      <PageBreadcrumbs
+        items={[
+          { label: "Home", href: "/dashboard" },
+          { label: "Circles", href: "/circles" },
+          { label: circle?.name ?? "Circle", href: circle?.name ? `/circles/${id}` : undefined },
+          { label: "Join" },
+        ]}
+      />
+
       <div>
         <h1 className="text-xl font-bold">Join Circle</h1>
         <p className="mt-1 text-sm text-muted-foreground">

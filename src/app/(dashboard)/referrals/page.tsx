@@ -1,21 +1,112 @@
-export default function ReferralsPage() {
-  return (
-    <div>
-      <h1 className="text-2xl font-bold">Referrals</h1>
-      <p className="mt-1 text-sm text-muted-foreground">
-        Invite friends and earn trust score boosts.
-      </p>
+"use client";
 
-      <div className="mt-6 rounded-xl border border-border p-6">
-        <p className="text-sm text-muted-foreground">Your referral link</p>
-        <p className="mt-1 font-mono text-sm">esusu.app/invite/your-code</p>
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/lib/api";
+import { Card } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Separator } from "@/components/ui/separator";
+import { PageBreadcrumbs } from "@/components/shared/page-breadcrumbs";
+import { Copy01Icon, Share08Icon } from "hugeicons-react";
+import { toast } from "sonner";
+
+interface ReferralData {
+  code: string;
+  referred: Array<{
+    name: string;
+    status: string;
+    bonus_kobo: number | null;
+    joined_at: string;
+  }>;
+}
+
+export default function ReferralsPage() {
+  const { data: res, isLoading } = useQuery({
+    queryKey: ["referrals"],
+    queryFn: () => api.referrals.list(),
+  });
+
+  const referral = res?.data as ReferralData | undefined;
+
+  function handleCopy() {
+    if (!referral) return;
+    const link = `esusu.app/invite/${referral.code}`;
+    navigator.clipboard.writeText(link);
+    toast.success(`Referral link copied: ${link}`);
+  }
+
+  return (
+    <div className="flex flex-col gap-6">
+      <PageBreadcrumbs
+        items={[
+          { label: "Home", href: "/dashboard" },
+          { label: "Referrals" },
+        ]}
+      />
+
+      <div>
+        <h1 className="text-xl font-bold">Refer & Earn</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Invite friends and earn trust score boosts.
+        </p>
       </div>
 
-      <section className="mt-10">
-        <h2 className="text-lg font-semibold">Referred Users</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          No referrals yet. Share your code to start earning.
-        </p>
+      {isLoading ? (
+        <Skeleton className="h-32 rounded-xl" />
+      ) : referral ? (
+        <Card className="p-5">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-[10px] font-semibold tracking-[0.05em] text-muted-foreground uppercase">
+                Your Referral Code
+              </p>
+              <p className="mt-1 font-heading text-2xl font-bold tracking-wider">
+                {referral.code}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={handleCopy}
+              className="flex size-10 items-center justify-center rounded-full bg-primary/10 text-primary"
+              aria-label="Copy referral code"
+            >
+              <Copy01Icon className="size-5" />
+            </button>
+          </div>
+          <p className="mt-2 text-xs text-muted-foreground">
+            Share this code with friends. When they join and complete a cycle,
+            you earn a trust score boost.
+          </p>
+        </Card>
+      ) : null}
+
+      <Separator />
+
+      <section>
+        <h2 className="mb-3 text-sm font-bold uppercase tracking-wider">
+          Referred Users
+        </h2>
+        {referral?.referred && referral.referred.length > 0 ? (
+          <div className="flex flex-col gap-2">
+            {referral.referred.map((r, i) => (
+              <div
+                key={i}
+                className="flex items-center justify-between rounded-xl border border-border px-4 py-3"
+              >
+                <p className="text-sm font-medium">{r.name}</p>
+                <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-semibold text-primary">
+                  {r.status}
+                </span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <Card className="flex flex-col items-center gap-3 p-8 text-center">
+            <Share08Icon className="size-8 text-muted-foreground" />
+            <p className="text-sm text-muted-foreground">
+              No referrals yet. Share your code to start earning.
+            </p>
+          </Card>
+        )}
       </section>
     </div>
   );

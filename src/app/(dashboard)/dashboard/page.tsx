@@ -25,7 +25,7 @@ export default function DashboardPage() {
   const circleList = (circlesRes?.data ?? []) as CircleData[];
 
   return (
-    <div className="flex flex-col gap-6 ">
+    <div className="flex flex-col gap-6">
       {walletLoading ? (
         <Skeleton className="h-44 rounded-xl" />
       ) : (
