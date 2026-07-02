@@ -31,7 +31,7 @@ async function main() {
   const token2 = await auth("+2348000000124");
   const join = await fetch(`${BASE}/circles/${circleId}/join`, {
     method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token2}` },
-    body: JSON.stringify({ inviteCode: code }),
+    body: JSON.stringify({ invite_code: code }),
   }).then(r => r.json());
   console.log(`Alice joined: ${join.code}`);
 
