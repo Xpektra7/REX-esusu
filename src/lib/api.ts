@@ -677,7 +677,7 @@ async function request<T>(
       const newToken = refreshJson.data?.token;
       if (newToken) {
         const currentUser = useAuthStore.getState().user;
-        if (!currentUser) { useAuthStore.getState().clearAuth(); return; }
+        if (!currentUser) { useAuthStore.getState().clearAuth(); throw new Error("Session expired"); }
         useAuthStore.getState().setAuth({
           access_token: newToken,
           refresh_token: refreshToken,
