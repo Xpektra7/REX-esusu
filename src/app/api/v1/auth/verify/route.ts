@@ -6,46 +6,44 @@ import { db } from "@/db";
 import { users, virtualAccounts } from "@/db/schema";
 import { nombaPost } from "@/lib/nomba";
 import { eq } from "drizzle-orm";
+import crypto from "crypto";
 
 const SANDBOX_URL = "https://sandbox.nomba.com/v1";
+const ALGO = "aes-256-gcm";
+
+function encryptBvn(plaintext: string): string {
+  const key = Buffer.from(process.env.BVN_ENCRYPTION_KEY || "", "hex");
+  if (key.length !== 32) throw new Error("BVN_ENCRYPTION_KEY must be a 64-char hex string (32 bytes)");
+  const iv = crypto.randomBytes(12);
+  const cipher = crypto.createCipheriv(ALGO, key, iv);
+  const enc = Buffer.concat([cipher.update(plaintext, "utf8"), cipher.final()]);
+  const tag = cipher.getAuthTag();
+  return `${iv.toString("hex")}:${tag.toString("hex")}:${enc.toString("hex")}`;
+}
 
 async function provisionVirtualAccount(userId: string, accountName: string, bvn?: string) {
   const baseUrl = process.env.NOMBA_BASE_URL || "https://api.nomba.com/v1";
   const isLive = !baseUrl.includes("sandbox");
 
   async function createVA(url: string): Promise<any> {
-    const savedUrl = process.env.NOMBA_BASE_URL;
-    const savedApiKey = process.env.NOMBA_API_KEY;
-    const savedSecret = process.env.NOMBA_SECRET_KEY;
-    try {
-      if (url !== savedUrl) {
-        process.env.NOMBA_BASE_URL = url;
-        process.env.NOMBA_API_KEY = process.env.NOMBA_TEST_API_KEY || savedApiKey;
-        process.env.NOMBA_SECRET_KEY = process.env.NOMBA_TEST_SECRET_KEY || savedSecret;
-      }
-      const result = await nombaPost("/v1/accounts/virtual", {
-        accountRef: userId,
-        accountName,
-        bvn: bvn || "",
-        expiryDate: "2027-12-31",
+    const result = await nombaPost("/v1/accounts/virtual", {
+      accountRef: userId,
+      accountName,
+      bvn: bvn || "",
+      expiryDate: "2027-12-31",
+    }, url);
+    const vaBody = result?.data || result;
+    if (vaBody) {
+      await db.insert(virtualAccounts).values({
+        userId,
+        accountNumber: vaBody.bankAccountNumber || vaBody.accountNumber,
+        accountName: vaBody.bankAccountName || vaBody.accountName,
+        bankCode: vaBody.bankName || vaBody.bank || vaBody.bankCode,
+        accountRef: vaBody.accountRef,
+        type: "personal",
       });
-      const vaBody = result?.data || result;
-      if (vaBody) {
-        await db.insert(virtualAccounts).values({
-          userId,
-          accountNumber: vaBody.bankAccountNumber || vaBody.accountNumber,
-          accountName: vaBody.bankAccountName || vaBody.accountName,
-          bankCode: vaBody.bankName || vaBody.bank || vaBody.bankCode,
-          accountRef: vaBody.accountRef,
-          type: "personal",
-        });
-      }
-      return vaBody;
-    } finally {
-      process.env.NOMBA_BASE_URL = savedUrl;
-      process.env.NOMBA_API_KEY = savedApiKey;
-      process.env.NOMBA_SECRET_KEY = savedSecret;
     }
+    return vaBody;
   }
 
   try {
@@ -105,7 +103,7 @@ export async function POST(req: NextRequest) {
     const passwordHash = await hashPassword(password);
     const [user] = await db.insert(users).values({
       phone, name, email, passwordHash,
-      bvnEncrypted: bvn ? Buffer.from(bvn).toString("base64") : null,
+      bvnEncrypted: bvn ? encryptBvn(bvn) : null,
       bvnLast4: bvn ? bvn.slice(-4) : null,
     }).returning();
 

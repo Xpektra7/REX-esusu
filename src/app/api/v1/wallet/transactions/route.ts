@@ -3,7 +3,7 @@ import { success, error } from "@/lib/api-response";
 import { requireAuth } from "@/lib/middleware";
 import { db } from "@/db";
 import { walletTransactions } from "@/db/schema";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, sql } from "drizzle-orm";
 
 export async function GET(req: NextRequest) {
   const auth = requireAuth(req);
@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
       .orderBy(desc(walletTransactions.createdAt))
       .limit(limit).offset(offset);
 
-    const [{ count }] = await db.select({ count: db.$count(walletTransactions) })
+    const [{ count }] = await db.select({ count: sql<number>`count(*)` })
       .from(walletTransactions)
       .where(eq(walletTransactions.userId, auth.user!.userId));
 

@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { db } from "@/db";
 import { users, circles, membersCircles, virtualAccounts, cycles, contributions, debts, notifications } from "@/db/schema";
 import { eq, and, sql } from "drizzle-orm";
-import { reconcileCycle, classifyPayment } from "./reconciliation";
+import { reconcileCycle, classifyPayment } from "../src/lib/reconciliation";
 
 // ---------------------------------------------------------------------------
 // Integration tests for the full cycle lifecycle.

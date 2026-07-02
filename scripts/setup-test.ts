@@ -11,7 +11,7 @@ async function auth(phone: string) {
   });
   const v = await fetch(`${BASE}/auth/verify`, {
     method: "POST", headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ phone, otp: "999999", password: "qwertyuiop" }),
+    body: JSON.stringify({ phone, otp: "999999", password: "qwertyuiop", name: "Test User", email: `test_${phone.slice(-4)}@test.com` }),
   }).then(r => r.json());
   return v?.data?.token;
 }
@@ -31,7 +31,7 @@ async function main() {
   const token2 = await auth("+2348000000124");
   const join = await fetch(`${BASE}/circles/${circleId}/join`, {
     method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token2}` },
-    body: JSON.stringify({ invite_code: code }),
+    body: JSON.stringify({ inviteCode: code }),
   }).then(r => r.json());
   console.log(`Alice joined: ${join.code}`);
 

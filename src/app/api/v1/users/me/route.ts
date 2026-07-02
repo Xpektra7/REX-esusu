@@ -28,6 +28,7 @@ export async function GET(req: NextRequest) {
     phone: user.phone,
     name: user.name,
     email: user.email,
+    bvnLast4: user.bvnLast4,
     trustScore: user.trustScore,
     balanceKobo: vas[0]?.balanceKobo ?? 0,
     virtualAccount: vas[0] ? {

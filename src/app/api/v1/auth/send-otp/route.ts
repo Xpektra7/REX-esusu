@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
 
     if (!getFixedOtp(phone)) {
       // In production, send OTP via email/Gmail SMTP here
-      console.log(`OTP for ${phone}: ${otp}`);
+      // OTP intentionally not logged — only whitelisted dev phones get a fixed OTP
     }
 
     return success({ expiresInSeconds: 300, isNewUser: !existing });

@@ -19,8 +19,11 @@ export async function POST(req: NextRequest) {
     if (!user) return error("User not found", "04", 404);
 
     // Require currentPassword only when changing an existing PIN
-    if (user.pinHash && !(await verifyPassword(currentPassword, user.passwordHash))) {
-      return error("Current password is incorrect");
+    if (user.pinHash) {
+      if (!currentPassword) return error("Current password is required to change PIN");
+      if (!(await verifyPassword(currentPassword, user.passwordHash))) {
+        return error("Current password is incorrect");
+      }
     }
 
     const pinHash = await bcrypt.hash(pin, 12);

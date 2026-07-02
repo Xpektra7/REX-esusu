@@ -12,8 +12,8 @@ export async function POST(req: NextRequest) {
 
   try {
     const { amountKobo, bankCode, accountNumber, accountName } = await req.json();
-    if (!amountKobo || !bankCode || !accountNumber || !accountName) {
-      return error("amountKobo, bankCode, accountNumber, and accountName are required");
+    if (!Number.isInteger(amountKobo) || amountKobo <= 0 || !bankCode || !accountNumber || !accountName) {
+      return error("amountKobo must be a positive integer; bankCode, accountNumber, and accountName are required");
     }
 
     // Get user's name for senderName

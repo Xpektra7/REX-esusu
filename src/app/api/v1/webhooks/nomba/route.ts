@@ -12,7 +12,10 @@ export async function POST(request: NextRequest) {
     const signature = request.headers.get("nomba-signature") || "";
     const timestamp = request.headers.get("nomba-timestamp") || "";
 
-    const secret = process.env.NOMBA_WEBHOOK_SECRET || "";
+    const secret = process.env.NOMBA_WEBHOOK_SECRET;
+    if (!secret) {
+      return new Response(JSON.stringify({ code: "01", description: "misconfigured" }), { status: 500 });
+    }
     const payload = JSON.parse(rawBody);
     const data = payload.data || {};
     const merchant = data.merchant || {};
@@ -42,7 +45,7 @@ export async function POST(request: NextRequest) {
     }
 
     const tsMs = /^\d+$/.test(timestamp) ? parseInt(timestamp, 10) : new Date(timestamp).getTime();
-    if (isNaN(tsMs) || Date.now() - tsMs > 300_000) {
+    if (isNaN(tsMs) || Math.abs(Date.now() - tsMs) > 300_000) {
       return new Response(JSON.stringify({ code: "01", description: "expired" }), { status: 401 });
     }
 

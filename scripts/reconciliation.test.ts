@@ -1,6 +1,6 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { classifyPayment } from "./reconciliation";
+import { classifyPayment } from "../src/lib/reconciliation";
 
 // ---------------------------------------------------------------------------
 // Classification tests (pure function, no DB needed)

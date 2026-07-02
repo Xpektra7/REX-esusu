@@ -643,10 +643,12 @@ async function request<T>(
       const refreshJson = await refreshRes.json();
       const newToken = refreshJson.data?.token;
       if (newToken) {
+        const currentUser = useAuthStore.getState().user;
+        if (!currentUser) { useAuthStore.getState().clearAuth(); return; }
         useAuthStore.getState().setAuth({
           access_token: newToken,
           refresh_token: refreshToken,
-          user: useAuthStore.getState().user!,
+          user: currentUser,
           needs_bvn: useAuthStore.getState().needsBvn,
           pin_set: useAuthStore.getState().pinSet,
         });

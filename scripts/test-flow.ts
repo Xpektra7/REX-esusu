@@ -83,8 +83,8 @@ async function flowAuth() {
         name: n, email: e,
       });
       if (v.code !== "00") throw new Error(`verify: ${v.description}`);
-      if (!v.data?.accessToken) throw new Error("No accessToken");
-      JTAs.push(v.data.accessToken);
+      if (!v.data?.token) throw new Error("No token");
+      JTAs.push(v.data.token);
     });
   }
 

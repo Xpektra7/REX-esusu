@@ -1,4 +1,4 @@
-let cachedToken: { token: string; expiresAt: number } | null = null;
+let cachedToken: { baseUrl: string; token: string; expiresAt: number } | null = null;
 
 function isProduction(): boolean {
   const url = process.env.NOMBA_BASE_URL || "";
@@ -6,11 +6,11 @@ function isProduction(): boolean {
 }
 
 export async function getNombaToken(): Promise<string> {
-  if (cachedToken && Date.now() < cachedToken.expiresAt) {
+  const baseUrl = process.env.NOMBA_BASE_URL!;
+
+  if (cachedToken && cachedToken.baseUrl === baseUrl && Date.now() < cachedToken.expiresAt) {
     return cachedToken.token;
   }
-
-  const baseUrl = process.env.NOMBA_BASE_URL!;
   const accountId = process.env.NOMBA_PARENT_ACCOUNT_ID!;
   const clientId = isProduction()
     ? process.env.NOMBA_LIVE_CLIENT_ID!
@@ -37,7 +37,7 @@ export async function getNombaToken(): Promise<string> {
   const token = result?.data?.access_token || result?.access_token;
   if (!token) throw new Error(`Nomba auth: no access_token in response`);
 
-  cachedToken = { token, expiresAt: Date.now() + 55 * 60 * 1000 };
+  cachedToken = { baseUrl, token, expiresAt: Date.now() + 55 * 60 * 1000 };
   return token;
 }
 
@@ -49,9 +49,10 @@ export function nombaHeaders(token: string): Record<string, string> {
   };
 }
 
-export async function nombaPost(path: string, body: unknown) {
+export async function nombaPost(path: string, body: unknown, baseUrlOverride?: string) {
   const token = await getNombaToken();
-  const res = await fetch(`${process.env.NOMBA_BASE_URL}${path}`, {
+  const baseUrl = baseUrlOverride || process.env.NOMBA_BASE_URL!;
+  const res = await fetch(`${baseUrl}${path}`, {
     method: "POST",
     headers: nombaHeaders(token),
     body: JSON.stringify(body),
