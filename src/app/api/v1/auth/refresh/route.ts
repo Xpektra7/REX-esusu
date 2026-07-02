@@ -4,11 +4,12 @@ import { signToken, verifyToken } from "@/lib/auth";
 
 export async function POST(req: NextRequest) {
   try {
-    const { refreshToken } = await req.json();
+    const body = await req.json();
+    const refreshToken = body.refreshToken ?? body.refresh_token;
     if (!refreshToken) return error("Refresh token required");
     const payload = verifyToken(refreshToken);
     if (!payload) return error("Invalid or expired refresh token", "01", 401);
-    return success({ accessToken: signToken(payload.userId, payload.phone) });
+    return success({ token: signToken(payload.userId, payload.phone) });
   } catch (e) {
     return error((e as Error).message);
   }
