@@ -5,5 +5,5 @@ import { requireAuth } from "@/lib/middleware";
 export async function GET(req: NextRequest) {
   const auth = requireAuth(req);
   if (auth.error) return auth.error;
-  return success({ notifications: [] });
+  return success([]);
 }

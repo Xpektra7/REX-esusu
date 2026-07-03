@@ -1,5 +1,22 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Environment Variables
+
+Copy `.env.example` to `.env` and fill in the values:
+
+```bash
+cp .env.example .env
+```
+
+| Variable | Description | How to get |
+|---|---|---|
+| `JWT_SECRET` | Signs auth tokens | `openssl rand -hex 32` |
+| `BVN_ENCRYPTION_KEY` | Encrypts BVN data | `openssl rand -hex 32` |
+| `DATABASE_URL` | Postgres connection | Your DB provider (Neon, Supabase, etc.) |
+| `NOMBA_*` | Nomba API credentials | Nomba dashboard → API Keys / Account Settings |
+| `NOMBA_WEBHOOK_SECRET` | Webhook signature verification | Nomba dashboard → Webhooks |
+| `OTP_WHITELIST` | Dev phone numbers with fixed OTP | JSON array, see `.env.example` |
+
 ## Getting Started
 
 First, run the development server:

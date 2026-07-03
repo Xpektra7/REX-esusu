@@ -23,7 +23,7 @@ interface UserProfile {
   name: string;
   phone: string;
   email: string;
-  bvn_last4: string;
+  bvnLast4: string;
   trustScore: number;
 }
 
@@ -130,7 +130,7 @@ export default function ProfilePage() {
             />
           </div>
           <p className="mt-2 text-[10px] text-muted-foreground">
-            BVN verified · Last 4 digits: {user.bvn_last4}
+            BVN verified · Last 4 digits: {user.bvnLast4}
           </p>
         </Card>
       )}

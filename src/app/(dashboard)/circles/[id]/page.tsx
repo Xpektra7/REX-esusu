@@ -99,7 +99,7 @@ export default function CircleDetailPage(props: {
       />
 
       <NextPayoutCard
-        daysLeft={2}
+        daysLeft={daysLeft}
         payoutAmount={totalPot / circle.cycleCount}
       />
 
