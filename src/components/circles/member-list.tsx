@@ -53,9 +53,9 @@ export function MemberList({ members }: { members: MemberItem[] }) {
                       Admin
                     </span>
                   )}
-                  {member.rotation_order != null && (
+                  {member.rotationOrder != null && (
                     <span className="text-[10px] text-muted-foreground">
-                      Position #{member.rotation_order}
+                      Position #{member.rotationOrder}
                     </span>
                   )}
                 </div>

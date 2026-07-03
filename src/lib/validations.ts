@@ -90,27 +90,27 @@ export const loginSchema = phoneSchema.merge(passwordSchema).extend({
 /** Circle creation. */
 export const createCircleSchema = z.object({
   name: z.string().min(2, "Circle name must be at least 2 characters"),
-  contribution_amount: z
+  contributionAmount: z
     .number()
     .min(100, "Minimum contribution is ₦100")
     .max(10_000_000),
   frequency: z.enum(["weekly", "monthly"]),
-  cycle_count: z.number().min(2).max(100),
-  default_resolution_rule: z
+  cycleCount: z.number().min(2).max(100),
+  defaultResolutionRule: z
     .enum(["absorb", "shrink", "end_early"])
     .default("absorb"),
 });
 
 /** Joining via invite code. */
 export const joinCircleSchema = z.object({
-  invite_code: z.string().min(1, "Invite code is required"),
+  inviteCode: z.string().min(1, "Invite code is required"),
 });
 
 /** Bank withdrawal. */
 export const withdrawSchema = z.object({
-  amount_kobo: z.number().min(100, "Minimum withdrawal is ₦100"),
-  bank_code: z.string().min(1, "Select a bank"),
-  account_number: z
+  amountKobo: z.number().min(100, "Minimum withdrawal is ₦100"),
+  bankCode: z.string().min(1, "Select a bank"),
+  accountNumber: z
     .string()
     .length(10, "Account number must be 10 digits")
     .regex(/^\d{10}$/),
@@ -119,5 +119,5 @@ export const withdrawSchema = z.object({
 /** Manual contribution record. */
 export const contributionSchema = z.object({
   cycle_id: z.string().uuid(),
-  amount_kobo: z.number().min(1),
+  amountKobo: z.number().min(1),
 });

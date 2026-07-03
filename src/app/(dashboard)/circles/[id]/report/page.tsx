@@ -77,9 +77,9 @@ export default function ReportPage(props: {
       </div>
 
       <ReportSummaryCards
-        totalContributionsKobo={report.total_contributions_kobo}
-        totalPayoutsKobo={report.total_payouts_kobo}
-        defaultRate={report.default_rate}
+        totalContributionsKobo={report.totalContributionsKobo}
+        totalPayoutsKobo={report.totalPayoutsKobo}
+        defaultRate={report.defaultRate}
         members={report.members}
       />
 

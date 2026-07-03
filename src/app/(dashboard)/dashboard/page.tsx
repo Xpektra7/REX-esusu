@@ -21,8 +21,8 @@ export default function DashboardPage() {
     queryFn: () => api.circles.list(),
   });
 
-  const balance = walletRes?.data?.balance ?? 0;
-  const circleList = (circlesRes?.data ?? []) as CircleData[];
+  const balance = walletRes?.data?.balanceKobo ?? 0;
+  const circleList = (circlesRes?.data?.circles ?? []) as CircleData[];
 
   return (
     <div className="flex flex-col gap-6">

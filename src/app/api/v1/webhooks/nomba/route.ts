@@ -1,1 +1,125 @@
-export async function GET() { return new Response(null, { status: 501 }); }
+import { NextRequest } from "next/server";
+import { db } from "@/db";
+import { webhookEvents } from "@/db/schema";
+import { eq } from "drizzle-orm";
+import crypto from "crypto";
+import { reconcilePayment } from "@/lib/reconciliation";
+import { handlePayoutSuccess, handlePayoutFailed } from "@/lib/payout";
+
+export async function POST(request: NextRequest) {
+  try {
+    const rawBody = await request.text();
+    const signature = request.headers.get("nomba-signature") || "";
+    const timestamp = request.headers.get("nomba-timestamp") || "";
+
+    const secret = process.env.NOMBA_WEBHOOK_SECRET;
+    if (!secret) {
+      return new Response(JSON.stringify({ code: "01", description: "misconfigured" }), { status: 500 });
+    }
+    const payload = JSON.parse(rawBody);
+    const data = payload.data || {};
+    const merchant = data.merchant || {};
+    const transaction = data.transaction || {};
+
+    let responseCode = transaction.responseCode ?? "";
+    if (responseCode === "null") responseCode = "";
+
+    const sigPayload = [
+      payload.event_type ?? "",
+      payload.requestId ?? "",
+      merchant.userId ?? "",
+      merchant.walletId ?? "",
+      transaction.transactionId ?? "",
+      transaction.type ?? "",
+      transaction.time ?? "",
+      responseCode,
+      timestamp,
+    ].join(":");
+
+    const expected = crypto.createHmac("sha256", secret).update(sigPayload).digest("base64");
+    const received = signature;
+
+    if (expected.length !== received.length ||
+        !crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(received))) {
+      return new Response(JSON.stringify({ code: "01", description: "bad signature" }), { status: 401 });
+    }
+
+    const tsMs = /^\d+$/.test(timestamp) ? parseInt(timestamp, 10) : new Date(timestamp).getTime();
+    if (isNaN(tsMs) || Math.abs(Date.now() - tsMs) > 300_000) {
+      return new Response(JSON.stringify({ code: "01", description: "expired" }), { status: 401 });
+    }
+
+    const existing = await db.select().from(webhookEvents)
+      .where(eq(webhookEvents.nombaRequestId, payload.requestId))
+      .limit(1);
+    if (existing.length > 0) {
+      return new Response(JSON.stringify({ code: "00", description: "duplicate" }));
+    }
+
+    await db.insert(webhookEvents).values({
+      nombaRequestId: payload.requestId,
+      eventType: payload.event_type,
+      rawPayload: payload,
+      status: "received",
+    });
+
+    processWebhook(payload).catch(console.error);
+
+    return new Response(JSON.stringify({ code: "00", description: "Received" }));
+  } catch (e) {
+    console.error("Webhook error:", e);
+    return new Response(JSON.stringify({ code: "00", description: "Received" }));
+  }
+}
+
+const HANDLED_EVENTS = new Set([
+  "payment_success",
+  "payment_failed",
+  "payment_reversal",
+  "payout_success",
+  "payout_failed",
+  "payout_refund",
+]);
+
+async function processWebhook(payload: any) {
+  const requestId = payload.requestId;
+  const eventType = payload.event_type;
+
+  try {
+    switch (eventType) {
+      case "payment_success":
+        await reconcilePayment(payload);
+        break;
+      case "payout_success":
+        await handlePayoutSuccess(payload);
+        break;
+      case "payout_failed":
+        await handlePayoutFailed(payload);
+        break;
+      case "payment_failed":
+      case "payment_reversal":
+      case "payout_refund":
+        console.warn(`[Webhook] Unhandled event type '${eventType}' — ack'd but no action taken`);
+        await db.update(webhookEvents)
+          .set({ status: "unhandled", processedAt: new Date() })
+          .where(eq(webhookEvents.nombaRequestId, requestId));
+        return;
+      default:
+        const isKnown = HANDLED_EVENTS.has(eventType);
+        console.error(`[Webhook] Untracked event type '${eventType}' — known=${isKnown}`);
+        await db.update(webhookEvents)
+          .set({ status: "unhandled", processedAt: new Date() })
+          .where(eq(webhookEvents.nombaRequestId, requestId));
+        return;
+    }
+
+    await db.update(webhookEvents)
+      .set({ status: "processed", processedAt: new Date() })
+      .where(eq(webhookEvents.nombaRequestId, requestId));
+  } catch (e) {
+    console.error(`[Webhook] Processing failed for ${eventType}:`, e);
+    await db.update(webhookEvents)
+      .set({ status: "failed" })
+      .where(eq(webhookEvents.nombaRequestId, requestId));
+  }
+}

@@ -27,8 +27,8 @@ export function CircleCard({ circle }: { circle: CircleData }) {
   const idx = circle.name.length % iconSet.length;
   const Icon = iconSet[idx].icon;
   const progress =
-    circle.cycle_count > 0
-      ? (circle.current_cycle / circle.cycle_count) * 100
+    circle.cycleCount > 0
+      ? (circle.currentCycle / circle.cycleCount) * 100
       : 0;
 
   return (
@@ -67,16 +67,16 @@ export function CircleCard({ circle }: { circle: CircleData }) {
                 Contribution
               </p>
               <p className="font-heading text-base font-bold">
-                {formatNaira(circle.contribution_amount)}
+                {formatNaira(circle.contributionAmount)}
               </p>
             </div>
-            {circle.member_position != null && circle.total_members != null && (
+            {circle.memberPosition != null && circle.totalMembers != null && (
               <div className="text-right">
                 <p className="text-[10px] font-semibold tracking-[0.05em] text-muted-foreground uppercase">
                   Position
                 </p>
                 <p className="font-heading text-base font-bold">
-                  {circle.member_position} / {circle.total_members}
+                  {circle.memberPosition} / {circle.totalMembers}
                 </p>
               </div>
             )}
@@ -85,7 +85,7 @@ export function CircleCard({ circle }: { circle: CircleData }) {
           <Progress value={progress} className="mt-4">
             <div className="flex w-full items-center justify-between text-[10px] text-muted-foreground">
               <span className="font-semibold tracking-wider uppercase">
-                Cycle {circle.current_cycle} of {circle.cycle_count}
+                Cycle {circle.currentCycle} of {circle.cycleCount}
               </span>
               <span>{Math.round(progress)}%</span>
             </div>

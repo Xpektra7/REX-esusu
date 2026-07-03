@@ -81,13 +81,13 @@ function OtpForm() {
         ...(flow === "signup" ? { name, email } : {}),
       });
 
-      // Cast the mock response into the shape the store expects.
+      // Cast the response into the shape the store expects.
       const data = res.data as unknown as {
         token: string;
-        refresh_token: string;
+        refreshToken: string;
         user: { id: string; phone: string; name: string; email: string };
-        needs_bvn: boolean;
-        pin_set: boolean;
+        needsBvn: boolean;
+        pinSet: boolean;
       };
 
       // Clean up password from sessionStorage.
@@ -96,16 +96,16 @@ function OtpForm() {
       // Persist auth state (tokens + user + onboarding flags).
       setAuth({
         access_token: data.token,
-        refresh_token: data.refresh_token,
+        refresh_token: data.refreshToken,
         user: data.user,
-        needs_bvn: data.needs_bvn,
-        pin_set: data.pin_set,
+        needs_bvn: data.needsBvn,
+        pin_set: data.pinSet,
       });
 
       // Decide where to send the user next.
-      if (data.needs_bvn) {
+      if (data.needsBvn) {
         router.push("/auth/kyc");
-      } else if (!data.pin_set) {
+      } else if (!data.pinSet) {
         router.push("/auth/pin?mode=set");
       } else {
         router.push("/dashboard");

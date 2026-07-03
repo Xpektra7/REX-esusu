@@ -2,26 +2,15 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { PageBreadcrumbs } from "@/components/shared/page-breadcrumbs";
 import { withdrawSchema } from "@/lib/validations";
 import { Loading01Icon } from "hugeicons-react";
 import { toast } from "sonner";
-
-const banks = [
-  { code: "000", name: "GTBank" },
-  { code: "001", name: "Access Bank" },
-  { code: "002", name: "Wema Bank" },
-  { code: "003", name: "FirstBank" },
-  { code: "004", name: "Zenith Bank" },
-  { code: "005", name: "UBA" },
-  { code: "006", name: "Opay" },
-  { code: "007", name: "Paga" },
-] as const;
 
 export default function WithdrawPage() {
   const router = useRouter();
@@ -30,11 +19,17 @@ export default function WithdrawPage() {
   const [accountNumber, setAccountNumber] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  const { data: banksRes, isLoading: banksLoading } = useQuery({
+    queryKey: ["bank-codes"],
+    queryFn: () => api.bankCodes(),
+  });
+  const banks = banksRes?.data?.banks ?? [];
+
   const mutation = useMutation({
     mutationFn: (data: {
-      amount_kobo: number;
-      bank_code: string;
-      account_number: string;
+      amountKobo: number;
+      bankCode: string;
+      accountNumber: string;
     }) => api.wallet.withdraw(data),
     onSuccess: () => {
       toast.success("Withdrawal initiated!");
@@ -51,9 +46,9 @@ export default function WithdrawPage() {
 
     const amountKobo = Math.round(parseFloat(amount) * 100);
     const parsed = withdrawSchema.safeParse({
-      amount_kobo: amountKobo,
-      bank_code: bankCode,
-      account_number: accountNumber,
+      amountKobo: amountKobo,
+      bankCode: bankCode,
+      accountNumber: accountNumber,
     });
 
     if (!parsed.success) {
@@ -98,10 +93,10 @@ export default function WithdrawPage() {
             placeholder="0.00"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
-            aria-invalid={!!errors.amount_kobo}
+            aria-invalid={!!errors.amountKobo}
           />
-          {errors.amount_kobo && (
-            <p className="text-sm text-destructive">{errors.amount_kobo}</p>
+          {errors.amountKobo && (
+            <p className="text-sm text-destructive">{errors.amountKobo}</p>
           )}
         </div>
 
@@ -109,21 +104,25 @@ export default function WithdrawPage() {
           <label className="text-[10px] font-semibold tracking-[0.05em] text-muted-foreground uppercase">
             Bank
           </label>
-          <select
-            value={bankCode}
-            onChange={(e) => setBankCode(e.target.value)}
-            className="flex h-10 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-            aria-invalid={!!errors.bank_code}
-          >
-            <option value="">Select bank</option>
-            {banks.map((bank) => (
-              <option key={bank.code} value={bank.code}>
-                {bank.name}
-              </option>
-            ))}
-          </select>
-          {errors.bank_code && (
-            <p className="text-sm text-destructive">{errors.bank_code}</p>
+          {banksLoading ? (
+            <Skeleton className="h-10 w-full rounded-lg" />
+          ) : (
+            <select
+              value={bankCode}
+              onChange={(e) => setBankCode(e.target.value)}
+              className="flex h-10 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              aria-invalid={!!errors.bankCode}
+            >
+              <option value="">Select bank</option>
+              {banks.map((bank) => (
+                <option key={bank.code} value={bank.code}>
+                  {bank.name}
+                </option>
+              ))}
+            </select>
+          )}
+          {errors.bankCode && (
+            <p className="text-sm text-destructive">{errors.bankCode}</p>
           )}
         </div>
 
@@ -138,11 +137,11 @@ export default function WithdrawPage() {
             placeholder="0123456789"
             value={accountNumber}
             onChange={(e) => setAccountNumber(e.target.value.replace(/\D/g, ""))}
-            aria-invalid={!!errors.account_number}
+            aria-invalid={!!errors.accountNumber}
           />
-          {errors.account_number && (
+          {errors.accountNumber && (
             <p className="text-sm text-destructive">
-              {errors.account_number}
+              {errors.accountNumber}
             </p>
           )}
         </div>

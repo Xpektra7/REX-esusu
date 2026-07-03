@@ -15,7 +15,7 @@ interface NotificationItem {
   title: string;
   body: string;
   read_at: string | null;
-  created_at: string;
+  createdAt: string;
 }
 
 function timeAgo(dateStr: string): string {
@@ -115,7 +115,7 @@ export default function NotificationsPage() {
                 <p className="text-sm font-medium">{n.title}</p>
                 <p className="text-xs text-muted-foreground">{n.body}</p>
                 <p className="mt-1 text-[10px] text-muted-foreground/60">
-                  {timeAgo(n.created_at)}
+                  {timeAgo(n.createdAt)}
                 </p>
               </div>
             </div>

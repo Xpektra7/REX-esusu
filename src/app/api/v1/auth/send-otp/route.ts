@@ -1,1 +1,24 @@
-export async function GET() { return new Response(null, { status: 501 }); }
+import { NextRequest } from "next/server";
+import { success, error } from "@/lib/api-response";
+import { generateOtp, getFixedOtp, storeOtp } from "@/lib/otp";
+import { findUserByPhone } from "@/lib/auth";
+
+export async function POST(req: NextRequest) {
+  try {
+    const { phone } = await req.json();
+    if (!phone) return error("Phone is required");
+
+    const existing = await findUserByPhone(phone);
+    const otp = getFixedOtp(phone) || generateOtp();
+    storeOtp(phone, otp);
+
+    if (!getFixedOtp(phone)) {
+      // In production, send OTP via email/Gmail SMTP here
+      // OTP intentionally not logged — only whitelisted dev phones get a fixed OTP
+    }
+
+    return success({ expiresInSeconds: 300, isNewUser: !existing });
+  } catch (e) {
+    return error((e as Error).message);
+  }
+}

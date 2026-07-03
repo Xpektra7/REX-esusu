@@ -15,7 +15,7 @@ export default function CirclesPage() {
     queryFn: () => api.circles.list(),
   });
 
-  const circles = (data?.data ?? []) as CircleData[];
+  const circles = (data?.data?.circles ?? []) as CircleData[];
 
   return (
     <div className="flex flex-col gap-6">

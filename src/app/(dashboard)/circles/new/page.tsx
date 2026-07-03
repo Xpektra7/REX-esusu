@@ -17,9 +17,9 @@ type FormErrors = Partial<Record<string, string>>;
 
 const initial = {
   name: "",
-  contribution_amount: 0,
+  contributionAmount: 0,
   frequency: "weekly" as const,
-  cycle_count: 0,
+  cycleCount: 0,
 };
 
 export default function CreateCirclePage() {
@@ -30,9 +30,9 @@ export default function CreateCirclePage() {
   const mutation = useMutation({
     mutationFn: (data: {
       name: string;
-      contribution_amount: number;
+      contributionAmount: number;
       frequency: "weekly" | "monthly";
-      cycle_count: number;
+      cycleCount: number;
     }) => api.circles.create(data),
     onSuccess: (res: { data: { id: string } }) => {
       toast.success("Circle created!");
@@ -63,10 +63,10 @@ export default function CreateCirclePage() {
       setErrors(fieldErrors);
       return;
     }
-    const { default_resolution_rule: _, ...apiData } = parsed.data;
+    const { defaultResolutionRule: _, ...apiData } = parsed.data;
     mutation.mutate({
       ...apiData,
-      contribution_amount: apiData.contribution_amount * 100,
+      contributionAmount: apiData.contributionAmount * 100,
     });
   }
 
@@ -116,18 +116,18 @@ export default function CreateCirclePage() {
             type="number"
             min={1}
             placeholder="5000"
-            value={form.contribution_amount || ""}
+            value={form.contributionAmount || ""}
             onChange={(e) =>
-              handleChange("contribution_amount", Number(e.target.value))
+              handleChange("contributionAmount", Number(e.target.value))
             }
-            aria-invalid={!!errors.contribution_amount}
+            aria-invalid={!!errors.contributionAmount}
           />
           <p className="text-xs text-muted-foreground">
             Fixed contribution each cycle
           </p>
-          {errors.contribution_amount && (
+          {errors.contributionAmount && (
             <p className="text-sm text-destructive">
-              {errors.contribution_amount}
+              {errors.contributionAmount}
             </p>
           )}
         </div>
@@ -167,14 +167,14 @@ export default function CreateCirclePage() {
             min={2}
             max={100}
             placeholder="12"
-            value={form.cycle_count || ""}
+            value={form.cycleCount || ""}
             onChange={(e) =>
-              handleChange("cycle_count", Number(e.target.value))
+              handleChange("cycleCount", Number(e.target.value))
             }
-            aria-invalid={!!errors.cycle_count}
+            aria-invalid={!!errors.cycleCount}
           />
-          {errors.cycle_count && (
-            <p className="text-sm text-destructive">{errors.cycle_count}</p>
+          {errors.cycleCount && (
+            <p className="text-sm text-destructive">{errors.cycleCount}</p>
           )}
         </div>
 
