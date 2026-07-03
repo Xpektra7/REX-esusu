@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const parsed = withdrawSchema.safeParse(body);
     if (!parsed.success) {
-      return error(parsed.error.errors.map((e) => e.message).join("; "));
+      return error(parsed.error.issues.map((e) => e.message).join("; "));
     }
     const { amountKobo, bankCode, accountNumber } = parsed.data;
 
