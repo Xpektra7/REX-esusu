@@ -1,9 +1,9 @@
-import { NextRequest } from "next/server";
-import { success, error } from "@/lib/api-response";
-import { requireAuth } from "@/lib/middleware";
+import { and, eq } from "drizzle-orm";
+import type { NextRequest } from "next/server";
 import { db } from "@/db";
-import { cycles, membersCircles, users, contributions } from "@/db/schema";
-import { eq, and } from "drizzle-orm";
+import { contributions, cycles, membersCircles, users } from "@/db/schema";
+import { error, success } from "@/lib/api-response";
+import { requireAuth } from "@/lib/middleware";
 
 export async function GET(
   req: NextRequest,
@@ -16,25 +16,38 @@ export async function GET(
     const { id, cycleNumber } = await params;
     const cycleNum = parseInt(cycleNumber, 10);
 
-    const [membership] = await db.select().from(membersCircles)
-      .where(and(eq(membersCircles.circleId, id), eq(membersCircles.userId, auth.user!.userId)))
+    const [membership] = await db
+      .select()
+      .from(membersCircles)
+      .where(
+        and(
+          eq(membersCircles.circleId, id),
+          eq(membersCircles.userId, auth.user?.userId),
+        ),
+      )
       .limit(1);
     if (!membership) return error("Not a member of this circle", "03", 403);
 
-    const [cycle] = await db.select().from(cycles)
+    const [cycle] = await db
+      .select()
+      .from(cycles)
       .where(and(eq(cycles.circleId, id), eq(cycles.cycleNumber, cycleNum)))
       .limit(1);
     if (!cycle) return error("Cycle not found", "04", 404);
 
-    const memberRows = await db.select({
-      memberId: membersCircles.id,
-      userId: membersCircles.userId,
-      name: users.name,
-    }).from(membersCircles)
+    const memberRows = await db
+      .select({
+        memberId: membersCircles.id,
+        userId: membersCircles.userId,
+        name: users.name,
+      })
+      .from(membersCircles)
       .innerJoin(users, eq(membersCircles.userId, users.id))
       .where(eq(membersCircles.circleId, id));
 
-    const contributionRows = await db.select().from(contributions)
+    const contributionRows = await db
+      .select()
+      .from(contributions)
       .where(eq(contributions.cycleId, cycle.id));
 
     const now = new Date();

@@ -1,8 +1,8 @@
 import {
-  CheckmarkCircle01Icon,
   BarChartIcon,
-  UserGroupIcon,
+  CheckmarkCircle01Icon,
   Shield01Icon,
+  UserGroupIcon,
 } from "hugeicons-react";
 
 const features = [
@@ -40,10 +40,10 @@ export function Features() {
           Why Esusu?
         </h2>
         <div className="grid gap-6 md:grid-cols-2">
-          {features.map((feature, i) => {
+          {features.map((feature) => {
             const Icon = feature.icon;
             return (
-              <div key={i} className="rounded-xl border border-border p-6">
+              <div key={feature.title} className="rounded-xl border border-border p-6">
                 <div className="flex size-10 items-center justify-center rounded-full border border-border bg-card">
                   <Icon className="size-4 text-primary" />
                 </div>

@@ -1,20 +1,20 @@
 "use client";
 
-import { use } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { api } from "@/lib/api";
-import { Card } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Separator } from "@/components/ui/separator";
-import { RecipientHeroCard } from "@/components/circles/recipient-hero-card";
-import { ShortfallAlert } from "@/components/circles/shortfall-alert";
-import { ContributionRow } from "@/components/circles/contribution-row";
-import { CycleActions } from "@/components/circles/cycle-actions";
-import { PageBreadcrumbs } from "@/components/shared/page-breadcrumbs";
-import { formatNaira } from "@/lib/utils";
-import type { CycleDetailData, CirclePageData } from "@/types";
 import { AlertCircleIcon } from "hugeicons-react";
 import Link from "next/link";
+import { use } from "react";
+import { ContributionRow } from "@/components/circles/contribution-row";
+import { CycleActions } from "@/components/circles/cycle-actions";
+import { RecipientHeroCard } from "@/components/circles/recipient-hero-card";
+import { ShortfallAlert } from "@/components/circles/shortfall-alert";
+import { PageBreadcrumbs } from "@/components/shared/page-breadcrumbs";
+import { Card } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
+import { api } from "@/lib/api";
+import { formatNaira } from "@/lib/utils";
+import type { CirclePageData, CycleDetailData } from "@/types";
 
 export default function CycleDetailPage(props: {
   params: Promise<{ id: string; num: string }>;
@@ -52,7 +52,10 @@ export default function CycleDetailPage(props: {
         <AlertCircleIcon className="size-10 text-muted-foreground" />
         <p className="text-sm text-muted-foreground">Cycle not found.</p>
         <Link href={`/circles/${id}`}>
-          <button className="rounded-lg border border-border px-4 py-2 text-sm">
+          <button
+            type="button"
+            className="rounded-lg border border-border px-4 py-2 text-sm"
+          >
             Back to Circle
           </button>
         </Link>

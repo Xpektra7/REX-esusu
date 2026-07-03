@@ -1,8 +1,8 @@
 import {
-  Shield01Icon,
-  UserGroupIcon,
   CheckmarkCircle01Icon,
   SavingsIcon,
+  Shield01Icon,
+  UserGroupIcon,
 } from "hugeicons-react";
 
 export function BentoStats() {
@@ -55,7 +55,9 @@ export function BentoStats() {
                   1
                 </div>
                 <div>
-                  <p className="text-sm font-semibold">Create or Join a Circle</p>
+                  <p className="text-sm font-semibold">
+                    Create or Join a Circle
+                  </p>
                   <p className="text-sm text-muted-foreground">
                     Set your contribution amount and invite people you trust.
                   </p>
@@ -67,9 +69,12 @@ export function BentoStats() {
                   2
                 </div>
                 <div>
-                  <p className="text-sm font-semibold">Automate Contributions</p>
+                  <p className="text-sm font-semibold">
+                    Automate Contributions
+                  </p>
                   <p className="text-sm text-muted-foreground">
-                    Payments are collected automatically from your wallet each cycle.
+                    Payments are collected automatically from your wallet each
+                    cycle.
                   </p>
                 </div>
               </div>

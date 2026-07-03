@@ -1,5 +1,5 @@
-import { cn } from "@/lib/utils";
 import { CONTRIBUTION_STATUS } from "@/lib/status";
+import { cn } from "@/lib/utils";
 
 export function ContributionStatusBadge({
   status,

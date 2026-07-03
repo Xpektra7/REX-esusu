@@ -1,7 +1,7 @@
 "use client";
 
+import { FileDownloadIcon, Notification03Icon } from "hugeicons-react";
 import { Button } from "@/components/ui/button";
-import { Notification03Icon, FileDownloadIcon } from "hugeicons-react";
 
 export function CycleActions() {
   return (

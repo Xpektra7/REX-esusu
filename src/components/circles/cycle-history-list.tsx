@@ -1,8 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { CycleBadge } from "@/components/circles/cycle-badge";
 import { formatNaira } from "@/lib/utils";
-import Link from "next/link";
 
 interface CycleItem {
   cycleNumber: number;

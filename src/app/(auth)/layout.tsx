@@ -1,5 +1,3 @@
-import Link from "next/link";
-
 export default function AuthLayout({
   children,
 }: {
@@ -7,9 +5,14 @@ export default function AuthLayout({
 }) {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-primary p-6">
-      <Link href="/" className="mb-8 text-2xl font-bold">
-        Esusu
-      </Link>
+      <div className="mb-2 text-2xl font-bold">
+        {/* Brand logo box */}
+        <img
+          src="/icon-512.svg"
+          alt="Esusu logo"
+          className="size-12 text-primary-foreground"
+        />
+      </div>
       <div className="w-full max-w-sm">{children}</div>
     </div>
   );

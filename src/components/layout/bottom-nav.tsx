@@ -1,14 +1,14 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { cn } from "@/lib/utils";
 import {
   Home01Icon,
   UserGroupIcon,
-  Wallet01Icon,
   UserIcon,
+  Wallet01Icon,
 } from "hugeicons-react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { cn } from "@/lib/utils";
 
 const tabs = [
   { href: "/dashboard", label: "Home", icon: Home01Icon },

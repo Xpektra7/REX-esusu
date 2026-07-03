@@ -1,9 +1,9 @@
 "use client";
 export const dynamic = "force-dynamic";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { useForm } from "@tanstack/react-form";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -12,9 +12,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { passwordSchema, phoneSchema } from "@/lib/validations";
 import { api } from "@/lib/api";
-import { SavingsIcon } from "hugeicons-react";
+import { passwordSchema, phoneSchema } from "@/lib/validations";
 
 // ------------------------------------------------------------------
 // Constants for the avatar stack
@@ -66,11 +65,11 @@ export default function AuthPage() {
         // without exposing it in URL params (see rule 83).
         sessionStorage.setItem("pending_password", password);
 
-        const params = new URLSearchParams({ phone, flow });
         if (flow === "signup") {
-          params.set("name", value.name);
-          params.set("email", value.email);
+          sessionStorage.setItem("pending_name", value.name);
+          sessionStorage.setItem("pending_email", value.email);
         }
+        const params = new URLSearchParams({ phone, flow });
 
         router.push(`/auth/otp?${params.toString()}`);
       } catch {
@@ -85,11 +84,6 @@ export default function AuthPage() {
   return (
     <Card className="relative w-full max-w-md">
       <CardHeader className="text-center">
-        {/* Brand logo box */}
-        <div className="mx-auto mb-4 flex size-14 items-center justify-center rounded-2xl bg-primary">
-          <SavingsIcon className="size-7 text-primary-foreground" />
-        </div>
-
         <CardTitle className="text-2xl">
           {flow === "login" ? "Welcome back" : "Welcome to Esusu"}
         </CardTitle>
@@ -162,7 +156,11 @@ export default function AuthPage() {
             <input
               id="password"
               type="password"
-              placeholder={flow === "signup" ? "At least 8 characters" : "Enter your password"}
+              placeholder={
+                flow === "signup"
+                  ? "At least 8 characters"
+                  : "Enter your password"
+              }
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full rounded-xl border border-border bg-background px-4 py-3.5 text-base outline-none focus:ring-2 focus:ring-ring transition-all"
@@ -257,13 +255,17 @@ export default function AuthPage() {
             <div className="flex justify-center -space-x-2">
               {avatarInitials.map((a) => (
                 <div
+                  className="size-8 rounded-full overflow-hidden border-2 border-background"
                   key={a.initials}
-                  className={`flex size-8 items-center justify-center rounded-full border-2 border-background text-[10px] font-bold ${a.bg} ${a.text}`}
                 >
-                  {a.initials}
+                  <img
+                    src={`https://api.dicebear.com/10.x/identicon/svg?rowColor=f5c211&backgroundColor=000000&seed=${a.initials}`}
+                    alt={a.initials}
+                    className="object-cover"
+                  />
                 </div>
               ))}
-              <div className="flex size-8 items-center justify-center rounded-full border-2 border-background bg-primary/10 text-[10px] font-bold text-primary">
+              <div className="flex size-8 items-center justify-center rounded-full border-2 border-background bg-foreground text-xs font-bold text-primary">
                 +4k
               </div>
             </div>

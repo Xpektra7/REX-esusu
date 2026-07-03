@@ -1,7 +1,7 @@
 import {
-  UserGroupIcon,
   BankIcon,
   CheckmarkCircle01Icon,
+  UserGroupIcon,
 } from "hugeicons-react";
 
 const steps = [
@@ -33,10 +33,10 @@ export function HowItWorks() {
           How It Works
         </h2>
         <div className="grid gap-8 md:grid-cols-3">
-          {steps.map((step, i) => {
+          {steps.map((step) => {
             const Icon = step.icon;
             return (
-              <div key={i} className="flex flex-col items-center text-center">
+              <div key={step.title} className="flex flex-col items-center text-center">
                 <div className="flex size-12 items-center justify-center rounded-full border border-border bg-card">
                   <Icon className="size-5 text-primary" />
                 </div>

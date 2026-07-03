@@ -1,16 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { Loading01Icon } from "hugeicons-react";
 import { useRouter } from "next/navigation";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { api } from "@/lib/api";
+import { useState } from "react";
+import { toast } from "sonner";
+import { PageBreadcrumbs } from "@/components/shared/page-breadcrumbs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { PageBreadcrumbs } from "@/components/shared/page-breadcrumbs";
+import { api } from "@/lib/api";
 import { withdrawSchema } from "@/lib/validations";
-import { Loading01Icon } from "hugeicons-react";
-import { toast } from "sonner";
 
 export default function WithdrawPage() {
   const router = useRouter();
@@ -83,10 +83,14 @@ export default function WithdrawPage() {
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-5">
         <div className="flex flex-col gap-2">
-          <label className="text-[10px] font-semibold tracking-[0.05em] text-muted-foreground uppercase">
+          <label
+            htmlFor="withdrawAmount"
+            className="text-[10px] font-semibold tracking-[0.05em] text-muted-foreground uppercase"
+          >
             Amount (₦)
           </label>
           <Input
+            id="withdrawAmount"
             type="number"
             min={1}
             step="0.01"
@@ -101,7 +105,10 @@ export default function WithdrawPage() {
         </div>
 
         <div className="flex flex-col gap-2">
-          <label className="text-[10px] font-semibold tracking-[0.05em] text-muted-foreground uppercase">
+          <label
+            htmlFor="bankCode"
+            className="text-[10px] font-semibold tracking-[0.05em] text-muted-foreground uppercase"
+          >
             Bank
           </label>
           {banksLoading ? (
@@ -127,30 +134,30 @@ export default function WithdrawPage() {
         </div>
 
         <div className="flex flex-col gap-2">
-          <label className="text-[10px] font-semibold tracking-[0.05em] text-muted-foreground uppercase">
+          <label
+            htmlFor="accountNumber"
+            className="text-[10px] font-semibold tracking-[0.05em] text-muted-foreground uppercase"
+          >
             Account Number
           </label>
           <Input
+            id="accountNumber"
             type="text"
             inputMode="numeric"
             maxLength={10}
             placeholder="0123456789"
             value={accountNumber}
-            onChange={(e) => setAccountNumber(e.target.value.replace(/\D/g, ""))}
+            onChange={(e) =>
+              setAccountNumber(e.target.value.replace(/\D/g, ""))
+            }
             aria-invalid={!!errors.accountNumber}
           />
           {errors.accountNumber && (
-            <p className="text-sm text-destructive">
-              {errors.accountNumber}
-            </p>
+            <p className="text-sm text-destructive">{errors.accountNumber}</p>
           )}
         </div>
 
-        <Button
-          type="submit"
-          className="w-full"
-          disabled={mutation.isPending}
-        >
+        <Button type="submit" className="w-full" disabled={mutation.isPending}>
           {mutation.isPending && (
             <Loading01Icon className="size-4 animate-spin" />
           )}

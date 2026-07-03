@@ -19,7 +19,7 @@ export function normalizePhone(phone: string): string {
 
   // Local format "08124495387" → add +234 prefix.
   if (cleaned.startsWith("0") && cleaned.length === 11) {
-    cleaned = "+234" + cleaned.slice(1);
+    cleaned = `+234${cleaned.slice(1)}`;
   }
   // Bare "234..." (no +) → add +.
   if (cleaned.startsWith("234") && !cleaned.startsWith("+234")) {
@@ -118,6 +118,6 @@ export const withdrawSchema = z.object({
 
 /** Manual contribution record. */
 export const contributionSchema = z.object({
-  cycle_id: z.string().uuid(),
+  cycleId: z.string().uuid(),
   amountKobo: z.number().min(1),
 });

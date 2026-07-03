@@ -1,7 +1,9 @@
-import { verifyToken } from "./auth";
 import { unauthorized } from "./api-response";
+import { verifyToken } from "./auth";
 
-export function getAuthUser(request: Request): { userId: string; phone: string } | null {
+export function getAuthUser(
+  request: Request,
+): { userId: string; phone: string } | null {
   const auth = request.headers.get("Authorization");
   if (!auth?.startsWith("Bearer ")) return null;
   return verifyToken(auth.slice(7));

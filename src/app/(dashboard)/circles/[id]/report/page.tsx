@@ -1,21 +1,19 @@
 "use client";
 
-import { use } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { api } from "@/lib/api";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Separator } from "@/components/ui/separator";
-import { PageBreadcrumbs } from "@/components/shared/page-breadcrumbs";
-import { ReportSummaryCards } from "@/components/circles/report-summary-cards";
-import { CycleHistoryList } from "@/components/circles/cycle-history-list";
-import { DebtHistoryList } from "@/components/circles/debt-history-list";
-import type { ReportData, CirclePageData } from "@/types";
 import { AlertCircleIcon } from "hugeicons-react";
 import Link from "next/link";
+import { use } from "react";
+import { CycleHistoryList } from "@/components/circles/cycle-history-list";
+import { DebtHistoryList } from "@/components/circles/debt-history-list";
+import { ReportSummaryCards } from "@/components/circles/report-summary-cards";
+import { PageBreadcrumbs } from "@/components/shared/page-breadcrumbs";
+import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
+import { api } from "@/lib/api";
+import type { CirclePageData, ReportData } from "@/types";
 
-export default function ReportPage(props: {
-  params: Promise<{ id: string }>;
-}) {
+export default function ReportPage(props: { params: Promise<{ id: string }> }) {
   const { id } = use(props.params);
 
   const { data: circleRes } = useQuery({
@@ -52,7 +50,12 @@ export default function ReportPage(props: {
         <AlertCircleIcon className="size-10 text-muted-foreground" />
         <p className="text-sm text-muted-foreground">Report not available.</p>
         <Link href={`/circles/${id}`}>
-          <button className="rounded-lg border border-border px-4 py-2 text-sm">Back to Circle</button>
+          <button
+            type="button"
+            className="rounded-lg border border-border px-4 py-2 text-sm"
+          >
+            Back to Circle
+          </button>
         </Link>
       </div>
     );

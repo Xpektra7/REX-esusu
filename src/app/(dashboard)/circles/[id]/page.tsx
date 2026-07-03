@@ -1,21 +1,21 @@
 "use client";
 
-import { use } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { api } from "@/lib/api";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Separator } from "@/components/ui/separator";
-import { MemberList } from "@/components/circles/member-list";
-import { HeroPotCard } from "@/components/circles/hero-pot-card";
-import { NextPayoutCard } from "@/components/circles/next-payout-card";
-import { CircleActions } from "@/components/circles/circle-actions";
-import { PageBreadcrumbs } from "@/components/shared/page-breadcrumbs";
-import { daysUntil } from "@/lib/utils";
-import type { CirclePageData } from "@/types";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { AlertCircleIcon } from "hugeicons-react";
 import Link from "next/link";
+import { use } from "react";
 import { toast } from "sonner";
+import { CircleActions } from "@/components/circles/circle-actions";
+import { HeroPotCard } from "@/components/circles/hero-pot-card";
+import { MemberList } from "@/components/circles/member-list";
+import { NextPayoutCard } from "@/components/circles/next-payout-card";
+import { PageBreadcrumbs } from "@/components/shared/page-breadcrumbs";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
+import { api } from "@/lib/api";
+import { daysUntil } from "@/lib/utils";
+import type { CirclePageData } from "@/types";
 
 export default function CircleDetailPage(props: {
   params: Promise<{ id: string }>;
@@ -58,7 +58,10 @@ export default function CircleDetailPage(props: {
         <AlertCircleIcon className="size-10 text-muted-foreground" />
         <p className="text-sm text-muted-foreground">Circle not found.</p>
         <Link href="/circles">
-          <button className="rounded-lg border border-border px-4 py-2 text-sm">
+          <button
+            type="button"
+            className="rounded-lg border border-border px-4 py-2 text-sm"
+          >
             Back to Circles
           </button>
         </Link>
@@ -69,9 +72,7 @@ export default function CircleDetailPage(props: {
   const members = circle.members ?? [];
   const totalPot = circle.contributionAmount * members.length;
   const progress =
-    circle.cycleCount > 0
-      ? (circle.currentCycle / circle.cycleCount) * 100
-      : 0;
+    circle.cycleCount > 0 ? (circle.currentCycle / circle.cycleCount) * 100 : 0;
   const daysLeft = circle.deadlineAt ? daysUntil(circle.deadlineAt) : null;
 
   return (

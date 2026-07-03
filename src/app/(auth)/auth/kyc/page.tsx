@@ -1,8 +1,9 @@
 "use client";
 export const dynamic = "force-dynamic";
 
-import { useEffect, useState } from "react";
+import { IdVerifiedIcon, Shield01Icon } from "hugeicons-react";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -12,15 +13,15 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { api } from "@/lib/api";
 import { useAuthStore } from "@/stores/auth-store";
-import { IdVerifiedIcon, Shield01Icon } from "hugeicons-react";
 
 /**
  * BVN KYC step.
  *
  * 3 steps:
  *   1. input    — user types their 11-digit BVN
- *   2. verifying — fake spinner (1.5 s) while "NIBSS" checks
+ *   2. verifying — calls api.auth.verifyBvn() server-side
  *   3. confirm   — shows the returned name and asks "Is this you?"
  *
  * On confirm → marks BVN as verified in the store, redirects to /auth/pin?mode=set.
@@ -52,29 +53,23 @@ export default function KycPage() {
     setError(null);
     setStep("verifying");
 
-    // Simulate NIBSS lookup delay.
-    await new Promise((r) => setTimeout(r, 1500));
+    try {
+      const res = await api.auth.verifyBvn(bvn);
+      const data = res.data as { verified: boolean; name: string; dob: string };
+      const returnedName = data.name;
 
-    // Basic local validation.
-    if (bvn.length !== 11 || !/^\d{11}$/.test(bvn)) {
-      setError("BVN must be 11 digits");
+      if (returnedName.toLowerCase() !== (user?.name || "").toLowerCase()) {
+        setError("BVN name does not match your account name");
+        setStep("input");
+        return;
+      }
+
+      setVerifiedName(returnedName);
+      setStep("confirm");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "BVN verification failed");
       setStep("input");
-      return;
     }
-
-    // Mock: NIBSS returns the name on the BVN. For the hackathon, any
-    // 11-digit BVN returns the same name the user entered during signup.
-    const returnedName = user?.name || "Chioma Okafor";
-
-    // Security check: the BVN holder's name must match the signup name.
-    if (returnedName.toLowerCase() !== (user?.name || "").toLowerCase()) {
-      setError("BVN name does not match your account name");
-      setStep("input");
-      return;
-    }
-
-    setVerifiedName(returnedName);
-    setStep("confirm");
   };
 
   const handleConfirm = () => {

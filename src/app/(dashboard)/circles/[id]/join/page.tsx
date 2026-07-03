@@ -1,16 +1,16 @@
 "use client";
 
-import { use, useState } from "react";
-import { useRouter } from "next/navigation";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { api } from "@/lib/api";
-import { joinCircleSchema } from "@/lib/validations";
+import { Loading01Icon } from "hugeicons-react";
+import { useRouter } from "next/navigation";
+import { use, useState } from "react";
+import { toast } from "sonner";
+import { PageBreadcrumbs } from "@/components/shared/page-breadcrumbs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { PageBreadcrumbs } from "@/components/shared/page-breadcrumbs";
-import { toast } from "sonner";
-import { Loading01Icon } from "hugeicons-react";
+import { api } from "@/lib/api";
+import { joinCircleSchema } from "@/lib/validations";
 
 export default function JoinCirclePage(props: {
   params: Promise<{ id: string }>;
@@ -64,7 +64,10 @@ export default function JoinCirclePage(props: {
         items={[
           { label: "Home", href: "/dashboard" },
           { label: "Circles", href: "/circles" },
-          { label: circle?.name ?? "Circle", href: circle?.name ? `/circles/${id}` : undefined },
+          {
+            label: circle?.name ?? "Circle",
+            href: circle?.name ? `/circles/${id}` : undefined,
+          },
           { label: "Join" },
         ]}
       />
@@ -80,8 +83,11 @@ export default function JoinCirclePage(props: {
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <div className="flex flex-col gap-2">
-          <label className="text-sm font-medium">Invite Code</label>
+          <label htmlFor="inviteCode" className="text-sm font-medium">
+            Invite Code
+          </label>
           <Input
+            id="inviteCode"
             placeholder="e.g. ESUSU-XYZ"
             value={inviteCode}
             onChange={(e) => {
@@ -98,7 +104,9 @@ export default function JoinCirclePage(props: {
           className="w-full"
           disabled={mutation.isPending || !inviteCode}
         >
-          {mutation.isPending && <Loading01Icon className="size-4 animate-spin" />}
+          {mutation.isPending && (
+            <Loading01Icon className="size-4 animate-spin" />
+          )}
           {mutation.isPending ? "Joining..." : "Join Circle"}
         </Button>
       </form>

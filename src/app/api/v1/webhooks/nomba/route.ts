@@ -1,10 +1,10 @@
-import { NextRequest } from "next/server";
+import crypto from "node:crypto";
+import { eq } from "drizzle-orm";
+import type { NextRequest } from "next/server";
 import { db } from "@/db";
 import { webhookEvents } from "@/db/schema";
-import { eq } from "drizzle-orm";
-import crypto from "crypto";
+import { handlePayoutFailed, handlePayoutSuccess } from "@/lib/payout";
 import { reconcilePayment } from "@/lib/reconciliation";
-import { handlePayoutSuccess, handlePayoutFailed } from "@/lib/payout";
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,7 +14,10 @@ export async function POST(request: NextRequest) {
 
     const secret = process.env.NOMBA_WEBHOOK_SECRET;
     if (!secret) {
-      return new Response(JSON.stringify({ code: "01", description: "misconfigured" }), { status: 500 });
+      return new Response(
+        JSON.stringify({ code: "01", description: "misconfigured" }),
+        { status: 500 },
+      );
     }
     const payload = JSON.parse(rawBody);
     const data = payload.data || {};
@@ -36,24 +39,41 @@ export async function POST(request: NextRequest) {
       timestamp,
     ].join(":");
 
-    const expected = crypto.createHmac("sha256", secret).update(sigPayload).digest("base64");
+    const expected = crypto
+      .createHmac("sha256", secret)
+      .update(sigPayload)
+      .digest("base64");
     const received = signature;
 
-    if (expected.length !== received.length ||
-        !crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(received))) {
-      return new Response(JSON.stringify({ code: "01", description: "bad signature" }), { status: 401 });
+    if (
+      expected.length !== received.length ||
+      !crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(received))
+    ) {
+      return new Response(
+        JSON.stringify({ code: "01", description: "bad signature" }),
+        { status: 401 },
+      );
     }
 
-    const tsMs = /^\d+$/.test(timestamp) ? parseInt(timestamp, 10) : new Date(timestamp).getTime();
-    if (isNaN(tsMs) || Math.abs(Date.now() - tsMs) > 300_000) {
-      return new Response(JSON.stringify({ code: "01", description: "expired" }), { status: 401 });
+    const tsMs = /^\d+$/.test(timestamp)
+      ? parseInt(timestamp, 10)
+      : new Date(timestamp).getTime();
+    if (Number.isNaN(tsMs) || Math.abs(Date.now() - tsMs) > 300_000) {
+      return new Response(
+        JSON.stringify({ code: "01", description: "expired" }),
+        { status: 401 },
+      );
     }
 
-    const existing = await db.select().from(webhookEvents)
+    const existing = await db
+      .select()
+      .from(webhookEvents)
       .where(eq(webhookEvents.nombaRequestId, payload.requestId))
       .limit(1);
     if (existing.length > 0) {
-      return new Response(JSON.stringify({ code: "00", description: "duplicate" }));
+      return new Response(
+        JSON.stringify({ code: "00", description: "duplicate" }),
+      );
     }
 
     await db.insert(webhookEvents).values({
@@ -65,10 +85,14 @@ export async function POST(request: NextRequest) {
 
     processWebhook(payload).catch(console.error);
 
-    return new Response(JSON.stringify({ code: "00", description: "Received" }));
+    return new Response(
+      JSON.stringify({ code: "00", description: "Received" }),
+    );
   } catch (e) {
     console.error("Webhook error:", e);
-    return new Response(JSON.stringify({ code: "00", description: "Received" }));
+    return new Response(
+      JSON.stringify({ code: "00", description: "Received" }),
+    );
   }
 }
 
@@ -81,6 +105,7 @@ const HANDLED_EVENTS = new Set([
   "payout_refund",
 ]);
 
+// biome-ignore lint/suspicious/noExplicitAny: Nomba webhook payload shape is dynamic
 async function processWebhook(payload: any) {
   const requestId = payload.requestId;
   const eventType = payload.event_type;
@@ -99,26 +124,35 @@ async function processWebhook(payload: any) {
       case "payment_failed":
       case "payment_reversal":
       case "payout_refund":
-        console.warn(`[Webhook] Unhandled event type '${eventType}' — ack'd but no action taken`);
-        await db.update(webhookEvents)
+        console.warn(
+          `[Webhook] Unhandled event type '${eventType}' — ack'd but no action taken`,
+        );
+        await db
+          .update(webhookEvents)
           .set({ status: "unhandled", processedAt: new Date() })
           .where(eq(webhookEvents.nombaRequestId, requestId));
         return;
-      default:
+      default: {
         const isKnown = HANDLED_EVENTS.has(eventType);
-        console.error(`[Webhook] Untracked event type '${eventType}' — known=${isKnown}`);
-        await db.update(webhookEvents)
+        console.error(
+          `[Webhook] Untracked event type '${eventType}' — known=${isKnown}`,
+        );
+        await db
+          .update(webhookEvents)
           .set({ status: "unhandled", processedAt: new Date() })
           .where(eq(webhookEvents.nombaRequestId, requestId));
         return;
+      }
     }
 
-    await db.update(webhookEvents)
+    await db
+      .update(webhookEvents)
       .set({ status: "processed", processedAt: new Date() })
       .where(eq(webhookEvents.nombaRequestId, requestId));
   } catch (e) {
     console.error(`[Webhook] Processing failed for ${eventType}:`, e);
-    await db.update(webhookEvents)
+    await db
+      .update(webhookEvents)
       .set({ status: "failed" })
       .where(eq(webhookEvents.nombaRequestId, requestId));
   }

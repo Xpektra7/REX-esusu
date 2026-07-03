@@ -1,17 +1,17 @@
 "use client";
 
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { Progress } from "@/components/ui/progress";
-import { cn, formatNaira } from "@/lib/utils";
 import {
-  PiggyBankIcon,
   Calendar01Icon,
+  PiggyBankIcon,
   SavingsIcon,
   Wallet01Icon,
 } from "hugeicons-react";
 import Link from "next/link";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { Separator } from "@/components/ui/separator";
+import { formatNaira } from "@/lib/utils";
 import type { CircleListItem as CircleData } from "@/types";
 
 const iconSet = [
@@ -21,15 +21,13 @@ const iconSet = [
   { icon: Wallet01Icon },
 ];
 
-export { type CircleData };
+export type { CircleData };
 
 export function CircleCard({ circle }: { circle: CircleData }) {
   const idx = circle.name.length % iconSet.length;
   const Icon = iconSet[idx].icon;
   const progress =
-    circle.cycleCount > 0
-      ? (circle.currentCycle / circle.cycleCount) * 100
-      : 0;
+    circle.cycleCount > 0 ? (circle.currentCycle / circle.cycleCount) * 100 : 0;
 
   return (
     <Link
@@ -50,9 +48,7 @@ export function CircleCard({ circle }: { circle: CircleData }) {
                 </p>
               </div>
             </div>
-            <Badge
-              variant={circle.status === "active" ? "default" : "outline"}
-            >
+            <Badge variant={circle.status === "active" ? "default" : "outline"}>
               {circle.status === "active" ? "Active" : "Inactive"}
             </Badge>
           </div>

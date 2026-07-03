@@ -1,14 +1,14 @@
 "use client";
 
-import { useState } from "react";
-import { cn, formatNaira } from "@/lib/utils";
 import {
+  ArrowUp01Icon,
+  PlusSignIcon,
   ViewIcon,
   ViewOffIcon,
-  PlusSignIcon,
-  ArrowUp01Icon,
 } from "hugeicons-react";
 import Link from "next/link";
+import { useState } from "react";
+import { cn, formatNaira } from "@/lib/utils";
 
 export function WalletCard({ balance }: { balance: number }) {
   const [hidden, setHidden] = useState(false);

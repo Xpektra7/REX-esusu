@@ -34,15 +34,11 @@ export function ReportSummaryCards({
       </Card>
       <Card className="flex flex-col gap-1 p-4">
         <span className="text-xs text-muted-foreground">Default Rate</span>
-        <span className="font-heading text-lg font-bold">
-          {defaultRate}%
-        </span>
+        <span className="font-heading text-lg font-bold">{defaultRate}%</span>
       </Card>
       <Card className="flex flex-col gap-1 p-4">
         <span className="text-xs text-muted-foreground">Members</span>
-        <span className="font-heading text-lg font-bold">
-          {members}
-        </span>
+        <span className="font-heading text-lg font-bold">{members}</span>
       </Card>
     </div>
   );

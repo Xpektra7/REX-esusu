@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { persist, createJSONStorage } from "zustand/middleware";
+import { createJSONStorage, persist } from "zustand/middleware";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -25,11 +25,15 @@ interface AuthState {
 
   // Actions
   setAuth: (payload: {
-    access_token: string;
-    refresh_token: string;
+    access_token?: string;
+    refresh_token?: string;
     user: AuthUser;
-    needs_bvn: boolean;
-    pin_set: boolean;
+    token?: string;
+    refreshToken?: string;
+    needsBvn?: boolean;
+    needs_bvn?: boolean;
+    pinSet?: boolean;
+    pin_set?: boolean;
   }) => void;
   setBvnVerified: () => void;
   setPinSet: (value: boolean) => void;
@@ -81,12 +85,12 @@ export const useAuthStore = create<AuthState>()(
        */
       setAuth: (payload) =>
         set({
-          accessToken: payload.access_token,
-          refreshToken: payload.refresh_token,
+          accessToken: payload.access_token ?? payload.token ?? null,
+          refreshToken: payload.refresh_token ?? payload.refreshToken ?? null,
           user: payload.user,
           isAuthenticated: true,
-          needsBvn: payload.needs_bvn,
-          pinSet: payload.pin_set,
+          needsBvn: payload.needs_bvn ?? payload.needsBvn ?? true,
+          pinSet: payload.pin_set ?? payload.pinSet ?? false,
         }),
 
       /** Marks BVN verification as done so we skip the KYC step. */

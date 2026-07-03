@@ -1,14 +1,14 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { api } from "@/lib/api";
-import { WalletCard } from "@/components/shared/wallet-card";
-import { CircleCard, type CircleData } from "@/components/shared/circle-card";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Separator } from "@/components/ui/separator";
 import { PlusSignIcon } from "hugeicons-react";
 import Link from "next/link";
+import { CircleCard, type CircleData } from "@/components/shared/circle-card";
+import { WalletCard } from "@/components/shared/wallet-card";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
+import { api } from "@/lib/api";
 
 export default function DashboardPage() {
   const { data: walletRes, isLoading: walletLoading } = useQuery({

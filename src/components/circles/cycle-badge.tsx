@@ -1,7 +1,7 @@
 "use client";
 
-import { cn } from "@/lib/utils";
 import { CYCLE_STATUS } from "@/lib/status";
+import { cn } from "@/lib/utils";
 
 export function CycleBadge({ status }: { status: string }) {
   return (

@@ -1,51 +1,85 @@
-import { NextRequest } from "next/server";
-import { success, error } from "@/lib/api-response";
-import { requireAuth } from "@/lib/middleware";
+import { and, eq } from "drizzle-orm";
+import type { NextRequest } from "next/server";
 import { db } from "@/db";
-import { circles, cycles, membersCircles, users, contributions } from "@/db/schema";
-import { eq, and } from "drizzle-orm";
+import {
+  circles,
+  contributions,
+  cycles,
+  membersCircles,
+  users,
+} from "@/db/schema";
+import { error, success } from "@/lib/api-response";
+import { requireAuth } from "@/lib/middleware";
 
-export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
   const auth = requireAuth(req);
   if (auth.error) return auth.error;
 
   try {
     const { id } = await params;
 
-    const [cycle] = await db.select().from(cycles).where(eq(cycles.id, id)).limit(1);
+    const [cycle] = await db
+      .select()
+      .from(cycles)
+      .where(eq(cycles.id, id))
+      .limit(1);
     if (!cycle) return error("Cycle not found", "04", 404);
 
-    const [circle] = await db.select().from(circles).where(eq(circles.id, cycle.circleId)).limit(1);
+    const [circle] = await db
+      .select()
+      .from(circles)
+      .where(eq(circles.id, cycle.circleId))
+      .limit(1);
     if (!circle) return error("Circle not found", "04", 404);
 
-    const [membership] = await db.select().from(membersCircles)
-      .where(and(eq(membersCircles.circleId, circle.id), eq(membersCircles.userId, auth.user!.userId)))
+    const [membership] = await db
+      .select()
+      .from(membersCircles)
+      .where(
+        and(
+          eq(membersCircles.circleId, circle.id),
+          eq(membersCircles.userId, auth.user?.userId),
+        ),
+      )
       .limit(1);
     if (!membership) return error("Not a member of this circle", "03", 403);
 
-    const memberRows = await db.select({
-      id: membersCircles.id,
-      userId: membersCircles.userId,
-      name: users.name,
-      status: membersCircles.status,
-      missedCycles: membersCircles.missedCycles,
-    }).from(membersCircles).innerJoin(users, eq(users.id, membersCircles.userId))
+    const memberRows = await db
+      .select({
+        id: membersCircles.id,
+        userId: membersCircles.userId,
+        name: users.name,
+        status: membersCircles.status,
+        missedCycles: membersCircles.missedCycles,
+      })
+      .from(membersCircles)
+      .innerJoin(users, eq(users.id, membersCircles.userId))
       .where(eq(membersCircles.circleId, circle.id));
 
-    const contribRows = await db.select({
-      id: contributions.id,
-      memberCircleId: contributions.memberCircleId,
-      amountKobo: contributions.amountKobo,
-      appliedKobo: contributions.appliedKobo,
-      status: contributions.status,
-      ourReference: contributions.ourReference,
-      createdAt: contributions.createdAt,
-    }).from(contributions).where(eq(contributions.cycleId, cycle.id));
+    const contribRows = await db
+      .select({
+        id: contributions.id,
+        memberCircleId: contributions.memberCircleId,
+        amountKobo: contributions.amountKobo,
+        appliedKobo: contributions.appliedKobo,
+        status: contributions.status,
+        ourReference: contributions.ourReference,
+        createdAt: contributions.createdAt,
+      })
+      .from(contributions)
+      .where(eq(contributions.cycleId, cycle.id));
 
-    const [recipient] = await db.select({
-      name: users.name,
-    }).from(membersCircles).innerJoin(users, eq(users.id, membersCircles.userId))
-      .where(eq(membersCircles.id, cycle.recipientMemberId)).limit(1);
+    const [recipient] = await db
+      .select({
+        name: users.name,
+      })
+      .from(membersCircles)
+      .innerJoin(users, eq(users.id, membersCircles.userId))
+      .where(eq(membersCircles.id, cycle.recipientMemberId))
+      .limit(1);
 
     const memberContributions = memberRows.map((m) => {
       const userContribs = contribRows.filter((c) => c.memberCircleId === m.id);
@@ -53,7 +87,12 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       return {
         memberName: m.name,
         amountKobo: totalPaid,
-        status: totalPaid >= circle.contributionAmountKobo ? "fully_paid" : totalPaid > 0 ? "partial" : "pending",
+        status:
+          totalPaid >= circle.contributionAmountKobo
+            ? "fully_paid"
+            : totalPaid > 0
+              ? "partial"
+              : "pending",
         missedCycles: m.missedCycles,
         contributions: userContribs,
       };

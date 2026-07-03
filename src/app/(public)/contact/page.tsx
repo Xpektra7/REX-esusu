@@ -28,18 +28,14 @@ export default function ContactPage() {
         </div>
         <div className="rounded-xl border border-border p-6">
           <h2 className="font-semibold">Legal & Privacy</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Privacy concerns
-          </p>
+          <p className="mt-1 text-sm text-muted-foreground">Privacy concerns</p>
           <a
             href="mailto:privacy@esusu.app"
             className="text-sm text-primary hover:underline"
           >
             privacy@esusu.app
           </a>
-          <p className="mt-4 text-sm text-muted-foreground">
-            Security issues
-          </p>
+          <p className="mt-4 text-sm text-muted-foreground">Security issues</p>
           <a
             href="mailto:security@esusu.app"
             className="text-sm text-primary hover:underline"
@@ -53,10 +49,7 @@ export default function ContactPage() {
         <h2 className="font-semibold">Send Us a Message</h2>
         <form className="mt-4 space-y-4">
           <div>
-            <label
-              htmlFor="name"
-              className="mb-1 block text-sm font-medium"
-            >
+            <label htmlFor="name" className="mb-1 block text-sm font-medium">
               Name
             </label>
             <input
@@ -67,10 +60,7 @@ export default function ContactPage() {
             />
           </div>
           <div>
-            <label
-              htmlFor="email"
-              className="mb-1 block text-sm font-medium"
-            >
+            <label htmlFor="email" className="mb-1 block text-sm font-medium">
               Email
             </label>
             <input
@@ -81,10 +71,7 @@ export default function ContactPage() {
             />
           </div>
           <div>
-            <label
-              htmlFor="subject"
-              className="mb-1 block text-sm font-medium"
-            >
+            <label htmlFor="subject" className="mb-1 block text-sm font-medium">
               Subject
             </label>
             <select
@@ -99,10 +86,7 @@ export default function ContactPage() {
             </select>
           </div>
           <div>
-            <label
-              htmlFor="message"
-              className="mb-1 block text-sm font-medium"
-            >
+            <label htmlFor="message" className="mb-1 block text-sm font-medium">
               Message
             </label>
             <textarea

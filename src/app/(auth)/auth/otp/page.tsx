@@ -1,8 +1,9 @@
 "use client";
 export const dynamic = "force-dynamic";
 
-import { Suspense, useEffect, useState } from "react";
+import { Refresh01Icon } from "hugeicons-react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -20,7 +21,6 @@ import {
 } from "@/components/ui/input-otp";
 import { api } from "@/lib/api";
 import { useAuthStore } from "@/stores/auth-store";
-import { Refresh01Icon } from "hugeicons-react";
 
 /**
  * OTP verification form.
@@ -40,11 +40,17 @@ function OtpForm() {
   const searchParams = useSearchParams();
   const setAuth = useAuthStore((s) => s.setAuth);
 
-  // Query-param values from the /auth page.
+  // Values set in sessionStorage by the /auth page (not in URL — avoids PII in browser history).
   const phone = searchParams.get("phone") || "";
   const flow = searchParams.get("flow") || "login";
-  const name = searchParams.get("name") || "";
-  const email = searchParams.get("email") || "";
+  const name =
+    typeof window !== "undefined"
+      ? sessionStorage.getItem("pending_name") || ""
+      : "";
+  const email =
+    typeof window !== "undefined"
+      ? sessionStorage.getItem("pending_email") || ""
+      : "";
 
   const [otp, setOtp] = useState("");
   const [error, setError] = useState<string | null>(null);

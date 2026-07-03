@@ -1,12 +1,12 @@
-import { Nav } from "@/components/landing/nav";
-import { Hero } from "@/components/landing/hero";
 import { BentoStats } from "@/components/landing/bento-stats";
-import { HowItWorks } from "@/components/landing/how-it-works";
 import { Features } from "@/components/landing/features";
-import { Testimonial } from "@/components/landing/testimonial";
-import { Security } from "@/components/landing/security";
-import { InstallSection } from "@/components/landing/install-section";
 import { Footer } from "@/components/landing/footer";
+import { Hero } from "@/components/landing/hero";
+import { HowItWorks } from "@/components/landing/how-it-works";
+import { InstallSection } from "@/components/landing/install-section";
+import { Nav } from "@/components/landing/nav";
+import { Security } from "@/components/landing/security";
+import { Testimonial } from "@/components/landing/testimonial";
 
 export default function Home() {
   return (

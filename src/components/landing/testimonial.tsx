@@ -1,7 +1,7 @@
 "use client";
 
-import { useRef } from "react";
 import { ArrowLeft01Icon, ArrowRight01Icon } from "hugeicons-react";
+import { useRef } from "react";
 
 const testimonials = [
   {

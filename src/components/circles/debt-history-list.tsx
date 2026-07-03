@@ -25,9 +25,9 @@ export function DebtHistoryList({ debts }: DebtHistoryListProps) {
 
   return (
     <div className="flex flex-col gap-2">
-      {debts.map((debt, i) => (
+      {debts.map((debt) => (
         <div
-          key={i}
+          key={`${debt.memberName}-${debt.cycle}`}
           className="flex items-center justify-between rounded-xl bg-card px-4 py-3"
         >
           <div>

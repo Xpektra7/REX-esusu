@@ -1,26 +1,46 @@
-import { NextRequest } from "next/server";
-import { success, error } from "@/lib/api-response";
-import { requireAuth } from "@/lib/middleware";
+import { and, count, eq, ne } from "drizzle-orm";
+import type { NextRequest } from "next/server";
 import { db } from "@/db";
-import { users, virtualAccounts, membersCircles, referrals } from "@/db/schema";
-import { eq, and, count, ne } from "drizzle-orm";
+import { membersCircles, referrals, users, virtualAccounts } from "@/db/schema";
+import { error, success } from "@/lib/api-response";
+import { requireAuth } from "@/lib/middleware";
 
 export async function GET(req: NextRequest) {
   const auth = requireAuth(req);
   if (auth.error) return auth.error;
 
-  const userId = auth.user!.userId;
-  const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+  const userId = auth.user?.userId;
+  const [user] = await db
+    .select()
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
   if (!user) return error("User not found", "04", 404);
 
-  const vas = await db.select().from(virtualAccounts)
-    .where(and(eq(virtualAccounts.userId, userId), eq(virtualAccounts.type, "personal")))
+  const vas = await db
+    .select()
+    .from(virtualAccounts)
+    .where(
+      and(
+        eq(virtualAccounts.userId, userId),
+        eq(virtualAccounts.type, "personal"),
+      ),
+    )
     .limit(1);
 
-  const activeCircles = await db.select({ count: count() }).from(membersCircles)
-    .where(and(eq(membersCircles.userId, userId), eq(membersCircles.status, "active")));
+  const activeCircles = await db
+    .select({ count: count() })
+    .from(membersCircles)
+    .where(
+      and(
+        eq(membersCircles.userId, userId),
+        eq(membersCircles.status, "active"),
+      ),
+    );
 
-  const referralCount = await db.select({ count: count() }).from(referrals)
+  const referralCount = await db
+    .select({ count: count() })
+    .from(referrals)
     .where(eq(referrals.referrerUserId, userId));
 
   return success({
@@ -31,11 +51,13 @@ export async function GET(req: NextRequest) {
     bvnLast4: user.bvnLast4,
     trustScore: user.trustScore,
     balanceKobo: vas[0]?.balanceKobo ?? 0,
-    virtualAccount: vas[0] ? {
-      accountNumber: vas[0].accountNumber,
-      accountName: vas[0].accountName,
-      bankName: "Nomba",
-    } : null,
+    virtualAccount: vas[0]
+      ? {
+          accountNumber: vas[0].accountNumber,
+          accountName: vas[0].accountName,
+          bankName: "Nomba",
+        }
+      : null,
     stats: {
       activeCircles: activeCircles[0]?.count ?? 0,
       referralCount: referralCount[0]?.count ?? 0,
@@ -51,13 +73,16 @@ export async function PATCH(req: NextRequest) {
     const { name, email } = await req.json();
     if (!name && !email) return error("Nothing to update");
 
-    const userId = auth.user!.userId;
+    const userId = auth.user?.userId;
     const updates: Record<string, string> = {};
 
     if (name) updates.name = name;
     if (email) {
-      const [existing] = await db.select().from(users)
-        .where(and(eq(users.email, email), ne(users.id, userId))).limit(1);
+      const [existing] = await db
+        .select()
+        .from(users)
+        .where(and(eq(users.email, email), ne(users.id, userId)))
+        .limit(1);
       if (existing) return error("Email already in use", "05", 409);
       updates.email = email;
     }

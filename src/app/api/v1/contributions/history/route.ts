@@ -1,9 +1,9 @@
-import { NextRequest } from "next/server";
-import { success, error } from "@/lib/api-response";
-import { requireAuth } from "@/lib/middleware";
+import { and, desc, eq, inArray } from "drizzle-orm";
+import type { NextRequest } from "next/server";
 import { db } from "@/db";
-import { contributions, membersCircles, cycles, circles } from "@/db/schema";
-import { eq, and, desc, inArray } from "drizzle-orm";
+import { circles, contributions, cycles, membersCircles } from "@/db/schema";
+import { error, success } from "@/lib/api-response";
+import { requireAuth } from "@/lib/middleware";
 
 export async function GET(req: NextRequest) {
   const auth = requireAuth(req);
@@ -15,33 +15,44 @@ export async function GET(req: NextRequest) {
     const page = parseInt(searchParams.get("page") || "1", 10);
     const limit = parseInt(searchParams.get("limit") || "20", 10);
 
-    const userMemberships = await db.select().from(membersCircles)
-      .where(eq(membersCircles.userId, auth.user!.userId));
+    const userMemberships = await db
+      .select()
+      .from(membersCircles)
+      .where(eq(membersCircles.userId, auth.user?.userId));
 
-    if (userMemberships.length === 0) return success({ contributions: [], pagination: { cursor: null, hasMore: false } });
+    if (userMemberships.length === 0)
+      return success({
+        contributions: [],
+        pagination: { cursor: null, hasMore: false },
+      });
 
     const memberCircleIds = userMemberships.map((m) => m.id);
 
     const conditions = [inArray(contributions.memberCircleId, memberCircleIds)];
     if (circleId) {
-      const circleCycles = await db.select({ id: cycles.id }).from(cycles).where(eq(cycles.circleId, circleId));
+      const circleCycles = await db
+        .select({ id: cycles.id })
+        .from(cycles)
+        .where(eq(cycles.circleId, circleId));
       const cycleIds = circleCycles.map((c) => c.id);
       if (cycleIds.length > 0) {
         conditions.push(inArray(contributions.cycleId, cycleIds));
       }
     }
 
-    const rows = await db.select({
-      id: contributions.id,
-      amountKobo: contributions.amountKobo,
-      appliedKobo: contributions.appliedKobo,
-      status: contributions.status,
-      ourReference: contributions.ourReference,
-      createdAt: contributions.createdAt,
-      cycleNumber: cycles.cycleNumber,
-      circleName: circles.name,
-      circleId: circles.id,
-    }).from(contributions)
+    const rows = await db
+      .select({
+        id: contributions.id,
+        amountKobo: contributions.amountKobo,
+        appliedKobo: contributions.appliedKobo,
+        status: contributions.status,
+        ourReference: contributions.ourReference,
+        createdAt: contributions.createdAt,
+        cycleNumber: cycles.cycleNumber,
+        circleName: circles.name,
+        circleId: circles.id,
+      })
+      .from(contributions)
       .innerJoin(cycles, eq(contributions.cycleId, cycles.id))
       .innerJoin(circles, eq(cycles.circleId, circles.id))
       .where(and(...conditions))

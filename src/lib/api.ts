@@ -1,10 +1,5 @@
-import type {
-  ApiResponse,
-  CircleListItem,
-  CircleDetail,
-  CycleContribution,
-} from "@/types";
 import { useAuthStore } from "@/stores/auth-store";
+import type { ApiResponse, CircleListItem, CycleContribution } from "@/types";
 
 const mockMembers = [
   {
@@ -170,15 +165,15 @@ async function mockRequest<T>(
       description: "Verification successful",
       data: {
         token: fakeToken(),
-        refresh_token: fakeToken(),
+        refreshToken: fakeToken(),
         user: {
           id: "user_mock_001",
           phone: body.phone || "+2348012345678",
           name: body.name || "Chioma Okafor",
           email: body.email || "chioma@example.com",
         },
-        needs_bvn: true,
-        pin_set: false,
+        needsBvn: true,
+        pinSet: false,
       } as T,
     };
   }
@@ -226,32 +221,34 @@ async function mockRequest<T>(
     return {
       code: "00",
       description: "OK",
-      data: [
-        {
-          id: "circle_mock_001",
-          name: "Weekend Travelers",
-          status: "active",
-          contributionAmount: 500000,
-          frequency: "weekly",
-          type: "Rotating Savings Group",
-          currentCycle: 4,
-          cycleCount: 12,
-          memberPosition: 3,
-          totalMembers: 10,
-        },
-        {
-          id: "circle_mock_002",
-          name: "Rent Savers",
-          status: "active",
-          contributionAmount: 2500000,
-          frequency: "monthly",
-          type: "Annual Contribution",
-          currentCycle: 2,
-          cycleCount: 10,
-          memberPosition: 1,
-          totalMembers: 5,
-        },
-      ] as T,
+      data: {
+        circles: [
+          {
+            id: "circle_mock_001",
+            name: "Weekend Travelers",
+            status: "active",
+            contributionAmount: 500000,
+            frequency: "weekly",
+            type: "Rotating Savings Group",
+            currentCycle: 4,
+            cycleCount: 12,
+            memberPosition: 3,
+            totalMembers: 10,
+          },
+          {
+            id: "circle_mock_002",
+            name: "Rent Savers",
+            status: "active",
+            contributionAmount: 2500000,
+            frequency: "monthly",
+            type: "Annual Contribution",
+            currentCycle: 2,
+            cycleCount: 10,
+            memberPosition: 1,
+            totalMembers: 5,
+          },
+        ],
+      } as T,
     };
   }
 
@@ -266,7 +263,7 @@ async function mockRequest<T>(
 
   // Check specific paths BEFORE the generic /circles/{id} catch-all
   if (path.endsWith("/report") && method === "GET") {
-    const circleId = path.split("/")[2];
+    const _circleId = path.split("/")[2];
     return {
       code: "00",
       description: "OK",
@@ -501,39 +498,64 @@ async function mockRequest<T>(
       code: "00",
       description: "OK",
       data: {
-        balance: 45000000,
-        transactions: [
-          {
-            type: "credit",
-            amount: 5000000,
-            description: "Received Payout — Weekend Travelers",
-            date: new Date().toISOString(),
-          },
-          {
-            type: "debit",
-            amount: 2500000,
-            description: "Contribution — Rent Savers",
-            date: new Date(Date.now() - 86400000).toISOString(),
-          },
-          {
-            type: "credit",
-            amount: 1500000,
-            description: "Top-up via Wema Bank",
-            date: new Date(Date.now() - 2 * 86400000).toISOString(),
-          },
-          {
-            type: "debit",
-            amount: 750000,
-            description: "Withdrawal to GTBank",
-            date: new Date(Date.now() - 3 * 86400000).toISOString(),
-          },
-        ],
-      } as unknown as T,
+        balanceKobo: 45000000,
+        virtualAccount: {
+          accountNumber: "1234567890",
+          accountName: "Chioma Okafor",
+          bankCode: "Nomba",
+        },
+        pendingReconciliationKobo: 0,
+      } as T,
     };
   }
 
   if (path === "/wallet/transactions" && method === "GET") {
-    return { code: "00", description: "OK", data: [] as T };
+    return {
+      code: "00",
+      description: "OK",
+      data: [
+        {
+          id: "tx_mock_001",
+          type: "credit",
+          amountKobo: 5000000,
+          reference: "PAYOUT_MOCK_001",
+          status: "completed",
+          description: "Received Payout — Weekend Travelers",
+          metadata: null,
+          createdAt: new Date().toISOString(),
+        },
+        {
+          id: "tx_mock_002",
+          type: "debit",
+          amountKobo: 2500000,
+          reference: "CONTRIB_MOCK_001",
+          status: "completed",
+          description: "Contribution — Rent Savers",
+          metadata: null,
+          createdAt: new Date(Date.now() - 86400000).toISOString(),
+        },
+        {
+          id: "tx_mock_003",
+          type: "credit",
+          amountKobo: 1500000,
+          reference: "TOPUP_MOCK_001",
+          status: "completed",
+          description: "Top-up via Wema Bank",
+          metadata: null,
+          createdAt: new Date(Date.now() - 2 * 86400000).toISOString(),
+        },
+        {
+          id: "tx_mock_004",
+          type: "debit",
+          amountKobo: 750000,
+          reference: "WITHDRAW_MOCK_001",
+          status: "completed",
+          description: "Withdrawal to GTBank",
+          metadata: null,
+          createdAt: new Date(Date.now() - 3 * 86400000).toISOString(),
+        },
+      ] as T,
+    };
   }
 
   if (path === "/wallet/withdraw" && method === "POST") {
@@ -554,28 +576,28 @@ async function mockRequest<T>(
           id: "notif_001",
           title: "Payout Received",
           body: "You received ₦50,000 from Weekend Travelers cycle #4.",
-          read_at: null,
+          read: false,
           createdAt: new Date(Date.now() - 3600000).toISOString(),
         },
         {
           id: "notif_002",
           title: "Contribution Due",
           body: "Your ₦25,000 contribution to Rent Savers is due tomorrow.",
-          read_at: new Date(Date.now() - 86400000).toISOString(),
+          read: true,
           createdAt: new Date(Date.now() - 172800000).toISOString(),
         },
         {
           id: "notif_003",
           title: "Member Joined",
           body: "Tunde Balogun has joined Weekend Travelers.",
-          read_at: null,
+          read: false,
           createdAt: new Date(Date.now() - 604800000).toISOString(),
         },
         {
           id: "notif_004",
           title: "Circle Completed",
           body: "Weekly Savers has completed all 12 cycles. Congratulations!",
-          read_at: new Date(Date.now() - 1209600000).toISOString(),
+          read: true,
           createdAt: new Date(Date.now() - 1209600000).toISOString(),
         },
       ] as T,
@@ -661,7 +683,7 @@ async function request<T>(
     ...(options.headers as Record<string, string>),
   };
   if (accessToken) {
-    headers["Authorization"] = `Bearer ${accessToken}`;
+    headers.Authorization = `Bearer ${accessToken}`;
   }
 
   // Live mode — real HTTP call.
@@ -683,7 +705,11 @@ async function request<T>(
       const newToken = refreshJson.data?.accessToken ?? refreshJson.data?.token;
       if (newToken) {
         const currentUser = useAuthStore.getState().user;
-        if (!currentUser) { useAuthStore.getState().clearAuth(); redirectToAuth(); throw new Error("Session expired"); }
+        if (!currentUser) {
+          useAuthStore.getState().clearAuth();
+          redirectToAuth();
+          throw new Error("Session expired");
+        }
         useAuthStore.getState().setAuth({
           access_token: newToken,
           refresh_token: refreshToken,
@@ -691,7 +717,7 @@ async function request<T>(
           needs_bvn: useAuthStore.getState().needsBvn,
           pin_set: useAuthStore.getState().pinSet,
         });
-        headers["Authorization"] = `Bearer ${newToken}`;
+        headers.Authorization = `Bearer ${newToken}`;
         res = await fetch(url, { ...options, headers });
       }
     } else {
@@ -740,20 +766,20 @@ export const api = {
 
     /** Sets a 4-digit PIN for quick-login. */
     setPin: (pin: string) =>
-      request<{}>("/auth/set-pin", {
+      request<Record<string, unknown>>("/auth/set-pin", {
         method: "POST",
         body: JSON.stringify({ pin }),
       }),
 
     /** Verifies the 4-digit PIN server-side. */
     verifyPin: (pin: string) =>
-      request<{}>("/auth/verify-pin", {
+      request<Record<string, unknown>>("/auth/verify-pin", {
         method: "POST",
         body: JSON.stringify({ pin }),
       }),
 
     /** Logs out the current session. */
-    logout: () => request<{}>("/auth/logout", { method: "POST" }),
+    logout: () => request<Record<string, unknown>>("/auth/logout", { method: "POST" }),
 
     /** Refreshes the access token using a refresh token. */
     refresh: (refreshToken: string) =>
@@ -791,18 +817,18 @@ export const api = {
 
     /** Activates a pending circle so members can start contributing. */
     activate: (id: string) =>
-      request<{}>(`/circles/${id}/activate`, { method: "POST" }),
+      request<Record<string, unknown>>(`/circles/${id}/activate`, { method: "POST" }),
 
     /** Joins a circle using an invite code. */
     join: (id: string, inviteCode: string) =>
-      request<{}>(`/circles/${id}/join`, {
+      request<Record<string, unknown>>(`/circles/${id}/join`, {
         method: "POST",
         body: JSON.stringify({ inviteCode: inviteCode }),
       }),
 
     /** Leaves a circle (only possible if no outstanding debts). */
     leave: (id: string) =>
-      request<{}>(`/circles/${id}/leave`, { method: "POST" }),
+      request<Record<string, unknown>>(`/circles/${id}/leave`, { method: "POST" }),
 
     /** Generates an invite link for a circle. */
     invite: (id: string) =>
@@ -836,12 +862,12 @@ export const api = {
 
     /** Manually closes a cycle (admin only). */
     close: (id: string) =>
-      request<{}>(`/cycles/${id}/close`, { method: "POST" }),
+      request<Record<string, unknown>>(`/cycles/${id}/close`, { method: "POST" }),
   },
 
   contributions: {
     /** Initiates a contribution (generates a payment reference). */
-    initiate: (payload: { cycle_id: string; amountKobo: number }) =>
+    initiate: (payload: { cycleId: string; amountKobo: number }) =>
       request<{ ref: string }>("/contributions/initiate", {
         method: "POST",
         body: JSON.stringify(payload),
@@ -849,7 +875,7 @@ export const api = {
 
     /** Confirms a contribution after payment is received. */
     confirm: (ref: string) =>
-      request<{}>("/contributions/confirm", {
+      request<Record<string, unknown>>("/contributions/confirm", {
         method: "POST",
         body: JSON.stringify({ ref }),
       }),
@@ -865,7 +891,16 @@ export const api = {
 
   wallet: {
     /** Wallet balance + recent transactions. */
-    get: () => request<{ balanceKobo: number; virtualAccount: { accountNumber: string; accountName: string; bankCode: string }; pendingReconciliationKobo: number }>("/wallet"),
+    get: () =>
+      request<{
+        balanceKobo: number;
+        virtualAccount: {
+          accountNumber: string;
+          accountName: string;
+          bankCode: string;
+        };
+        pendingReconciliationKobo: number;
+      }>("/wallet"),
 
     /** Full transaction history. */
     transactions: () => request<unknown[]>("/wallet/transactions"),
@@ -888,11 +923,11 @@ export const api = {
 
     /** Marks a single notification as read. */
     markRead: (id: string) =>
-      request<{}>(`/notifications/${id}/read`, { method: "PATCH" }),
+      request<Record<string, unknown>>(`/notifications/${id}/read`, { method: "PATCH" }),
 
     /** Marks all notifications as read. */
     markAllRead: () =>
-      request<{}>("/notifications/read-all", { method: "POST" }),
+      request<Record<string, unknown>>("/notifications/read-all", { method: "POST" }),
   },
 
   users: {
@@ -901,7 +936,7 @@ export const api = {
 
     /** Updates name / email. */
     update: (payload: { name?: string; email?: string }) =>
-      request<{}>("/users/me", {
+      request<Record<string, unknown>>("/users/me", {
         method: "PATCH",
         body: JSON.stringify(payload),
       }),
@@ -926,6 +961,6 @@ export const api = {
     list: () => request<{ outgoing: unknown[]; incoming: unknown[] }>("/debts"),
 
     /** Pays a specific debt. */
-    pay: (id: string) => request<{}>(`/debts/${id}/pay`, { method: "POST" }),
+    pay: (id: string) => request<Record<string, unknown>>(`/debts/${id}/pay`, { method: "POST" }),
   },
 };

@@ -1,4 +1,4 @@
-import { NextRequest } from "next/server";
+import type { NextRequest } from "next/server";
 import { success } from "@/lib/api-response";
 import { requireAuth } from "@/lib/middleware";
 

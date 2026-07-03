@@ -19,6 +19,13 @@
 - Database queries go through Drizzle (`src/db/index.ts`) — no raw SQL
 - Schema is in `src/db/schema.ts` — do not hardcode table/column names
 
+## Casing Convention (Strict)
+- **camelCase** for all code identifiers: variables (`balanceKobo`), functions (`signToken`), object properties (`memberPosition`), API response fields (`accessToken`), Zod schema fields (`cycleId`), route handler params (`circleId`)
+- **kebab-case** for file names (`api-response.ts`, `verify-pin/route.ts`) and URL route segments (`/auth/send-otp`, `/wallet/withdraw`)
+- **PascalCase** for TypeScript types/interfaces (`CircleListItem`, `ApiResponse`)
+- DB column names use **snake_case** (database convention) — Drizzle schema handles mapping to camelCase in code
+- **Never snake_case in TypeScript identifiers, API response bodies, Zod schemas, URL params, or JSON payloads**
+
 ## Validation
 - All user input validated with Zod schemas before reaching the database
 - Validation errors return consistent `ApiResponse` shape, not raw Zod errors

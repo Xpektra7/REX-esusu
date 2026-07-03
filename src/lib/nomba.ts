@@ -1,4 +1,5 @@
-let cachedToken: { baseUrl: string; token: string; expiresAt: number } | null = null;
+let cachedToken: { baseUrl: string; token: string; expiresAt: number } | null =
+  null;
 
 function isProduction(): boolean {
   const url = process.env.NOMBA_BASE_URL || "";
@@ -6,18 +7,25 @@ function isProduction(): boolean {
 }
 
 export async function getNombaToken(): Promise<string> {
-  const baseUrl = process.env.NOMBA_BASE_URL!;
+  const baseUrl = process.env.NOMBA_BASE_URL || "";
 
-  if (cachedToken && cachedToken.baseUrl === baseUrl && Date.now() < cachedToken.expiresAt) {
+  if (
+    cachedToken &&
+    cachedToken.baseUrl === baseUrl &&
+    Date.now() < cachedToken.expiresAt
+  ) {
     return cachedToken.token;
   }
-  const accountId = process.env.NOMBA_PARENT_ACCOUNT_ID!;
+  const accountId = process.env.NOMBA_PARENT_ACCOUNT_ID || "";
   const clientId = isProduction()
-    ? process.env.NOMBA_LIVE_CLIENT_ID!
-    : process.env.NOMBA_TEST_CLIENT_ID!;
+    ? process.env.NOMBA_LIVE_CLIENT_ID
+    : process.env.NOMBA_TEST_CLIENT_ID;
   const secret = isProduction()
-    ? process.env.NOMBA_LIVE_PRIVATE_KEY!
-    : process.env.NOMBA_TEST_PRIVATE_KEY!;
+    ? process.env.NOMBA_LIVE_PRIVATE_KEY
+    : process.env.NOMBA_TEST_PRIVATE_KEY;
+  if (!baseUrl || !accountId || !clientId || !secret) {
+    throw new Error("Nomba credentials not configured");
+  }
 
   const res = await fetch(`${baseUrl}/v1/auth/token/issue`, {
     method: "POST",
@@ -44,33 +52,42 @@ export async function getNombaToken(): Promise<string> {
 export function nombaHeaders(token: string): Record<string, string> {
   return {
     "Content-Type": "application/json",
-    accountId: process.env.NOMBA_PARENT_ACCOUNT_ID!,
+    accountId: process.env.NOMBA_PARENT_ACCOUNT_ID || "",
     Authorization: `Bearer ${token}`,
   };
 }
 
-export async function nombaPost(path: string, body: unknown, baseUrlOverride?: string) {
+export async function nombaPost(
+  path: string,
+  body: unknown,
+  baseUrlOverride?: string,
+) {
   const token = await getNombaToken();
-  const baseUrl = baseUrlOverride || process.env.NOMBA_BASE_URL!;
+  const baseUrl = baseUrlOverride || process.env.NOMBA_BASE_URL || "";
   const res = await fetch(`${baseUrl}${path}`, {
     method: "POST",
     headers: nombaHeaders(token),
     body: JSON.stringify(body),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(`Nomba API error ${res.status}: ${JSON.stringify(data)}`);
+  if (!res.ok)
+    throw new Error(`Nomba API error ${res.status}: ${JSON.stringify(data)}`);
   return data;
 }
 
 export async function nombaGet(path: string, params?: Record<string, string>) {
   const token = await getNombaToken();
-  const url = new URL(`${process.env.NOMBA_BASE_URL}${path}`);
-  if (params) Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
+  const url = new URL(`${process.env.NOMBA_BASE_URL || ""}${path}`);
+  if (params)
+    Object.entries(params).forEach(([k, v]) => {
+      url.searchParams.set(k, v);
+    });
   const res = await fetch(url.toString(), {
     method: "GET",
     headers: nombaHeaders(token),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(`Nomba API error ${res.status}: ${JSON.stringify(data)}`);
+  if (!res.ok)
+    throw new Error(`Nomba API error ${res.status}: ${JSON.stringify(data)}`);
   return data;
 }

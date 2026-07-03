@@ -1,22 +1,24 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { api } from "@/lib/api";
-import { Card } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Separator } from "@/components/ui/separator";
-import { PageBreadcrumbs } from "@/components/shared/page-breadcrumbs";
-import { DiceBearAvatar } from "@/components/shared/dicebear-avatar";
-import { cn } from "@/lib/utils";
 import {
   IdVerifiedIcon,
+  Logout01Icon,
+  Mail01Icon,
+  Share08Icon,
   Shield01Icon,
   UserIcon,
-  Mail01Icon,
-  Logout01Icon,
-  Share08Icon,
 } from "hugeicons-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { DiceBearAvatar } from "@/components/shared/dicebear-avatar";
+import { PageBreadcrumbs } from "@/components/shared/page-breadcrumbs";
+import { Card } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
+import { api } from "@/lib/api";
+import { cn } from "@/lib/utils";
+import { useAuthStore } from "@/stores/auth-store";
 
 interface UserProfile {
   id: string;
@@ -69,6 +71,9 @@ function SettingsRow({
 }
 
 export default function ProfilePage() {
+  const router = useRouter();
+  const clearAuth = useAuthStore((s) => s.clearAuth);
+
   const { data: res, isLoading } = useQuery({
     queryKey: ["profile"],
     queryFn: () => api.users.me(),
@@ -79,10 +84,7 @@ export default function ProfilePage() {
   return (
     <div className="flex flex-col gap-6">
       <PageBreadcrumbs
-        items={[
-          { label: "Home", href: "/dashboard" },
-          { label: "Profile" },
-        ]}
+        items={[{ label: "Home", href: "/dashboard" }, { label: "Profile" }]}
       />
 
       {isLoading ? (
@@ -161,20 +163,32 @@ export default function ProfilePage() {
       <Separator />
 
       <div className="flex flex-col gap-2">
-        <h2 className="text-sm font-bold uppercase tracking-wider">
-          More
-        </h2>
+        <h2 className="text-sm font-bold uppercase tracking-wider">More</h2>
         <SettingsRow
           icon={<Share08Icon className="size-4" />}
           label="Refer & Earn"
           href="/referrals"
         />
-        <SettingsRow
-          icon={<Logout01Icon className="size-4" />}
-          label="Log Out"
-          href="/auth"
-          variant="danger"
-        />
+        <button
+          type="button"
+          onClick={async () => {
+            try {
+              await api.auth.logout();
+            } catch {
+              /* ignore */
+            }
+            clearAuth();
+            router.push("/auth");
+          }}
+          className={cn(
+            "flex items-center gap-3 rounded-xl border border-destructive/30 px-4 py-3 transition-colors hover:bg-muted/50",
+          )}
+        >
+          <div className="flex size-9 items-center justify-center rounded-full bg-destructive/10 text-destructive">
+            <Logout01Icon className="size-4" />
+          </div>
+          <span className="text-sm font-medium text-destructive">Log Out</span>
+        </button>
       </div>
     </div>
   );

@@ -30,13 +30,7 @@ export interface CircleMember {
   userId: string;
   circleId: string;
   role: "admin" | "member";
-  status:
-    | "invited"
-    | "active"
-    | "defaulted"
-    | "removed"
-    | "left"
-    | "completed";
+  status: "invited" | "active" | "defaulted" | "removed" | "left" | "completed";
   rotationOrder: number | null;
   missedCycles: number;
   joinedAt: string;
@@ -99,6 +93,7 @@ export interface Debt {
   creditorMemberId: string;
   amountKobo: number;
   paidKobo: number;
+  fineKobo: number;
   status: "active" | "cleared" | "redirected";
   createdAt: string;
   clearedAt: string | null;
@@ -122,7 +117,7 @@ export interface Notification {
   title: string;
   body: string;
   data: Record<string, unknown> | null;
-  readAt: string | null;
+  read: boolean;
   createdAt: string;
 }
 

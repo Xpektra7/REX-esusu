@@ -1,17 +1,17 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
-import { api } from "@/lib/api";
-import { createCircleSchema } from "@/lib/validations";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card } from "@/components/ui/card";
-import { PageBreadcrumbs } from "@/components/shared/page-breadcrumbs";
-import { Loading01Icon, InformationCircleIcon } from "hugeicons-react";
+import { InformationCircleIcon, Loading01Icon } from "hugeicons-react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { toast } from "sonner";
+import { PageBreadcrumbs } from "@/components/shared/page-breadcrumbs";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
+import { createCircleSchema } from "@/lib/validations";
 
 type FormErrors = Partial<Record<string, string>>;
 
@@ -43,10 +43,7 @@ export default function CreateCirclePage() {
     },
   });
 
-  function handleChange(
-    field: keyof typeof initial,
-    value: string | number,
-  ) {
+  function handleChange(field: keyof typeof initial, value: string | number) {
     setForm((prev) => ({ ...prev, [field]: value }));
     setErrors((prev) => ({ ...prev, [field]: undefined }));
   }
@@ -94,10 +91,14 @@ export default function CreateCirclePage() {
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-5">
         <div className="flex flex-col gap-2">
-          <label className="text-[10px] font-semibold tracking-[0.05em] text-muted-foreground uppercase">
+          <label
+            htmlFor="circleName"
+            className="text-[10px] font-semibold tracking-[0.05em] text-muted-foreground uppercase"
+          >
             Circle Name
           </label>
           <Input
+            id="circleName"
             placeholder="e.g. Lagos Travelers Savings"
             value={form.name}
             onChange={(e) => handleChange("name", e.target.value)}
@@ -109,10 +110,14 @@ export default function CreateCirclePage() {
         </div>
 
         <div className="flex flex-col gap-2">
-          <label className="text-[10px] font-semibold tracking-[0.05em] text-muted-foreground uppercase">
+          <label
+            htmlFor="amount"
+            className="text-[10px] font-semibold tracking-[0.05em] text-muted-foreground uppercase"
+          >
             Amount per Member (₦)
           </label>
           <Input
+            id="amount"
             type="number"
             min={1}
             placeholder="5000"
@@ -133,9 +138,9 @@ export default function CreateCirclePage() {
         </div>
 
         <div className="flex flex-col gap-2">
-          <label className="text-[10px] font-semibold tracking-[0.05em] text-muted-foreground uppercase">
+          <span className="text-[10px] font-semibold tracking-[0.05em] text-muted-foreground uppercase">
             Contribution Frequency
-          </label>
+          </span>
           <div className="flex gap-2">
             {freqOptions.map((opt) => (
               <button
@@ -159,18 +164,20 @@ export default function CreateCirclePage() {
         </div>
 
         <div className="flex flex-col gap-2">
-          <label className="text-[10px] font-semibold tracking-[0.05em] text-muted-foreground uppercase">
+          <label
+            htmlFor="cycleCount"
+            className="text-[10px] font-semibold tracking-[0.05em] text-muted-foreground uppercase"
+          >
             Number of Cycles
           </label>
           <Input
+            id="cycleCount"
             type="number"
             min={2}
             max={100}
             placeholder="12"
             value={form.cycleCount || ""}
-            onChange={(e) =>
-              handleChange("cycleCount", Number(e.target.value))
-            }
+            onChange={(e) => handleChange("cycleCount", Number(e.target.value))}
             aria-invalid={!!errors.cycleCount}
           />
           {errors.cycleCount && (

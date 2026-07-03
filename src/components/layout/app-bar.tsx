@@ -1,10 +1,10 @@
 "use client";
 
-import { useAuthStore } from "@/stores/auth-store";
-import { DiceBearAvatar } from "@/components/shared/dicebear-avatar";
-import { getGreeting } from "@/lib/utils";
 import { Notification01Icon } from "hugeicons-react";
 import Link from "next/link";
+import { DiceBearAvatar } from "@/components/shared/dicebear-avatar";
+import { getGreeting } from "@/lib/utils";
+import { useAuthStore } from "@/stores/auth-store";
 
 export function AppBar() {
   const user = useAuthStore((s) => s.user);

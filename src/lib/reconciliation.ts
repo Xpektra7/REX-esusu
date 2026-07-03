@@ -1,15 +1,15 @@
+import { and, asc, eq, inArray, sql } from "drizzle-orm";
 import { db } from "@/db";
 import {
   circles,
-  virtualAccounts,
   contributions,
   cycles,
   debts,
   membersCircles,
   notifications,
   users,
+  virtualAccounts,
 } from "@/db/schema";
-import { eq, and, asc, sql, inArray } from "drizzle-orm";
 
 type WebhookPayload = {
   event_type: string;
@@ -65,14 +65,14 @@ export async function reconcilePayment(payload: WebhookPayload) {
 
   const ourRef = extractReference(txn.narration || "");
 
-  let contribution: typeof contributions.$inferSelect | null = null;
+  let _contribution: typeof contributions.$inferSelect | null = null;
   if (ourRef) {
     const results = await db
       .select()
       .from(contributions)
       .where(eq(contributions.ourReference, ourRef))
       .limit(1);
-    contribution = results[0] || null;
+    _contribution = results[0] || null;
   }
 
   const actual = txn.transactionAmount || 0;
@@ -220,13 +220,13 @@ async function getOutstandingDebtsForMemberCircles(
     .where(
       and(inArray(debts.debtorMemberId, mcIds), eq(debts.status, "active")),
     );
-    return Number(rows[0]?.remaining) || 0;
+  return Number(rows[0]?.remaining) || 0;
 }
 
 async function applyFifoDebtClearing(
   userId: string,
   amountKobo: number,
-  vaId: string,
+  _vaId: string,
 ): Promise<number> {
   const mcIds = await getMemberCircleIds(userId);
   if (mcIds.length === 0) return amountKobo;
@@ -267,14 +267,16 @@ async function applyFifoDebtClearing(
 }
 
 async function allocateToCycle(
-  userId: string,
+  _userId: string,
   amountKobo: number,
   vaId: string,
   classification: Classification,
   expected: Record<string, number>,
 ): Promise<number> {
   let remaining = amountKobo;
-  const sortedEntries = Object.entries(expected).sort(([a], [b]) => a.localeCompare(b));
+  const sortedEntries = Object.entries(expected).sort(([a], [b]) =>
+    a.localeCompare(b),
+  );
   for (const [mcId, expectedAmt] of sortedEntries) {
     if (remaining <= 0) break;
 

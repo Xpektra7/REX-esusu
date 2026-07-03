@@ -1,13 +1,13 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { api } from "@/lib/api";
-import { Card } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Separator } from "@/components/ui/separator";
-import { PageBreadcrumbs } from "@/components/shared/page-breadcrumbs";
 import { Copy01Icon, Share08Icon } from "hugeicons-react";
 import { toast } from "sonner";
+import { PageBreadcrumbs } from "@/components/shared/page-breadcrumbs";
+import { Card } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
+import { api } from "@/lib/api";
 
 interface ReferralData {
   code: string;
@@ -37,10 +37,7 @@ export default function ReferralsPage() {
   return (
     <div className="flex flex-col gap-6">
       <PageBreadcrumbs
-        items={[
-          { label: "Home", href: "/dashboard" },
-          { label: "Referrals" },
-        ]}
+        items={[{ label: "Home", href: "/dashboard" }, { label: "Referrals" }]}
       />
 
       <div>
@@ -89,7 +86,7 @@ export default function ReferralsPage() {
           <div className="flex flex-col gap-2">
             {referral.referred.map((r, i) => (
               <div
-                key={i}
+                key={r.name || i}
                 className="flex items-center justify-between rounded-xl border border-border px-4 py-3"
               >
                 <p className="text-sm font-medium">{r.name}</p>

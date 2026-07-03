@@ -1,5 +1,5 @@
-import { NextRequest } from "next/server";
-import { success, error } from "@/lib/api-response";
+import type { NextRequest } from "next/server";
+import { error, success } from "@/lib/api-response";
 import { signToken, verifyToken } from "@/lib/auth";
 
 export async function POST(req: NextRequest) {

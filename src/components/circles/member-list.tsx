@@ -1,6 +1,6 @@
-import { cn } from "@/lib/utils";
 import { DiceBearAvatar } from "@/components/shared/dicebear-avatar";
 import { MEMBER_STATUS } from "@/lib/status";
+import { cn } from "@/lib/utils";
 import type { MemberItem } from "@/types";
 
 export type { MemberItem };

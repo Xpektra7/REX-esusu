@@ -1,9 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Manrope } from "next/font/google";
 import "./globals.css";
-import { cn } from "@/lib/utils";
 import { SerwistProvider } from "@serwist/next/react";
 import { Toaster } from "sonner";
+import { cn } from "@/lib/utils";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -46,12 +46,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={cn(
-        "h-full",
-        "antialiased",
-        inter.variable,
-        manrope.variable,
-      )}
+      className={cn("h-full", "antialiased", inter.variable, manrope.variable)}
     >
       <body className="min-h-full flex flex-col">
         <SerwistProvider swUrl="/sw.js">{children}</SerwistProvider>

@@ -1,20 +1,19 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { api } from "@/lib/api";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Separator } from "@/components/ui/separator";
-import { PageBreadcrumbs } from "@/components/shared/page-breadcrumbs";
-import { cn } from "@/lib/utils";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Notification01Icon } from "hugeicons-react";
 import { toast } from "sonner";
+import { PageBreadcrumbs } from "@/components/shared/page-breadcrumbs";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { api } from "@/lib/api";
+import { cn } from "@/lib/utils";
 
 interface NotificationItem {
   id: string;
   title: string;
   body: string;
-  readAt: string | null;
+  read: boolean;
   createdAt: string;
 }
 
@@ -50,7 +49,7 @@ export default function NotificationsPage() {
   });
 
   const notifications = (res?.data ?? []) as NotificationItem[];
-  const unreadCount = notifications.filter((n) => !n.readAt).length;
+  const unreadCount = notifications.filter((n) => !n.read).length;
 
   return (
     <div className="flex flex-col gap-6">
@@ -91,9 +90,7 @@ export default function NotificationsPage() {
       ) : notifications.length === 0 ? (
         <div className="flex flex-col items-center gap-4 rounded-xl border border-border p-8 text-center">
           <Notification01Icon className="size-8 text-muted-foreground" />
-          <p className="text-sm text-muted-foreground">
-            No notifications yet.
-          </p>
+          <p className="text-sm text-muted-foreground">No notifications yet.</p>
         </div>
       ) : (
         <div className="flex flex-col gap-2">
@@ -102,13 +99,13 @@ export default function NotificationsPage() {
               key={n.id}
               className={cn(
                 "flex items-start gap-3 rounded-xl border px-4 py-3",
-                n.readAt ? "border-border" : "border-primary/20",
+                n.read ? "border-border" : "border-primary/20",
               )}
             >
               <span
                 className={cn(
                   "mt-1.5 size-2 shrink-0 rounded-full",
-                  n.readAt ? "bg-muted-foreground/30" : "bg-primary",
+                  n.read ? "bg-muted-foreground/30" : "bg-primary",
                 )}
               />
               <div className="min-w-0 flex-1">

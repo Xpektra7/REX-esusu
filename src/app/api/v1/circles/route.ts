@@ -1,30 +1,44 @@
-import { NextRequest } from "next/server";
-import { success, error } from "@/lib/api-response";
-import { requireAuth } from "@/lib/middleware";
+import { and, count, eq, inArray } from "drizzle-orm";
+import type { NextRequest } from "next/server";
 import { db } from "@/db";
-import { circles, membersCircles, inviteCodes } from "@/db/schema";
-import { eq, and, count, inArray } from "drizzle-orm";
+import { circles, inviteCodes, membersCircles } from "@/db/schema";
+import { error, success } from "@/lib/api-response";
+import { requireAuth } from "@/lib/middleware";
 
 export async function GET(req: NextRequest) {
   const auth = requireAuth(req);
   if (auth.error) return auth.error;
 
-  const memberships = await db.select().from(membersCircles)
-    .where(eq(membersCircles.userId, auth.user!.userId));
+  const memberships = await db
+    .select()
+    .from(membersCircles)
+    .where(eq(membersCircles.userId, auth.user?.userId));
 
   if (memberships.length === 0) return success({ circles: [] });
 
   const circleIds = memberships.map((m) => m.circleId);
-  const circlesData = await db.select().from(circles).where(inArray(circles.id, circleIds));
+  const circlesData = await db
+    .select()
+    .from(circles)
+    .where(inArray(circles.id, circleIds));
 
-  const memberCountRows = await db.select({
-    circleId: membersCircles.circleId,
-    value: count(),
-  }).from(membersCircles)
-    .where(and(inArray(membersCircles.circleId, circleIds), eq(membersCircles.status, "active")))
+  const memberCountRows = await db
+    .select({
+      circleId: membersCircles.circleId,
+      value: count(),
+    })
+    .from(membersCircles)
+    .where(
+      and(
+        inArray(membersCircles.circleId, circleIds),
+        eq(membersCircles.status, "active"),
+      ),
+    )
     .groupBy(membersCircles.circleId);
 
-  const memberCountMap = new Map(memberCountRows.map((r) => [r.circleId, r.value]));
+  const memberCountMap = new Map(
+    memberCountRows.map((r) => [r.circleId, r.value]),
+  );
 
   const circlesList = circlesData.map((circle) => {
     const mc = memberships.find((m) => m.circleId === circle.id);
@@ -49,28 +63,40 @@ export async function POST(req: NextRequest) {
   if (auth.error) return auth.error;
 
   try {
-    const { name, contributionAmountKobo, frequency, cycleCount, defaultResolutionRule, gracePeriodHours } = await req.json();
+    const {
+      name,
+      contributionAmountKobo,
+      frequency,
+      cycleCount,
+      defaultResolutionRule,
+      gracePeriodHours,
+    } = await req.json();
     if (!name || !contributionAmountKobo || !frequency || !cycleCount) {
-      return error("name, contributionAmountKobo, frequency, and cycleCount are required");
+      return error(
+        "name, contributionAmountKobo, frequency, and cycleCount are required",
+      );
     }
 
     const cyclePeriodDays = frequency === "weekly" ? 7 : 30;
     const grace = gracePeriodHours || (frequency === "weekly" ? 24 : 72);
     const code = Math.random().toString(36).substring(2, 10).toUpperCase();
 
-    const [circle] = await db.insert(circles).values({
-      creatorId: auth.user!.userId,
-      name,
-      contributionAmountKobo,
-      frequency,
-      cyclePeriodDays,
-      cycleCount,
-      defaultResolutionRule: defaultResolutionRule || "absorb",
-      gracePeriodHours: grace,
-    }).returning();
+    const [circle] = await db
+      .insert(circles)
+      .values({
+        creatorId: auth.user?.userId,
+        name,
+        contributionAmountKobo,
+        frequency,
+        cyclePeriodDays,
+        cycleCount,
+        defaultResolutionRule: defaultResolutionRule || "absorb",
+        gracePeriodHours: grace,
+      })
+      .returning();
 
     await db.insert(membersCircles).values({
-      userId: auth.user!.userId,
+      userId: auth.user?.userId,
       circleId: circle.id,
       role: "admin",
       status: "active",
@@ -78,21 +104,24 @@ export async function POST(req: NextRequest) {
 
     await db.insert(inviteCodes).values({
       circleId: circle.id,
-      createdBy: auth.user!.userId,
+      createdBy: auth.user?.userId,
       code,
     });
 
-    return success({
-      id: circle.id,
-      name: circle.name,
-      inviteCode: code,
-      contributionAmountKobo: circle.contributionAmountKobo,
-      frequency: circle.frequency,
-      cyclePeriodDays: circle.cyclePeriodDays,
-      cycleCount: circle.cycleCount,
-      members: 1,
-      status: circle.status,
-    }, "Circle created");
+    return success(
+      {
+        id: circle.id,
+        name: circle.name,
+        inviteCode: code,
+        contributionAmountKobo: circle.contributionAmountKobo,
+        frequency: circle.frequency,
+        cyclePeriodDays: circle.cyclePeriodDays,
+        cycleCount: circle.cycleCount,
+        members: 1,
+        status: circle.status,
+      },
+      "Circle created",
+    );
   } catch (e) {
     return error((e as Error).message);
   }

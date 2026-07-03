@@ -1,5 +1,5 @@
-import { NextRequest } from "next/server";
-import { success, error } from "@/lib/api-response";
+import type { NextRequest } from "next/server";
+import { error, success } from "@/lib/api-response";
 import { requireAuth } from "@/lib/middleware";
 import { nombaPost } from "@/lib/nomba";
 
@@ -9,7 +9,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const { accountNumber, bankCode } = await req.json();
-    
+
     if (!accountNumber || !bankCode) {
       return error("accountNumber and bankCode are required");
     }
@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
       accountNumber,
       bankCode,
     });
-    
+
     return success(result);
   } catch (e) {
     return error((e as Error).message);

@@ -46,6 +46,13 @@
 - Show loading spinner on submit button during submission
 - Handle network errors gracefully (not just "Something went wrong")
 
+## Casing Convention (Strict)
+- **camelCase** for all code identifiers: variables (`balanceKobo`), functions (`formatNaira`), object properties (`memberPosition`), URL query params (`?mode=set`), Zod fields, Zustand store fields
+- **kebab-case** for file names: `circle-card.tsx`, `page-breadcrumbs.tsx`, `auth-store.ts`
+- **PascalCase** for component names (`CircleCard`) and TypeScript types/interfaces (`CircleListItem`)
+- URL route segments: kebab-case (`/wallet/withdraw`, `/circles/[id]/join`)
+- **Never snake_case** in identifiers, types, API responses, or URL params — except DB column names (database convention)
+
 ## File & Folder Conventions
 - One component per file, named `kebab-case.tsx`
 - Page files: `page.tsx` inside route group folders

@@ -12,8 +12,8 @@ export default function AboutPage() {
           Millions of Nigerians participate in traditional Ajo/Esusu savings
           groups, but these systems are manual, trust-dependent, and lack
           transparency. Esusu digitizes this trusted tradition using Nomba's
-          Virtual Account infrastructure — giving every user a real bank
-          account number, automatic reconciliation via webhooks, and complete
+          Virtual Account infrastructure — giving every user a real bank account
+          number, automatic reconciliation via webhooks, and complete
           transparency into every cycle.
         </p>
       </section>

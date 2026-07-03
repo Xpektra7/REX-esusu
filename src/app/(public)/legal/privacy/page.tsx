@@ -19,16 +19,16 @@ export default function PrivacyPage() {
           <h2 className="font-semibold">2. BVN Handling</h2>
           <p className="mt-1 text-sm text-muted-foreground">
             BVN is encrypted at rest using AES-256-GCM. Only decrypted when
-            provisioning Nomba virtual accounts. Never stored in logs. Only
-            last 4 digits ever displayed.
+            provisioning Nomba virtual accounts. Never stored in logs. Only last
+            4 digits ever displayed.
           </p>
         </div>
         <div>
           <h2 className="font-semibold">3. Data Sharing</h2>
           <p className="mt-1 text-sm text-muted-foreground">
             We share BVN with Nomba for VA creation. Circle members see your
-            name, contribution status, and trust score. We use Vercel and
-            Gmail for infrastructure. We do not sell your data.
+            name, contribution status, and trust score. We use Vercel and Gmail
+            for infrastructure. We do not sell your data.
           </p>
         </div>
         <div>

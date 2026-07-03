@@ -1,37 +1,42 @@
 "use client";
 
-import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { api } from "@/lib/api";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Separator } from "@/components/ui/separator";
-import { PageBreadcrumbs } from "@/components/shared/page-breadcrumbs";
-import { DiceBearAvatar } from "@/components/shared/dicebear-avatar";
-import { formatNaira } from "@/lib/utils";
 import {
+  ArrowUp01Icon,
+  PlusSignIcon,
   ViewIcon,
   ViewOffIcon,
-  PlusSignIcon,
-  ArrowUp01Icon,
 } from "hugeicons-react";
 import Link from "next/link";
-import { cn } from "@/lib/utils";
+import { useState } from "react";
+import { DiceBearAvatar } from "@/components/shared/dicebear-avatar";
+import { PageBreadcrumbs } from "@/components/shared/page-breadcrumbs";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
+import { api } from "@/lib/api";
+import { cn, formatNaira } from "@/lib/utils";
 
-interface RawTx {
-  type: string;
+interface WalletTransaction {
+  id: string;
+  type: "credit" | "debit";
   amountKobo: number;
   reference: string;
   status: string;
+  description: string;
+  metadata: unknown;
   createdAt: string;
 }
 
-interface Transaction {
-  type: "credit" | "debit";
-  amount: number;
-  description: string;
-  date: string;
+interface WalletData {
+  balanceKobo: number;
+  virtualAccount: {
+    accountNumber: string;
+    accountName: string;
+    bankCode: string;
+  };
+  pendingReconciliationKobo: number;
 }
 
 export default function WalletPage() {
@@ -47,22 +52,13 @@ export default function WalletPage() {
     queryFn: () => api.wallet.transactions(),
   });
 
-  const balanceKobo = res?.data?.balanceKobo ?? 0;
-  const rawTxs = (txRes?.data as { transactions?: RawTx[] })?.transactions ?? [];
-  const transactions: Transaction[] = rawTxs.map((t) => ({
-    type: t.type as "credit" | "debit",
-    amount: t.amountKobo,
-    description: t.reference,
-    date: t.createdAt,
-  }));
+  const wallet = res?.data as WalletData | undefined;
+  const transactions = (txRes?.data ?? []) as WalletTransaction[];
 
   return (
     <div className="flex flex-col gap-6">
       <PageBreadcrumbs
-        items={[
-          { label: "Home", href: "/dashboard" },
-          { label: "Wallet" },
-        ]}
+        items={[{ label: "Home", href: "/dashboard" }, { label: "Wallet" }]}
       />
 
       {isLoading ? (
@@ -88,7 +84,7 @@ export default function WalletPage() {
             </div>
 
             <p className="py-3 font-heading text-3xl font-semibold text-card-foreground">
-              {hidden ? "****" : formatNaira(balanceKobo, 2)}
+              {hidden ? "****" : formatNaira(wallet?.balanceKobo ?? 0, 2)}
             </p>
 
             <div className="flex gap-3">
@@ -130,11 +126,11 @@ export default function WalletPage() {
           </Card>
         ) : (
           <div className="flex flex-col gap-2">
-            {transactions.map((tx, i) => {
+            {transactions.map((tx) => {
               const isCredit = tx.type === "credit";
               return (
                 <div
-                  key={i}
+                  key={tx.id}
                   className="flex items-center justify-between rounded-xl border border-border px-4 py-3"
                 >
                   <div className="flex items-center gap-3">
@@ -142,7 +138,7 @@ export default function WalletPage() {
                     <div>
                       <p className="text-sm font-medium">{tx.description}</p>
                       <p className="text-xs text-muted-foreground">
-                        {new Date(tx.date).toLocaleDateString("en-NG", {
+                        {new Date(tx.createdAt).toLocaleDateString("en-NG", {
                           day: "numeric",
                           month: "short",
                         })}
@@ -156,7 +152,7 @@ export default function WalletPage() {
                     )}
                   >
                     {isCredit ? "+" : "-"}
-                    {formatNaira(tx.amount)}
+                    {formatNaira(tx.amountKobo)}
                   </p>
                 </div>
               );

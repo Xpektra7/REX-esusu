@@ -1,8 +1,8 @@
 "use client";
 
+import { SmartPhone01Icon } from "hugeicons-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { SmartPhone01Icon } from "hugeicons-react";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -75,10 +75,8 @@ export function InstallPrompt() {
           <h3 className="text-lg font-semibold">Install on iPhone</h3>
           <p className="max-w-sm text-sm text-muted-foreground">
             Tap Share{" "}
-            <span className="inline-block text-base leading-none">
-              ↑
-            </span>{" "}
-            then scroll down and tap <strong>Add to Home Screen</strong>.
+            <span className="inline-block text-base leading-none">↑</span> then
+            scroll down and tap <strong>Add to Home Screen</strong>.
           </p>
         </>
       )}

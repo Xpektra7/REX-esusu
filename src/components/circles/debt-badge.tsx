@@ -1,7 +1,7 @@
 "use client";
 
-import { cn } from "@/lib/utils";
 import { DEBT_STATUS } from "@/lib/status";
+import { cn } from "@/lib/utils";
 
 export function DebtBadge({ status }: { status: string }) {
   return (

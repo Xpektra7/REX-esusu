@@ -9,13 +9,22 @@ export function error(description: string, code = "01", status = 400) {
 }
 
 export function unauthorized(description = "Unauthorized") {
-  return NextResponse.json({ code: "03", description, data: null }, { status: 401 });
+  return NextResponse.json(
+    { code: "03", description, data: null },
+    { status: 401 },
+  );
 }
 
 export function notFound(description = "Not found") {
-  return NextResponse.json({ code: "04", description, data: null }, { status: 404 });
+  return NextResponse.json(
+    { code: "04", description, data: null },
+    { status: 404 },
+  );
 }
 
 export function conflict(description = "Conflict") {
-  return NextResponse.json({ code: "05", description, data: null }, { status: 409 });
+  return NextResponse.json(
+    { code: "05", description, data: null },
+    { status: 409 },
+  );
 }

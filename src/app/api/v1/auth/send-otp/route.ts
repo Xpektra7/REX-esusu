@@ -1,7 +1,7 @@
-import { NextRequest } from "next/server";
-import { success, error } from "@/lib/api-response";
-import { generateOtp, getFixedOtp, storeOtp } from "@/lib/otp";
+import type { NextRequest } from "next/server";
+import { error, success } from "@/lib/api-response";
 import { findUserByPhone } from "@/lib/auth";
+import { generateOtp, getFixedOtp, storeOtp } from "@/lib/otp";
 
 export async function POST(req: NextRequest) {
   try {
@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
 
     const existing = await findUserByPhone(phone);
     const otp = getFixedOtp(phone) || generateOtp();
-    storeOtp(phone, otp);
+    await storeOtp(phone, otp);
 
     if (!getFixedOtp(phone)) {
       // In production, send OTP via email/Gmail SMTP here
