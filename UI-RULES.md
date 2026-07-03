@@ -91,7 +91,13 @@
 - No `dangerouslySetInnerHTML` unless sanitized
 - User input always goes through Zod validation before reaching API
 
-## Comments
-- Comments are allowed where they clarify non-obvious logic
-- Prefer self-documenting code over comments where possible
-- No commented-out code — delete it
+## Merge & Conflict Prevention
+- **Never prefix active variables with `_`** — `_daysLeft` signals "unused". If a variable is used, name it without underscore (`daysLeft`). If truly unused, remove it entirely.
+- **Mock shapes must match the live API response shape** — when the live API returns `{ balanceKobo }`, the mock must too. If the frontend consumes a different shape, update the frontend, not the mock.
+- **Do not fix the same bug in parallel** — before fixing an API shape mismatch or type error, check `git log --oneline -20` to see if someone else already pushed a fix. If in doubt, rebase first.
+- **Import order is managed by Biome** — run `npx biome check --write` before committing. Manual import reorganization always conflicts.
+- **Auth store accepts both `camelCase` and `snake_case`** — the `setAuth` action handles both conventions (`access_token` and `token`, `needs_bvn` and `needsBvn`). Prefer camelCase in new code, but don't refactor the store — it normalizes.
+- **Comments**
+  - Comments are allowed where they clarify non-obvious logic
+  - Prefer self-documenting code over comments where possible
+  - No commented-out code — delete it

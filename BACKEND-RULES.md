@@ -48,6 +48,13 @@
 - Never modify the database directly — always through Drizzle
 - Connection string in `.env` as `DATABASE_URL`
 
+## Merge & Conflict Prevention
+- **Prefer `|| ""` over `!` for env var assertions** — `process.env.FOO || ""` is merge-safe. The `!` non-null assertion causes conflicts when someone adds a default value in a parallel branch.
+- **Route handler response shapes are owned by the handler** — the mock in `api.ts` must mirror the route handler's return type. Always update both together in the same commit.
+- **Import order is managed by Biome** — run `npx biome check --write` before committing. Manual import reorganization always conflicts with parallel work.
+- **Do not fix the same bug in parallel** — before fixing an API shape mismatch or type error, check `git log --oneline -20` to see if someone else already pushed a fix. If in doubt, rebase first.
+- **Dead-prefixed variables become active** — if you prefix a variable with `_` (e.g., `_daysLeft`) to suppress a TS error, someone will later use it. Either remove the variable entirely or name it properly from the start.
+
 ## Security
 - BVN and PIN fields are never logged or returned in responses after verification
 - JWT secrets from environment variables, not hardcoded
