@@ -31,7 +31,7 @@ export default function CircleDetailPage(props: {
     mutationFn: () => api.circles.invite(id),
     onSuccess: (res: unknown) => {
       const code =
-        (res as { data?: { invite_code?: string } })?.data?.invite_code ??
+        (res as { data?: { inviteCode?: string } })?.data?.inviteCode ??
         "ESUSU-XYZ";
       navigator.clipboard.writeText(code);
       toast.success(`Invite code copied: ${code}`);
@@ -67,12 +67,12 @@ export default function CircleDetailPage(props: {
   }
 
   const members = circle.members ?? [];
-  const totalPot = circle.contribution_amount * members.length;
+  const totalPot = circle.contributionAmount * members.length;
   const progress =
-    circle.cycle_count > 0
-      ? (circle.current_cycle / circle.cycle_count) * 100
+    circle.cycleCount > 0
+      ? (circle.currentCycle / circle.cycleCount) * 100
       : 0;
-  const daysLeft = circle.deadline_at ? daysUntil(circle.deadline_at) : null;
+  const daysLeft = circle.deadlineAt ? daysUntil(circle.deadlineAt) : null;
 
   return (
     <div className="flex flex-col gap-6">
@@ -92,15 +92,15 @@ export default function CircleDetailPage(props: {
       <HeroPotCard
         totalPot={totalPot}
         progress={progress}
-        currentCycle={circle.current_cycle}
-        cycleCount={circle.cycle_count}
-        contributionAmount={circle.contribution_amount}
+        currentCycle={circle.currentCycle}
+        cycleCount={circle.cycleCount}
+        contributionAmount={circle.contributionAmount}
         frequency={circle.frequency}
       />
 
       <NextPayoutCard
         daysLeft={2}
-        payoutAmount={totalPot / circle.cycle_count}
+        payoutAmount={totalPot / circle.cycleCount}
       />
 
       <Separator />

@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { success, error, notFound } from "@/lib/api-response";
 import { requireAuth } from "@/lib/middleware";
 import { db } from "@/db";
-import { circles, membersCircles, users } from "@/db/schema";
+import { circles, membersCircles, users, inviteCodes, cycles } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -14,10 +14,18 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     const [circle] = await db.select().from(circles).where(eq(circles.id, id)).limit(1);
     if (!circle) return notFound("Circle not found");
 
-    const members = await db.select({
+    const [inviteRecord] = await db.select().from(inviteCodes)
+      .where(eq(inviteCodes.circleId, id)).limit(1);
+
+    const [currentCycle] = await db.select().from(cycles)
+      .where(and(eq(cycles.circleId, id), eq(cycles.status, "active")))
+      .limit(1);
+
+    const rows = await db.select({
       id: membersCircles.id,
       userId: membersCircles.userId,
       name: users.name,
+      phone: users.phone,
       role: membersCircles.role,
       status: membersCircles.status,
       trustScore: users.trustScore,
@@ -26,18 +34,27 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     }).from(membersCircles).innerJoin(users, eq(users.id, membersCircles.userId))
       .where(eq(membersCircles.circleId, id));
 
+    const members = rows.map((r) => ({
+      id: r.id,
+      role: r.role,
+      status: r.status,
+      rotationOrder: r.rotationOrder,
+      missedCycles: r.missedCycles,
+      user: { name: r.name, phone: r.phone ?? undefined, trustScore: r.trustScore },
+    }));
+
     return success({
       id: circle.id,
       name: circle.name,
-      contributionAmountKobo: circle.contributionAmountKobo,
+      status: circle.status,
+      contributionAmount: circle.contributionAmountKobo,
       frequency: circle.frequency,
       cycleCount: circle.cycleCount,
       currentCycle: circle.currentCycle,
-      defaultResolutionRule: circle.defaultResolutionRule,
-      gracePeriodHours: circle.gracePeriodHours,
-      status: circle.status,
+      inviteCode: inviteRecord?.code,
+      cyclePeriodDays: circle.cyclePeriodDays,
+      deadlineAt: currentCycle?.deadlineAt?.toISOString(),
       members,
-      createdAt: circle.createdAt,
     });
   } catch (e) {
     return error((e as Error).message);

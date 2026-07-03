@@ -4,8 +4,8 @@ import { DebtBadge } from "@/components/circles/debt-badge";
 import { formatNaira } from "@/lib/utils";
 
 interface DebtItem {
-  member_name: string;
-  amount_kobo: number;
+  memberName: string;
+  amountKobo: number;
   cycle: number;
   status: string;
 }
@@ -31,9 +31,9 @@ export function DebtHistoryList({ debts }: DebtHistoryListProps) {
           className="flex items-center justify-between rounded-xl bg-card px-4 py-3"
         >
           <div>
-            <p className="text-sm font-medium">{debt.member_name}</p>
+            <p className="text-sm font-medium">{debt.memberName}</p>
             <p className="text-xs text-muted-foreground">
-              {formatNaira(debt.amount_kobo)} · Cycle #{debt.cycle}
+              {formatNaira(debt.amountKobo)} · Cycle #{debt.cycle}
             </p>
           </div>
           <DebtBadge status={debt.status} />

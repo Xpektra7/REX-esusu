@@ -40,25 +40,25 @@ export async function GET(
     const contribs = memberRows.map((m) => {
       const c = contributionRows.find((cr) => cr.memberCircleId === m.memberId);
       return {
-        member_id: m.memberId,
-        member_name: m.name,
-        amount_kobo: c?.amountKobo ?? 0,
+        memberId: m.memberId,
+        memberName: m.name,
+        amountKobo: c?.amountKobo ?? 0,
         status: c ? (c.status === "reconciled" || c.status === "fully_applied" ? "paid" : "pending") : "pending",
-        paid_at: c?.reconciledAt ?? undefined,
+        paidAt: c?.reconciledAt ?? undefined,
       };
     });
 
     return success({
       id: cycle.id,
-      circle_id: cycle.circleId,
-      recipient_member_id: cycle.recipientMemberId,
-      cycle_number: cycle.cycleNumber,
-      expected_total_kobo: cycle.expectedTotalKobo,
-      actual_total_kobo: cycle.actualTotalKobo,
+      circleId: cycle.circleId,
+      recipientMemberId: cycle.recipientMemberId,
+      cycleNumber: cycle.cycleNumber,
+      expectedTotalKobo: cycle.expectedTotalKobo,
+      actualTotalKobo: cycle.actualTotalKobo,
       status: cycle.status,
-      starts_at: cycle.startsAt,
-      deadline_at: cycle.deadlineAt,
-      closed_at: cycle.closedAt,
+      startsAt: cycle.startsAt,
+      deadlineAt: cycle.deadlineAt,
+      closedAt: cycle.closedAt,
       contributions: contribs,
     });
   } catch (e) {

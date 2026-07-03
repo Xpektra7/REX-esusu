@@ -24,7 +24,7 @@ interface UserProfile {
   phone: string;
   email: string;
   bvn_last4: string;
-  trust_score: number;
+  trustScore: number;
 }
 
 function SettingsRow({
@@ -119,14 +119,14 @@ export default function ProfilePage() {
                 Trust Score
               </p>
               <p className="font-heading text-lg font-bold text-primary">
-                {user.trust_score}
+                {user.trustScore}
               </p>
             </div>
           </div>
           <div className="mt-3 h-1.5 w-full rounded-full bg-muted">
             <div
               className="h-full rounded-full bg-primary transition-all"
-              style={{ width: `${user.trust_score}%` }}
+              style={{ width: `${user.trustScore}%` }}
             />
           </div>
           <p className="mt-2 text-[10px] text-muted-foreground">

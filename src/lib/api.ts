@@ -12,8 +12,8 @@ const mockMembers = [
     user_id: "user_mock_001",
     role: "admin",
     status: "active",
-    rotation_order: 1,
-    missed_cycles: 0,
+    rotationOrder: 1,
+    missedCycles: 0,
     joined_at: "2025-01-15T00:00:00Z",
     left_at: null,
     user: {
@@ -21,10 +21,10 @@ const mockMembers = [
       name: "Chioma Okafor",
       phone: "+2348012345678",
       email: "chioma@example.com",
-      trust_score: 85,
+      trustScore: 85,
       bvn_last4: "1234",
-      created_at: "",
-      updated_at: "",
+      createdAt: "",
+      updatedAt: "",
     },
   },
   {
@@ -32,8 +32,8 @@ const mockMembers = [
     user_id: "user_mock_002",
     role: "member",
     status: "invited",
-    rotation_order: 2,
-    missed_cycles: 0,
+    rotationOrder: 2,
+    missedCycles: 0,
     joined_at: "2025-01-15T00:00:00Z",
     left_at: null,
     user: {
@@ -41,10 +41,10 @@ const mockMembers = [
       name: "Emeka Nwosu",
       phone: "+2348123456789",
       email: "emeka@example.com",
-      trust_score: 72,
+      trustScore: 72,
       bvn_last4: "5678",
-      created_at: "",
-      updated_at: "",
+      createdAt: "",
+      updatedAt: "",
     },
   },
   {
@@ -52,8 +52,8 @@ const mockMembers = [
     user_id: "user_mock_003",
     role: "member",
     status: "active",
-    rotation_order: 3,
-    missed_cycles: 0,
+    rotationOrder: 3,
+    missedCycles: 0,
     joined_at: "2025-01-15T00:00:00Z",
     left_at: null,
     user: {
@@ -61,10 +61,10 @@ const mockMembers = [
       name: "Aisha Bello",
       phone: "+2348034567890",
       email: "aisha@example.com",
-      trust_score: 91,
+      trustScore: 91,
       bvn_last4: "9012",
-      created_at: "",
-      updated_at: "",
+      createdAt: "",
+      updatedAt: "",
     },
   },
   {
@@ -72,8 +72,8 @@ const mockMembers = [
     user_id: "user_mock_004",
     role: "member",
     status: "completed",
-    rotation_order: 4,
-    missed_cycles: 1,
+    rotationOrder: 4,
+    missedCycles: 1,
     joined_at: "2025-01-20T00:00:00Z",
     left_at: null,
     user: {
@@ -81,10 +81,10 @@ const mockMembers = [
       name: "Tunde Balogun",
       phone: "+2348055555555",
       email: "tunde@example.com",
-      trust_score: 45,
+      trustScore: 45,
       bvn_last4: "3456",
-      created_at: "",
-      updated_at: "",
+      createdAt: "",
+      updatedAt: "",
     },
   },
   {
@@ -92,8 +92,8 @@ const mockMembers = [
     user_id: "user_mock_005",
     role: "member",
     status: "defaulted",
-    rotation_order: 5,
-    missed_cycles: 3,
+    rotationOrder: 5,
+    missedCycles: 3,
     joined_at: "2025-01-15T00:00:00Z",
     left_at: null,
     user: {
@@ -101,10 +101,10 @@ const mockMembers = [
       name: "Funke Adeyemi",
       phone: "+2348166666666",
       email: "funke@example.com",
-      trust_score: 28,
+      trustScore: 28,
       bvn_last4: "7890",
-      created_at: "",
-      updated_at: "",
+      createdAt: "",
+      updatedAt: "",
     },
   },
 ];
@@ -231,25 +231,25 @@ async function mockRequest<T>(
           id: "circle_mock_001",
           name: "Weekend Travelers",
           status: "active",
-          contribution_amount: 500000,
+          contributionAmount: 500000,
           frequency: "weekly",
           type: "Rotating Savings Group",
-          current_cycle: 4,
-          cycle_count: 12,
-          member_position: 3,
-          total_members: 10,
+          currentCycle: 4,
+          cycleCount: 12,
+          memberPosition: 3,
+          totalMembers: 10,
         },
         {
           id: "circle_mock_002",
           name: "Rent Savers",
           status: "active",
-          contribution_amount: 2500000,
+          contributionAmount: 2500000,
           frequency: "monthly",
           type: "Annual Contribution",
-          current_cycle: 2,
-          cycle_count: 10,
-          member_position: 1,
-          total_members: 5,
+          currentCycle: 2,
+          cycleCount: 10,
+          memberPosition: 1,
+          totalMembers: 5,
         },
       ] as T,
     };
@@ -260,7 +260,7 @@ async function mockRequest<T>(
     return {
       code: "00",
       description: "Circle created",
-      data: { id: "circle_mock_001", invite_code: "ESUSU-XYZ", ...body } as T,
+      data: { id: "circle_mock_001", inviteCode: "ESUSU-XYZ", ...body } as T,
     };
   }
 
@@ -271,40 +271,40 @@ async function mockRequest<T>(
       code: "00",
       description: "OK",
       data: {
-        total_contributions_kobo: 5000000,
-        total_payouts_kobo: 4500000,
-        default_rate: 2.5,
+        totalContributionsKobo: 5000000,
+        totalPayoutsKobo: 4500000,
+        defaultRate: 2.5,
         members: 8,
         cycles: [
           {
-            cycle_number: 1,
+            cycleNumber: 1,
             status: "paid_out",
-            total_kobo: 5000000,
-            completed_at: "2025-02-15T00:00:00Z",
+            totalKobo: 5000000,
+            completedAt: "2025-02-15T00:00:00Z",
           },
           {
-            cycle_number: 2,
+            cycleNumber: 2,
             status: "paid_out",
-            total_kobo: 4900000,
-            completed_at: "2025-03-15T00:00:00Z",
+            totalKobo: 4900000,
+            completedAt: "2025-03-15T00:00:00Z",
           },
           {
-            cycle_number: 3,
+            cycleNumber: 3,
             status: "active",
-            total_kobo: 4500000,
-            completed_at: null,
+            totalKobo: 4500000,
+            completedAt: null,
           },
         ],
         debts: [
           {
-            member_name: "Funke Adeyemi",
-            amount_kobo: 500000,
+            memberName: "Funke Adeyemi",
+            amountKobo: 500000,
             cycle: 3,
             status: "active",
           },
           {
-            member_name: "Tunde Balogun",
-            amount_kobo: 250000,
+            memberName: "Tunde Balogun",
+            amountKobo: 250000,
             cycle: 2,
             status: "cleared",
           },
@@ -330,7 +330,7 @@ async function mockRequest<T>(
       code: "00",
       description: "Invite generated",
       data: {
-        invite_code: "ESUSU-XYZ",
+        inviteCode: "ESUSU-XYZ",
         link: "https://esusu.app/join/ESUSU-XYZ",
       } as T,
     };
@@ -345,19 +345,19 @@ async function mockRequest<T>(
       description: "OK",
       data: {
         id: circleId,
-        creator_id: "user_mock_001",
+        creatorId: "user_mock_001",
         name: "Weekend Travelers",
-        contribution_amount: 500000,
+        contributionAmount: 500000,
         frequency: "weekly",
-        cycle_period_days: 7,
-        cycle_count: 12,
-        current_cycle: 4,
-        default_resolution_rule: "absorb",
-        grace_period_hours: 24,
+        cyclePeriodDays: 7,
+        cycleCount: 12,
+        currentCycle: 4,
+        defaultResolutionRule: "absorb",
+        gracePeriodHours: 24,
         status: "active",
-        created_at: "2025-01-15T00:00:00Z",
-        updated_at: new Date().toISOString(),
-        invite_code: "ESUSU-XYZ",
+        createdAt: "2025-01-15T00:00:00Z",
+        updatedAt: new Date().toISOString(),
+        inviteCode: "ESUSU-XYZ",
         members: mockMembers,
       } as T,
     };
@@ -372,21 +372,21 @@ async function mockRequest<T>(
       description: "OK",
       data: {
         id: `cycle_mock_00${cycleNum}`,
-        circle_id: cycleByCircleMatch[1],
-        recipient_member_id:
+        circleId: cycleByCircleMatch[1],
+        recipientMemberId:
           cycleNum <= 3 ? mockMembers[cycleNum - 1]?.user_id : "user_mock_001",
-        cycle_number: cycleNum,
-        expected_total_kobo: 5000000,
-        actual_total_kobo: cycleNum <= 2 ? 5000000 : 4500000,
+        cycleNumber: cycleNum,
+        expectedTotalKobo: 5000000,
+        actualTotalKobo: cycleNum <= 2 ? 5000000 : 4500000,
         status:
           cycleNum <= 2 ? "paid_out" : cycleNum === 3 ? "active" : "pending",
-        starts_at: new Date(
+        startsAt: new Date(
           Date.now() - (12 - cycleNum) * 7 * 86400000,
         ).toISOString(),
-        deadline_at: new Date(
+        deadlineAt: new Date(
           Date.now() + (cycleNum - 3) * 7 * 86400000,
         ).toISOString(),
-        closed_at:
+        closedAt:
           cycleNum <= 2
             ? new Date(
                 Date.now() - (12 - cycleNum) * 7 * 86400000 + 86400000,
@@ -394,38 +394,38 @@ async function mockRequest<T>(
             : null,
         contributions: [
           {
-            member_id: "user_mock_001",
-            member_name: "Chioma Okafor",
-            amount_kobo: 500000,
+            memberId: "user_mock_001",
+            memberName: "Chioma Okafor",
+            amountKobo: 500000,
             status: "paid" as const,
-            paid_at: new Date(
+            paidAt: new Date(
               Date.now() - (12 - cycleNum) * 7 * 86400000,
             ).toISOString(),
           },
           {
-            member_id: "user_mock_002",
-            member_name: "Emeka Nwosu",
-            amount_kobo: 500000,
+            memberId: "user_mock_002",
+            memberName: "Emeka Nwosu",
+            amountKobo: 500000,
             status: "paid" as const,
-            paid_at: new Date(
+            paidAt: new Date(
               Date.now() - (12 - cycleNum) * 7 * 86400000,
             ).toISOString(),
           },
           {
-            member_id: "user_mock_003",
-            member_name: "Aisha Bello",
-            amount_kobo: 500000,
+            memberId: "user_mock_003",
+            memberName: "Aisha Bello",
+            amountKobo: 500000,
             status: "paid" as const,
-            paid_at: new Date(
+            paidAt: new Date(
               Date.now() - (12 - cycleNum) * 7 * 86400000,
             ).toISOString(),
           },
           {
-            member_id: "user_mock_004",
-            member_name: "Tunde Balogun",
-            amount_kobo: 500000,
+            memberId: "user_mock_004",
+            memberName: "Tunde Balogun",
+            amountKobo: 500000,
             status: cycleNum >= 4 ? ("defaulted" as const) : ("paid" as const),
-            paid_at:
+            paidAt:
               cycleNum < 4
                 ? new Date(
                     Date.now() - (12 - cycleNum) * 7 * 86400000,
@@ -433,11 +433,11 @@ async function mockRequest<T>(
                 : undefined,
           },
           {
-            member_id: "user_mock_005",
-            member_name: "Funke Adeyemi",
-            amount_kobo: 500000,
+            memberId: "user_mock_005",
+            memberName: "Funke Adeyemi",
+            amountKobo: 500000,
             status: cycleNum >= 2 ? ("defaulted" as const) : ("paid" as const),
-            paid_at:
+            paidAt:
               cycleNum === 1
                 ? new Date(
                     Date.now() - (12 - cycleNum) * 7 * 86400000,
@@ -456,15 +456,15 @@ async function mockRequest<T>(
       description: "OK",
       data: {
         id: "cycle_mock_001",
-        circle_id: "circle_mock_001",
-        recipient_member_id: "user_mock_002",
-        cycle_number: 1,
-        expected_total_kobo: 4000000,
-        actual_total_kobo: 3800000,
+        circleId: "circle_mock_001",
+        recipientMemberId: "user_mock_002",
+        cycleNumber: 1,
+        expectedTotalKobo: 4000000,
+        actualTotalKobo: 3800000,
         status: "active",
-        starts_at: new Date().toISOString(),
-        deadline_at: new Date(Date.now() + 7 * 86400000).toISOString(),
-        closed_at: null,
+        startsAt: new Date().toISOString(),
+        deadlineAt: new Date(Date.now() + 7 * 86400000).toISOString(),
+        closedAt: null,
       } as T,
     };
   }
@@ -555,28 +555,28 @@ async function mockRequest<T>(
           title: "Payout Received",
           body: "You received ₦50,000 from Weekend Travelers cycle #4.",
           read_at: null,
-          created_at: new Date(Date.now() - 3600000).toISOString(),
+          createdAt: new Date(Date.now() - 3600000).toISOString(),
         },
         {
           id: "notif_002",
           title: "Contribution Due",
           body: "Your ₦25,000 contribution to Rent Savers is due tomorrow.",
           read_at: new Date(Date.now() - 86400000).toISOString(),
-          created_at: new Date(Date.now() - 172800000).toISOString(),
+          createdAt: new Date(Date.now() - 172800000).toISOString(),
         },
         {
           id: "notif_003",
           title: "Member Joined",
           body: "Tunde Balogun has joined Weekend Travelers.",
           read_at: null,
-          created_at: new Date(Date.now() - 604800000).toISOString(),
+          createdAt: new Date(Date.now() - 604800000).toISOString(),
         },
         {
           id: "notif_004",
           title: "Circle Completed",
           body: "Weekly Savers has completed all 12 cycles. Congratulations!",
           read_at: new Date(Date.now() - 1209600000).toISOString(),
-          created_at: new Date(Date.now() - 1209600000).toISOString(),
+          createdAt: new Date(Date.now() - 1209600000).toISOString(),
         },
       ] as T,
     };
@@ -597,9 +597,9 @@ async function mockRequest<T>(
         email: "chioma@example.com",
         name: "Chioma Okafor",
         bvn_last4: "1234",
-        trust_score: 85,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
+        trustScore: 85,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       } as T,
     };
   }
@@ -632,6 +632,12 @@ async function mockRequest<T>(
 
   // Fallback: unknown route
   throw new Error(`[mock] No handler for ${method} ${path}`);
+}
+
+function redirectToAuth() {
+  if (typeof window !== "undefined") {
+    window.location.href = "/auth";
+  }
 }
 
 /**
@@ -677,7 +683,7 @@ async function request<T>(
       const newToken = refreshJson.data?.accessToken ?? refreshJson.data?.token;
       if (newToken) {
         const currentUser = useAuthStore.getState().user;
-        if (!currentUser) { useAuthStore.getState().clearAuth(); throw new Error("Session expired"); }
+        if (!currentUser) { useAuthStore.getState().clearAuth(); redirectToAuth(); throw new Error("Session expired"); }
         useAuthStore.getState().setAuth({
           access_token: newToken,
           refresh_token: refreshToken,
@@ -690,7 +696,11 @@ async function request<T>(
       }
     } else {
       useAuthStore.getState().clearAuth();
+      redirectToAuth();
     }
+  } else if (res.status === 401) {
+    useAuthStore.getState().clearAuth();
+    redirectToAuth();
   }
 
   const json: ApiResponse<T> = await res.json();
@@ -762,7 +772,7 @@ export const api = {
 
   circles: {
     /** Lists all circles the current user belongs to. */
-    list: () => request<unknown[]>("/circles"),
+    list: () => request<{ circles: CircleListItem[] }>("/circles"),
 
     /** Gets a single circle by ID. */
     get: (id: string) => request<unknown>(`/circles/${id}`),
@@ -770,11 +780,11 @@ export const api = {
     /** Creates a new circle. Returns the circle ID + invite code. */
     create: (payload: {
       name: string;
-      contribution_amount: number;
+      contributionAmount: number;
       frequency: string;
-      cycle_count: number;
+      cycleCount: number;
     }) =>
-      request<{ id: string; invite_code: string }>("/circles", {
+      request<{ id: string; inviteCode: string }>("/circles", {
         method: "POST",
         body: JSON.stringify(payload),
       }),
@@ -787,7 +797,7 @@ export const api = {
     join: (id: string, inviteCode: string) =>
       request<{}>(`/circles/${id}/join`, {
         method: "POST",
-        body: JSON.stringify({ invite_code: inviteCode }),
+        body: JSON.stringify({ inviteCode: inviteCode }),
       }),
 
     /** Leaves a circle (only possible if no outstanding debts). */
@@ -796,7 +806,7 @@ export const api = {
 
     /** Generates an invite link for a circle. */
     invite: (id: string) =>
-      request<{ invite_code: string; link: string }>(`/circles/${id}/invite`, {
+      request<{ inviteCode: string; link: string }>(`/circles/${id}/invite`, {
         method: "POST",
       }),
 
@@ -812,15 +822,15 @@ export const api = {
     getByCircleAndNumber: (circleId: string, cycleNum: number) =>
       request<{
         id: string;
-        circle_id: string;
-        recipient_member_id: string;
-        cycle_number: number;
-        expected_total_kobo: number;
-        actual_total_kobo: number;
+        circleId: string;
+        recipientMemberId: string;
+        cycleNumber: number;
+        expectedTotalKobo: number;
+        actualTotalKobo: number;
         status: string;
-        starts_at: string;
-        deadline_at: string;
-        closed_at: string | null;
+        startsAt: string;
+        deadlineAt: string;
+        closedAt: string | null;
         contributions: import("@/types").CycleContribution[];
       }>(`/circles/${circleId}/cycles/${cycleNum}`),
 
@@ -831,7 +841,7 @@ export const api = {
 
   contributions: {
     /** Initiates a contribution (generates a payment reference). */
-    initiate: (payload: { cycle_id: string; amount_kobo: number }) =>
+    initiate: (payload: { cycle_id: string; amountKobo: number }) =>
       request<{ ref: string }>("/contributions/initiate", {
         method: "POST",
         body: JSON.stringify(payload),
@@ -855,16 +865,16 @@ export const api = {
 
   wallet: {
     /** Wallet balance + recent transactions. */
-    get: () => request<{ balance: number; transactions: unknown[] }>("/wallet"),
+    get: () => request<{ balanceKobo: number; virtualAccount: { accountNumber: string; accountName: string; bankCode: string }; pendingReconciliationKobo: number }>("/wallet"),
 
     /** Full transaction history. */
     transactions: () => request<unknown[]>("/wallet/transactions"),
 
     /** Withdraws funds to a bank account. */
     withdraw: (payload: {
-      amount_kobo: number;
-      bank_code: string;
-      account_number: string;
+      amountKobo: number;
+      bankCode: string;
+      accountNumber: string;
     }) =>
       request<{ ref: string }>("/wallet/withdraw", {
         method: "POST",
@@ -896,6 +906,15 @@ export const api = {
         body: JSON.stringify(payload),
       }),
   },
+
+  bankCodes: () =>
+    request<{ banks: { code: string; name: string }[] }>("/bank-codes"),
+
+  bankLookup: (payload: { accountNumber: string; bankCode: string }) =>
+    request<{ accountName: string }>("/bank-lookup", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
 
   referrals: {
     /** Gets the user's referral code and referred users. */

@@ -40,7 +40,7 @@ export default function JoinCirclePage(props: {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const parsed = joinCircleSchema.safeParse({ invite_code: inviteCode });
+    const parsed = joinCircleSchema.safeParse({ inviteCode });
     if (!parsed.success) {
       setError(parsed.error.issues[0]?.message ?? "Invalid code");
       return;

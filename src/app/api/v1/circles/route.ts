@@ -3,7 +3,7 @@ import { success, error } from "@/lib/api-response";
 import { requireAuth } from "@/lib/middleware";
 import { db } from "@/db";
 import { circles, membersCircles, inviteCodes } from "@/db/schema";
-import { eq, and } from "drizzle-orm";
+import { eq, and, count, inArray } from "drizzle-orm";
 
 export async function GET(req: NextRequest) {
   const auth = requireAuth(req);
@@ -15,24 +15,32 @@ export async function GET(req: NextRequest) {
   if (memberships.length === 0) return success({ circles: [] });
 
   const circleIds = memberships.map((m) => m.circleId);
-  const circlesList = [];
-  for (const cid of circleIds) {
-    const [circle] = await db.select().from(circles).where(eq(circles.id, cid)).limit(1);
-    if (circle) {
-      const mc = memberships.find((m) => m.circleId === cid);
-      circlesList.push({
-        id: circle.id,
-        name: circle.name,
-        contributionAmountKobo: circle.contributionAmountKobo,
-        frequency: circle.frequency,
-        currentCycle: circle.currentCycle,
-        totalCycles: circle.cycleCount,
-        status: circle.status,
-        myRole: mc?.role ?? "member",
-        myStatus: mc?.status ?? "active",
-      });
-    }
-  }
+  const circlesData = await db.select().from(circles).where(inArray(circles.id, circleIds));
+
+  const memberCountRows = await db.select({
+    circleId: membersCircles.circleId,
+    value: count(),
+  }).from(membersCircles)
+    .where(and(inArray(membersCircles.circleId, circleIds), eq(membersCircles.status, "active")))
+    .groupBy(membersCircles.circleId);
+
+  const memberCountMap = new Map(memberCountRows.map((r) => [r.circleId, r.value]));
+
+  const circlesList = circlesData.map((circle) => {
+    const mc = memberships.find((m) => m.circleId === circle.id);
+    return {
+      id: circle.id,
+      name: circle.name,
+      status: circle.status,
+      contributionAmount: circle.contributionAmountKobo,
+      frequency: circle.frequency,
+      type: "Rotating Savings Group",
+      currentCycle: circle.currentCycle,
+      cycleCount: circle.cycleCount,
+      memberPosition: mc?.rotationOrder ?? undefined,
+      totalMembers: memberCountMap.get(circle.id) ?? 0,
+    };
+  });
   return success({ circles: circlesList });
 }
 

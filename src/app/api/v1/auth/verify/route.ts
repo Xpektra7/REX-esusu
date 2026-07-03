@@ -89,9 +89,9 @@ export async function POST(req: NextRequest) {
       return success({
         user: { id: existing.id, phone: existing.phone, name: existing.name, email: existing.email },
         token: signToken(existing.id, existing.phone),
-        refresh_token: signToken(existing.id, existing.phone),
-        needs_bvn: !existing.bvnLast4,
-        pin_set: !!existing.pinHash,
+        refreshToken: signToken(existing.id, existing.phone),
+        needsBvn: !existing.bvnLast4,
+        pinSet: !!existing.pinHash,
       });
     }
 
@@ -116,9 +116,9 @@ export async function POST(req: NextRequest) {
     return success({
       user: { id: user.id, phone: user.phone, name: user.name, email: user.email },
       token: signToken(user.id, user.phone),
-      refresh_token: signToken(user.id, user.phone),
-      needs_bvn: !bvn,
-      pin_set: false,
+      refreshToken: signToken(user.id, user.phone),
+      needsBvn: !bvn,
+      pinSet: false,
     }, "Account created");
   } catch (e) {
     return error((e as Error).message);

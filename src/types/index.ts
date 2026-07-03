@@ -3,32 +3,32 @@ export interface User {
   phone: string;
   email: string;
   name: string;
-  bvn_last4: string;
-  trust_score: number;
-  created_at: string;
-  updated_at: string;
+  bvnLast4: string;
+  trustScore: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface Circle {
   id: string;
-  creator_id: string;
+  creatorId: string;
   name: string;
-  contribution_amount: number;
+  contributionAmount: number;
   frequency: "weekly" | "monthly";
-  cycle_period_days: number;
-  cycle_count: number;
-  current_cycle: number;
-  default_resolution_rule: "absorb" | "shrink" | "end_early";
-  grace_period_hours: number;
+  cyclePeriodDays: number;
+  cycleCount: number;
+  currentCycle: number;
+  defaultResolutionRule: "absorb" | "shrink" | "end_early";
+  gracePeriodHours: number;
   status: "pending" | "active" | "completed" | "dissolved";
-  created_at: string;
-  updated_at: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface CircleMember {
   id: string;
-  user_id: string;
-  circle_id: string;
+  userId: string;
+  circleId: string;
   role: "admin" | "member";
   status:
     | "invited"
@@ -37,48 +37,48 @@ export interface CircleMember {
     | "removed"
     | "left"
     | "completed";
-  rotation_order: number | null;
-  missed_cycles: number;
-  joined_at: string;
-  left_at: string | null;
+  rotationOrder: number | null;
+  missedCycles: number;
+  joinedAt: string;
+  leftAt: string | null;
   user?: User;
 }
 
 export interface VirtualAccount {
   id: string;
-  user_id: string;
-  circle_id: string | null;
+  userId: string;
+  circleId: string | null;
   type: "personal" | "circle";
-  account_number: string;
-  account_name: string;
-  bank_code: string;
-  account_ref: string;
+  accountNumber: string;
+  accountName: string;
+  bankCode: string;
+  accountRef: string;
   currency: string;
-  balance_kobo: number;
-  expires_at: string;
-  created_at: string;
+  balanceKobo: number;
+  expiresAt: string;
+  createdAt: string;
 }
 
 export interface Cycle {
   id: string;
-  circle_id: string;
-  recipient_member_id: string;
-  cycle_number: number;
-  expected_total_kobo: number;
-  actual_total_kobo: number;
+  circleId: string;
+  recipientMemberId: string;
+  cycleNumber: number;
+  expectedTotalKobo: number;
+  actualTotalKobo: number;
   status: "pending" | "active" | "settling" | "paid_out" | "closed";
-  starts_at: string;
-  deadline_at: string;
-  closed_at: string | null;
+  startsAt: string;
+  deadlineAt: string;
+  closedAt: string | null;
 }
 
 export interface Contribution {
   id: string;
-  member_circle_id: string;
-  cycle_id: string;
-  virtual_account_id: string;
-  amount_kobo: number;
-  applied_kobo: number;
+  memberCircleId: string;
+  cycleId: string;
+  virtualAccountId: string;
+  amountKobo: number;
+  appliedKobo: number;
   status: "pending" | "reconciled" | "partial" | "fully_applied";
   classification:
     | "exact"
@@ -86,120 +86,120 @@ export interface Contribution {
     | "overpayment"
     | "misdirected"
     | null;
-  nomba_transaction_ref: string | null;
-  our_reference: string;
-  created_at: string;
-  reconciled_at: string | null;
+  nombaTransactionRef: string | null;
+  ourReference: string;
+  createdAt: string;
+  reconciledAt: string | null;
 }
 
 export interface Debt {
   id: string;
-  cycle_id: string;
-  debtor_member_id: string;
-  creditor_member_id: string;
-  amount_kobo: number;
-  paid_kobo: number;
+  cycleId: string;
+  debtorMemberId: string;
+  creditorMemberId: string;
+  amountKobo: number;
+  paidKobo: number;
   status: "active" | "cleared" | "redirected";
-  created_at: string;
-  cleared_at: string | null;
+  createdAt: string;
+  clearedAt: string | null;
 }
 
 export interface Payout {
   id: string;
-  cycle_id: string;
-  member_id: string;
-  amount_kobo: number;
+  cycleId: string;
+  memberId: string;
+  amountKobo: number;
   status: "pending" | "initiated" | "completed" | "failed";
-  nomba_transaction_ref: string | null;
-  created_at: string;
-  completed_at: string | null;
+  nombaTransactionRef: string | null;
+  createdAt: string;
+  completedAt: string | null;
 }
 
 export interface Notification {
   id: string;
-  user_id: string;
+  userId: string;
   type: string;
   title: string;
   body: string;
   data: Record<string, unknown> | null;
-  read_at: string | null;
-  created_at: string;
+  readAt: string | null;
+  createdAt: string;
 }
 
 export interface WalletTransaction {
   id: string;
-  user_id: string;
+  userId: string;
   type: "credit" | "debit";
-  amount_kobo: number;
+  amountKobo: number;
   reference: string;
   status: "pending" | "completed" | "failed";
   metadata: Record<string, unknown> | null;
-  created_at: string;
+  createdAt: string;
 }
 
 export interface Referral {
   id: string;
-  referrer_user_id: string;
-  referred_user_id: string;
+  referrerUserId: string;
+  referredUserId: string;
   status: "pending" | "joined" | "completed_circle";
-  bonus_kobo: number | null;
-  created_at: string;
+  bonusKobo: number | null;
+  createdAt: string;
 }
 
 export interface CircleListItem {
   id: string;
   name: string;
   status: "active" | "inactive" | "pending" | "completed" | "dissolved";
-  contribution_amount: number;
+  contributionAmount: number;
   frequency: "weekly" | "monthly";
   type: string;
-  current_cycle: number;
-  cycle_count: number;
-  member_position?: number;
-  total_members?: number;
+  currentCycle: number;
+  cycleCount: number;
+  memberPosition?: number;
+  totalMembers?: number;
 }
 
 export interface CircleDetail extends Circle {
   members: CircleMember[];
-  invite_code?: string;
+  inviteCode?: string;
 }
 
 export interface CycleContribution {
-  member_id: string;
-  member_name: string;
-  amount_kobo: number;
+  memberId: string;
+  memberName: string;
+  amountKobo: number;
   status: "paid" | "pending" | "defaulted";
-  paid_at?: string;
+  paidAt?: string;
 }
 
 export interface CycleDetailData {
   id: string;
-  circle_id: string;
-  recipient_member_id: string;
-  cycle_number: number;
-  expected_total_kobo: number;
-  actual_total_kobo: number;
+  circleId: string;
+  recipientMemberId: string;
+  cycleNumber: number;
+  expectedTotalKobo: number;
+  actualTotalKobo: number;
   status: string;
-  starts_at: string;
-  deadline_at: string;
-  closed_at: string | null;
+  startsAt: string;
+  deadlineAt: string;
+  closedAt: string | null;
   contributions: CycleContribution[];
 }
 
 export interface ReportData {
-  total_contributions_kobo: number;
-  total_payouts_kobo: number;
-  default_rate: number;
+  totalContributionsKobo: number;
+  totalPayoutsKobo: number;
+  defaultRate: number;
   members: number;
   cycles: Array<{
-    cycle_number: number;
+    cycleNumber: number;
     status: string;
-    total_kobo: number;
-    completed_at: string | null;
+    totalKobo: number;
+    completedAt: string | null;
   }>;
   debts: Array<{
-    member_name: string;
-    amount_kobo: number;
+    memberName: string;
+    amountKobo: number;
     cycle: number;
     status: string;
   }>;
@@ -209,12 +209,12 @@ export interface MemberItem {
   id: string;
   role: string;
   status: string;
-  rotation_order?: number | null;
-  missed_cycles?: number;
+  rotationOrder?: number | null;
+  missedCycles?: number;
   user?: {
     name: string;
     phone?: string;
-    trust_score?: number;
+    trustScore?: number;
   } | null;
 }
 
@@ -222,13 +222,13 @@ export interface CirclePageData {
   id: string;
   name: string;
   status: string;
-  contribution_amount: number;
+  contributionAmount: number;
   frequency: string;
-  cycle_count: number;
-  current_cycle: number;
-  invite_code?: string;
-  cycle_period_days?: number;
-  deadline_at?: string;
+  cycleCount: number;
+  currentCycle: number;
+  inviteCode?: string;
+  cyclePeriodDays?: number;
+  deadlineAt?: string;
   members?: MemberItem[];
 }
 
@@ -239,7 +239,7 @@ export interface ApiResponse<T> {
 }
 
 export interface AuthTokens {
-  access_token: string;
-  refresh_token: string;
-  expires_in: number;
+  accessToken: string;
+  refreshToken: string;
+  expiresIn: number;
 }

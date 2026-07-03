@@ -61,13 +61,13 @@ export default function CycleDetailPage(props: {
   }
 
   const recipient = cycle.contributions.find(
-    (c) => c.member_id === cycle.recipient_member_id,
+    (c) => c.memberId === cycle.recipientMemberId,
   );
   const progress =
-    cycle.expected_total_kobo > 0
-      ? (cycle.actual_total_kobo / cycle.expected_total_kobo) * 100
+    cycle.expectedTotalKobo > 0
+      ? (cycle.actualTotalKobo / cycle.expectedTotalKobo) * 100
       : 0;
-  const shortfall = cycle.expected_total_kobo - cycle.actual_total_kobo;
+  const shortfall = cycle.expectedTotalKobo - cycle.actualTotalKobo;
   const pendingCount = cycle.contributions.filter(
     (c) => c.status === "pending",
   ).length;
@@ -85,19 +85,19 @@ export default function CycleDetailPage(props: {
           { label: "Home", href: "/dashboard" },
           { label: "Circles", href: "/circles" },
           { label: circle?.name ?? "Circle", href: `/circles/${id}` },
-          { label: `Cycle #${cycle.cycle_number}` },
+          { label: `Cycle #${cycle.cycleNumber}` },
         ]}
       />
 
       <h1 className="text-xl font-bold">
-        Cycle #{cycle.cycle_number} Contribution
+        Cycle #{cycle.cycleNumber} Contribution
       </h1>
 
       {recipient && (
         <RecipientHeroCard
-          recipientName={recipient.member_name}
-          expectedTotal={cycle.expected_total_kobo}
-          actualTotal={cycle.actual_total_kobo}
+          recipientName={recipient.memberName}
+          expectedTotal={cycle.expectedTotalKobo}
+          actualTotal={cycle.actualTotalKobo}
           progress={progress}
         />
       )}
@@ -109,7 +109,7 @@ export default function CycleDetailPage(props: {
           </span>
           <span className="font-heading text-lg font-bold">
             {cycle.contributions.length > 0
-              ? formatNaira(cycle.contributions[0].amount_kobo)
+              ? formatNaira(cycle.contributions[0].amountKobo)
               : "—"}
           </span>
         </Card>
@@ -118,7 +118,7 @@ export default function CycleDetailPage(props: {
             Total Payout
           </span>
           <span className="font-heading text-lg font-bold">
-            {formatNaira(cycle.expected_total_kobo)}
+            {formatNaira(cycle.expectedTotalKobo)}
           </span>
         </Card>
       </div>
@@ -158,12 +158,12 @@ export default function CycleDetailPage(props: {
           <div className="flex flex-col gap-2">
             {cycle.contributions.map((c) => (
               <ContributionRow
-                key={c.member_id}
-                memberName={c.member_name}
-                amountKobo={c.amount_kobo}
+                key={c.memberId}
+                memberName={c.memberName}
+                amountKobo={c.amountKobo}
                 status={c.status as "paid" | "pending" | "defaulted"}
-                paidAt={c.paid_at}
-                isRecipient={c.member_id === cycle.recipient_member_id}
+                paidAt={c.paidAt}
+                isRecipient={c.memberId === cycle.recipientMemberId}
               />
             ))}
           </div>

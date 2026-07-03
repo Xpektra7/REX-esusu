@@ -5,16 +5,19 @@ import { db } from "@/db";
 import { users, virtualAccounts } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { nombaPost } from "@/lib/nomba";
+import { withdrawSchema } from "@/lib/validations";
 
 export async function POST(req: NextRequest) {
   const auth = requireAuth(req);
   if (auth.error) return auth.error;
 
   try {
-    const { amountKobo, bankCode, accountNumber, accountName } = await req.json();
-    if (!Number.isInteger(amountKobo) || amountKobo <= 0 || !bankCode || !accountNumber || !accountName) {
-      return error("amountKobo must be a positive integer; bankCode, accountNumber, and accountName are required");
+    const body = await req.json();
+    const parsed = withdrawSchema.safeParse(body);
+    if (!parsed.success) {
+      return error(parsed.error.errors.map((e) => e.message).join("; "));
     }
+    const { amountKobo, bankCode, accountNumber } = parsed.data;
 
     // Get user's name for senderName
     const [user] = await db.select().from(users).where(eq(users.id, auth.user!.userId)).limit(1);
@@ -25,6 +28,18 @@ export async function POST(req: NextRequest) {
       .limit(1);
     if (!va || va.balanceKobo < amountKobo) {
       return error("Insufficient balance", "07");
+    }
+
+    // Resolve account name via bank lookup
+    let accountName = "";
+    try {
+      const lookup = await nombaPost("/v1/transfers/bank/lookup", { accountNumber, bankCode });
+      accountName = lookup?.data?.accountName ?? "";
+    } catch {
+      return error("Could not verify bank account. Please check the account number.");
+    }
+    if (!accountName) {
+      return error("Could not resolve account name for this bank account.");
     }
 
     const merchantTxRef = `WITHDRAW_${auth.user!.userId.slice(0, 8)}_${Date.now()}`;

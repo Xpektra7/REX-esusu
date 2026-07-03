@@ -19,7 +19,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const [code] = await db.select().from(inviteCodes)
       .where(eq(inviteCodes.circleId, id)).limit(1);
 
-    return success({ inviteCode: code?.code ?? "N/A" });
+    return success({ inviteCode: code?.code ?? "N/A", link: `/circles/${id}/join?code=${code?.code}` });
   } catch (e) {
     return error((e as Error).message);
   }

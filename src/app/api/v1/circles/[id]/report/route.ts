@@ -115,21 +115,31 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       };
     });
 
+    const reportCycles = cycleRows.map((c) => ({
+      cycleNumber: c.cycleNumber,
+      status: c.status,
+      totalKobo: c.actualTotalKobo,
+      completedAt: c.closedAt?.toISOString?.() ?? c.closedAt,
+    }));
+
+    const reportDebts = allDebts.filter((d) => d.debts.status === "active").map((d) => {
+      const debtor = memberMap.get(d.debts.debtorMemberId);
+      const cycle = cycleRows.find((c) => c.id === d.cycles.id);
+      return {
+        memberName: debtor?.name ?? "Unknown",
+        amountKobo: d.debts.amountKobo - d.debts.paidKobo,
+        cycle: cycle?.cycleNumber ?? 0,
+        status: d.debts.status,
+      };
+    });
+
     return success({
-      circleName: circle.name,
-      contributionAmountKobo: circle.contributionAmountKobo,
-      frequency: circle.frequency,
-      totalCycles: circle.cycleCount,
-      completedCycles,
-      summary: {
-        totalCollectedKobo: totalCollected,
-        totalPaidOutKobo: totalPaidOut,
-        totalFinesKobo: totalFines,
-        totalOutstandingDebtsKobo: totalOutstandingDebts,
-        defaultRate: `${defaultRate}%`,
-      },
-      members: memberReports,
-      cycles: cycleReports,
+      totalContributionsKobo: totalCollected,
+      totalPayoutsKobo: totalPaidOut,
+      defaultRate: defaultRate,
+      members: memberRows.length,
+      cycles: reportCycles,
+      debts: reportDebts,
     });
   } catch (e) {
     return error((e as Error).message);
