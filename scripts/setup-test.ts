@@ -29,10 +29,12 @@ async function main() {
 
   // 2. Join Alice
   const token2 = await auth("+2348000000124");
-  const join = await fetch(`${BASE}/circles/${circleId}/join`, {
+  const joinRes = await fetch(`${BASE}/circles/${circleId}/join`, {
     method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token2}` },
     body: JSON.stringify({ inviteCode: code }),
-  console.log(`Alice joined: ${join.code}`);
+  });
+  const joinData = await joinRes.json();
+  console.log(`Alice joined: ${joinData.code}`);
 
   // 3. Top up wallets (₦10,000 = 1,000,000 kobo each)
   const amountKobo = 1_000_000;
