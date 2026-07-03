@@ -22,8 +22,7 @@ export function Nav() {
           >
             FAQ
           </Link>
-          <Link href="/auth" className={cn(buttonVariants({}), "font-bold p-3")}>
-            Get Started
+          <Link href="/auth" className={cn(buttonVariants({ size: "lg" }), "font-bold")}>
           </Link>
         </div>
       </nav>
