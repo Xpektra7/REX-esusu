@@ -65,9 +65,7 @@ export function InstallPrompt() {
             Install as an app for the best experience — fast, works offline,
             push notifications included.
           </p>
-          <Button size="lg" onClick={handleInstall}>
-            Install App
-          </Button>
+          <Button size="lg" onClick={handleInstall} className="font-bold">
         </>
       )}
       {state === "ios" && (
