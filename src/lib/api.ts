@@ -670,11 +670,11 @@ async function request<T>(
     const refreshRes = await fetch(`${BASE_URL}/auth/refresh`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ refresh_token: refreshToken }),
+      body: JSON.stringify({ refreshToken }),
     });
     if (refreshRes.ok) {
       const refreshJson = await refreshRes.json();
-      const newToken = refreshJson.data?.token;
+      const newToken = refreshJson.data?.accessToken ?? refreshJson.data?.token;
       if (newToken) {
         const currentUser = useAuthStore.getState().user;
         if (!currentUser) { useAuthStore.getState().clearAuth(); throw new Error("Session expired"); }
