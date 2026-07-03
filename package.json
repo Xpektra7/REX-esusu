@@ -8,8 +8,8 @@
     "start": "next start",
     "lint": "biome check",
     "format": "biome format --write",
-    "test": "tsx --test src/lib/reconciliation.test.ts",
-    "test:integration": "tsx --test src/lib/reconciliation.integration.test.ts",
+    "test": "tsx --test scripts/reconciliation.test.ts",
+    "test:integration": "tsx --test scripts/reconciliation.integration.test.ts",
     "db:push": "drizzle-kit push",
     "db:generate": "drizzle-kit generate",
     "db:studio": "drizzle-kit studio"
