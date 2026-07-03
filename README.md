@@ -1,53 +1,68 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Esusu — Digital Group Savings
 
-## Environment Variables
+Esusu is a digital **Ajo/Esusu platform** that lets groups of people save money together, transparently. Powered by **Nomba** for virtual accounts and payment reconciliation, it brings the traditional Nigerian rotating savings model to your phone — no spreadsheets, no distrust, no missed collections.
 
-Copy `.env.example` to `.env` and fill in the values:
+## How It Works
+
+1. **Create or join a circle** — Set a contribution amount and frequency (daily, weekly, monthly). Each circle gets a private invite code.
+2. **Each member gets a personal Nomba virtual account** — No shared accounts. Everyone pays into their own dedicated account number.
+3. **Contributions are tracked automatically** — Our engine reconciles payments, tracks who's up to date, and sends payouts to the next recipient on schedule.
+4. **Payouts rotate** — Each cycle, one member receives the full pool. The cycle repeats until everyone has been paid.
+
+## Features
+
+- **Circle management** — Create, join, invite, leave circles. Set contribution amounts and schedules.
+- **Individual virtual accounts** — Every member gets their own Nomba bank account number. Contribute via bank transfer.
+- **Auto-reconciliation** — Payments are matched to contributions automatically. See who has paid and who hasn't in real time.
+- **Rotating payouts** — Each cycle member gets their turn. The system tracks the rotation and sends payouts.
+- **Wallet & Top-up** — Deposit money into your wallet via bank transfer to your personal virtual account.
+- **Referral system** — Invite friends and earn trust score boosts.
+- **Notifications** — Get reminded when contributions are due and when payouts arrive.
+- **Responsive design** — Works on mobile and desktop. Installable as a PWA for offline access and push notifications.
+
+## Quick Start
 
 ```bash
+npm install
 cp .env.example .env
-```
-
-| Variable | Description | How to get |
-|---|---|---|
-| `JWT_SECRET` | Signs auth tokens | `openssl rand -hex 32` |
-| `BVN_ENCRYPTION_KEY` | Encrypts BVN data | `openssl rand -hex 32` |
-| `DATABASE_URL` | Postgres connection | Your DB provider (Neon, Supabase, etc.) |
-| `NOMBA_*` | Nomba API credentials | Nomba dashboard → API Keys / Account Settings |
-| `NOMBA_WEBHOOK_SECRET` | Webhook signature verification | Nomba dashboard → Webhooks |
-| `OTP_WHITELIST` | Dev phone numbers with fixed OTP | JSON array, see `.env.example` |
-
-## Getting Started
-
-First, run the development server:
-
-```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000). The app runs in **mock mode** by default — no real API keys needed.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Testing the app
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Use any of these numbers as your phone number (enter `8000000123` in the phone field — the `+234` prefix is pre-filled):
 
-## Learn More
+| Phone | OTP |
+|---|---|
+| `+234 800 0000 123` | `999999` |
+| `+234 800 0000 124` | `999999` |
+| `+234 800 0000 125` | `999999` |
 
-To learn more about Next.js, take a look at the following resources:
+Any password works as long as it's at least 8 characters (e.g. `password123`).
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+You can also add or change whitelisted numbers in the `OTP_WHITELIST` variable inside `.env`.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Environment Variables
 
-## Deploy on Vercel
+| Variable | What it's for |
+|---|---|
+| `JWT_SECRET` | Signs authentication tokens |
+| `BVN_ENCRYPTION_KEY` | Encrypts BVN data at rest |
+| `DATABASE_URL` | PostgreSQL connection (Neon, Supabase, etc.) |
+| `NOMBA_*` | Nomba API credentials for virtual accounts and payments |
+| `NOMBA_WEBHOOK_SECRET` | Verifies Nomba webhook signatures |
+| `OTP_WHITELIST` | Phone numbers that always get a fixed OTP in development |
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Built With
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **Next.js 16** — App Router, Turbopack, PWA
+- **Tailwind CSS v4** — Utility-first styling
+- **shadcn/ui (base-vega)** — Component system built on Base UI
+- **TanStack React Query** — Server state management
+- **Drizzle ORM** — Database access with PostgreSQL
+- **Zustand** — Client-side auth state
+- **Serwist** — PWA service worker (production only)
+- **Nomba API** — Virtual accounts, payments, reconciliation
+- **Hugeicons** — Icon library

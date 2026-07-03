@@ -15,6 +15,8 @@ export function InstallPrompt() {
   const [state, setState] = useState<InstallState>("unsupported");
   const [deferredPrompt, setDeferredPrompt] =
     useState<BeforeInstallPromptEvent | null>(null);
+  const [dismissed, setDismissed] = useState(false);
+  const [visible, setVisible] = useState(false);
 
   useEffect(() => {
     if (window.matchMedia("(display-mode: standalone)").matches) {
@@ -41,6 +43,12 @@ export function InstallPrompt() {
     };
   }, []);
 
+  useEffect(() => {
+    if (state === "installed") return;
+    const timer = setTimeout(() => setVisible(true), 3000);
+    return () => clearTimeout(timer);
+  }, [state]);
+
   const handleInstall = async () => {
     if (!deferredPrompt) return;
     deferredPrompt.prompt();
@@ -51,44 +59,56 @@ export function InstallPrompt() {
     setDeferredPrompt(null);
   };
 
-  if (state === "installed") return null;
+  if (state === "installed" || dismissed || !visible) return null;
+
+  const promptText = ({
+    promptable: {
+      title: "Get Esusu on your phone",
+      desc: "Install for the best experience — fast, offline, push notifications included.",
+      cta: "Install App",
+    },
+    ios: {
+      title: "Install on iPhone",
+      desc: "Tap Share ↑ then Add to Home Screen.",
+      cta: null,
+    },
+    unsupported: {
+      title: "Use Esusu on any device",
+      desc: "Works in your browser. Open in Chrome on Android for install.",
+      cta: null,
+    },
+  })[state];
 
   return (
-    <div className="flex flex-col items-center gap-4 rounded-xl bg-card p-8 text-center">
-      <div className="flex size-12 items-center justify-center rounded-full bg-primary">
-        <SmartPhone01Icon className="size-6 text-primary-foreground" />
+    <div className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-background p-4 shadow-lg md:p-5">
+      <div className="mx-auto flex max-w-5xl items-center justify-between gap-4">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="hidden shrink-0 sm:flex size-10 items-center justify-center rounded-full bg-primary">
+            <SmartPhone01Icon className="size-5 text-primary-foreground" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-sm font-bold">{promptText.title}</p>
+            <p className="text-xs text-muted-foreground truncate">
+              {promptText.desc}
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          {promptText.cta && (
+            <Button size="lg" onClick={handleInstall} className="font-bold">
+              {promptText.cta}
+            </Button>
+          )}
+          <button
+            type="button"
+            onClick={() => setDismissed(true)}
+            className="flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
+            aria-label="Dismiss"
+          >
+            ✕
+          </button>
+        </div>
       </div>
-      {state === "promptable" && (
-        <>
-          <h3 className="text-lg font-semibold">Get Esusu on your phone</h3>
-          <p className="max-w-sm text-sm text-muted-foreground">
-            Install as an app for the best experience — fast, works offline,
-            push notifications included.
-          </p>
-          <Button size="lg" onClick={handleInstall} className="font-bold">
-            Install App
-          </Button>
-        </>
-      )}
-      {state === "ios" && (
-        <>
-          <h3 className="text-lg font-semibold">Install on iPhone</h3>
-          <p className="max-w-sm text-sm text-muted-foreground">
-            Tap Share{" "}
-            <span className="inline-block text-base leading-none">↑</span> then
-            scroll down and tap <strong>Add to Home Screen</strong>.
-          </p>
-        </>
-      )}
-      {state === "unsupported" && (
-        <>
-          <h3 className="text-lg font-semibold">Use Esusu on any device</h3>
-          <p className="max-w-sm text-sm text-muted-foreground">
-            Works in your browser. For the best experience, open this page in
-            Chrome or Edge on Android.
-          </p>
-        </>
-      )}
     </div>
   );
 }

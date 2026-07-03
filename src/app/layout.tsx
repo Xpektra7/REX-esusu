@@ -33,7 +33,8 @@ export const metadata: Metadata = {
     title: "Esusu",
   },
   icons: {
-    apple: "/icon-192.svg",
+    apple: "/icon-192.png",
+    icon: "/icon-192.png",
   },
 };
 
