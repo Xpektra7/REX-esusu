@@ -37,13 +37,22 @@ export async function GET(
     const contributionRows = await db.select().from(contributions)
       .where(eq(contributions.cycleId, cycle.id));
 
+    const now = new Date();
+    const deadlinePassed = cycle.deadlineAt && new Date(cycle.deadlineAt) < now;
+
     const contribs = memberRows.map((m) => {
       const c = contributionRows.find((cr) => cr.memberCircleId === m.memberId);
+      let status: string;
+      if (c) {
+        status = c.status === "reconciled" || c.status === "fully_applied" ? "paid" : "pending";
+      } else {
+        status = deadlinePassed ? "defaulted" : "pending";
+      }
       return {
         memberId: m.memberId,
         memberName: m.name,
         amountKobo: c?.amountKobo ?? 0,
-        status: c ? (c.status === "reconciled" || c.status === "fully_applied" ? "paid" : "pending") : "pending",
+        status,
         paidAt: c?.reconciledAt ?? undefined,
       };
     });
