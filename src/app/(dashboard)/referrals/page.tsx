@@ -14,8 +14,8 @@ interface ReferralData {
   referred: Array<{
     name: string;
     status: string;
-    bonus_kobo: number | null;
-    joined_at: string;
+    bonusKobo: number | null;
+    joinedAt: string;
   }>;
 }
 

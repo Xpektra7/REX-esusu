@@ -14,7 +14,7 @@ interface NotificationItem {
   id: string;
   title: string;
   body: string;
-  read_at: string | null;
+  readAt: string | null;
   createdAt: string;
 }
 
@@ -50,7 +50,7 @@ export default function NotificationsPage() {
   });
 
   const notifications = (res?.data ?? []) as NotificationItem[];
-  const unreadCount = notifications.filter((n) => !n.read_at).length;
+  const unreadCount = notifications.filter((n) => !n.readAt).length;
 
   return (
     <div className="flex flex-col gap-6">
@@ -102,13 +102,13 @@ export default function NotificationsPage() {
               key={n.id}
               className={cn(
                 "flex items-start gap-3 rounded-xl border px-4 py-3",
-                n.read_at ? "border-border" : "border-primary/20",
+                n.readAt ? "border-border" : "border-primary/20",
               )}
             >
               <span
                 className={cn(
                   "mt-1.5 size-2 shrink-0 rounded-full",
-                  n.read_at ? "bg-muted-foreground/30" : "bg-primary",
+                  n.readAt ? "bg-muted-foreground/30" : "bg-primary",
                 )}
               />
               <div className="min-w-0 flex-1">
