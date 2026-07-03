@@ -39,7 +39,7 @@ export default function AboutPage() {
               desc: "Every member sees who paid, who owes, and where the money is.",
             },
           ].map((f) => (
-            <div key={f.title} className="rounded-xl border border-border p-5">
+            <div key={f.title} className="rounded-xl bg-card  p-5">
               <h3 className="font-semibold">{f.title}</h3>
               <p className="mt-1 text-sm text-muted-foreground">{f.desc}</p>
             </div>

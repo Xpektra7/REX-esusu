@@ -7,7 +7,7 @@ export default function ContactPage() {
       </p>
 
       <div className="mt-10 grid gap-6 md:grid-cols-2">
-        <div className="rounded-xl border border-border p-6">
+        <div className="rounded-xl bg-card  p-6">
           <h2 className="font-semibold">Email</h2>
           <p className="mt-1 text-sm text-muted-foreground">
             General inquiries
@@ -26,7 +26,7 @@ export default function ContactPage() {
             support@esusu.app
           </a>
         </div>
-        <div className="rounded-xl border border-border p-6">
+        <div className="rounded-xl bg-card  p-6">
           <h2 className="font-semibold">Legal & Privacy</h2>
           <p className="mt-1 text-sm text-muted-foreground">Privacy concerns</p>
           <a
@@ -45,7 +45,7 @@ export default function ContactPage() {
         </div>
       </div>
 
-      <section className="mt-10 rounded-xl border border-border p-6">
+      <section className="mt-10 rounded-xl bg-card  p-6">
         <h2 className="font-semibold">Send Us a Message</h2>
         <form className="mt-4 space-y-4">
           <div>
@@ -56,7 +56,7 @@ export default function ContactPage() {
               id="name"
               type="text"
               placeholder="Your name"
-              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+              className="w-full rounded-lg bg-background px-3 py-2 text-sm"
             />
           </div>
           <div>
@@ -67,7 +67,7 @@ export default function ContactPage() {
               id="email"
               type="email"
               placeholder="your@email.com"
-              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+              className="w-full rounded-lg bg-background px-3 py-2 text-sm"
             />
           </div>
           <div>
@@ -76,7 +76,7 @@ export default function ContactPage() {
             </label>
             <select
               id="subject"
-              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+              className="w-full rounded-lg bg-background px-3 py-2 text-sm"
             >
               <option>General inquiry</option>
               <option>Support request</option>
@@ -93,7 +93,7 @@ export default function ContactPage() {
               id="message"
               rows={5}
               placeholder="Your message..."
-              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+              className="w-full rounded-lg bg-background px-3 py-2 text-sm"
             />
           </div>
           <button

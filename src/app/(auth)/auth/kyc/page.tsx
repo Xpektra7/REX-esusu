@@ -106,7 +106,7 @@ export default function KycPage() {
                 placeholder="•••••••••••"
                 value={bvn}
                 onChange={(e) => setBvn(e.target.value.replace(/\D/g, ""))}
-                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm tracking-widest"
+                className="w-full rounded-lg   bg-background px-3 py-2 text-sm tracking-widest"
               />
               <p className="text-xs text-muted-foreground">
                 Your BVN is encrypted and never shared. Only last 4 digits are
@@ -130,7 +130,7 @@ export default function KycPage() {
         {/* Step 3 — Name confirmation */}
         {step === "confirm" && (
           <div className="space-y-4 py-4">
-            <div className="flex flex-col items-center gap-3 rounded-xl border border-border p-6 text-center">
+            <div className="flex flex-col items-center gap-3 rounded-xl    p-6 text-center">
               <div className="flex size-12 items-center justify-center rounded-full bg-primary/10">
                 <IdVerifiedIcon className="size-6 text-primary" />
               </div>

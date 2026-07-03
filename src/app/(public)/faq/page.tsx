@@ -50,7 +50,7 @@ export default function FAQPage() {
       </p>
       <div className="mt-10 space-y-3">
         {faqs.map((faq) => (
-          <details key={faq.q} className="rounded-xl border border-border p-4">
+          <details key={faq.q} className="rounded-xl bg-card  p-4">
             <summary className="cursor-pointer font-medium">{faq.q}</summary>
             <p className="mt-2 text-sm text-muted-foreground">{faq.a}</p>
           </details>

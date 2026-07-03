@@ -43,8 +43,8 @@ export function Features() {
           {features.map((feature) => {
             const Icon = feature.icon;
             return (
-              <div key={feature.title} className="rounded-xl border border-border p-6">
-                <div className="flex size-10 items-center justify-center rounded-full border border-border bg-card">
+              <div key={feature.title} className="rounded-xl bg-card  p-6">
+                <div className="flex size-10 items-center justify-center rounded-full bg-card  bg-card">
                   <Icon className="size-4 text-primary" />
                 </div>
                 <h3 className="mt-4 font-semibold">{feature.title}</h3>

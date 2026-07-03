@@ -4,7 +4,7 @@ export function Security() {
   return (
     <section className="border-b border-border py-16 md:py-20">
       <div className="mx-auto max-w-5xl px-6 text-center">
-        <div className="mx-auto flex size-12 items-center justify-center rounded-full border border-border bg-card">
+        <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-card  bg-card">
           <Shield01Icon className="size-5 text-primary" />
         </div>
         <h2 className="mt-4 text-2xl font-bold md:text-3xl">Built on Nomba</h2>

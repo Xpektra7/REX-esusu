@@ -43,6 +43,8 @@ export function SideNav() {
         <img
           src="/icon-512.svg"
           alt="Esusu"
+          fetchPriority="high"
+          decoding="async"
           className="size-9 shrink-0"
         />
         <span className="text-lg font-bold">Esusu</span>

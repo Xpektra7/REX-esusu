@@ -47,13 +47,15 @@ export default function WalletPage() {
     queryFn: () => api.wallet.get(),
   });
 
-  const { data: txRes } = useQuery({
+  const { data: txRes, isLoading: txLoading } = useQuery({
     queryKey: ["wallet-transactions"],
     queryFn: () => api.wallet.transactions(),
   });
 
   const wallet = res?.data as WalletData | undefined;
-  const transactions = ((txRes?.data as { transactions: WalletTransaction[] } | undefined)?.transactions ?? []) as WalletTransaction[];
+  const transactions = ((
+    txRes?.data as { transactions: WalletTransaction[] } | undefined
+  )?.transactions ?? []) as WalletTransaction[];
 
   return (
     <div className="flex flex-col gap-6">
@@ -92,7 +94,7 @@ export default function WalletPage() {
                 href="/wallet/topup"
                 className={cn(
                   "flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-3",
-                  "bg-card-foreground text-card text-xs font-bold tracking-wider hover:opacity-90 transition-opacity",
+                  "bg-card-foreground text-card text-xs font-bold tracking-wider hover: transition-opacity",
                 )}
               >
                 <PlusSignIcon className="size-4" />
@@ -102,7 +104,7 @@ export default function WalletPage() {
                 href="/wallet/withdraw"
                 className={cn(
                   "flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-3",
-                  "bg-background text-card-foreground text-xs font-bold tracking-wider hover:opacity-90 transition-opacity",
+                  "bg-background text-card-foreground text-xs font-bold tracking-wider hover: transition-opacity",
                 )}
               >
                 <ArrowUp01Icon className="size-4" />
@@ -118,12 +120,20 @@ export default function WalletPage() {
           Transaction History
         </h2>
 
-        {transactions.length === 0 ? (
-          <Card className="flex flex-col items-center gap-4 p-8 text-center">
+        {txLoading ? (
+          <div className="flex flex-col gap-2">
+            {[1, 2, 3, 4, 5].map((n) => (
+              <Skeleton key={n} className="h-16 rounded-xl" />
+            ))}
+          </div>
+        ) : transactions.length === 0 ? (
+          <Card className="flex flex-col items-center justify-center gap-4 h-64 text-center">
             <img
-              src="/illustrations/empty.svg"
+              src="/illustrations/empty-wallet.svg"
               alt=""
-              className="size-32 object-contain opacity-40"
+              loading="lazy"
+              decoding="async"
+              className="size-32 object-contain"
             />
             <p className="text-sm text-muted-foreground">
               No transactions yet.
@@ -136,7 +146,7 @@ export default function WalletPage() {
               return (
                 <div
                   key={tx.id}
-                  className="flex items-center justify-between rounded-xl border border-border px-4 py-3"
+                  className="flex items-center justify-between rounded-xl bg-card  px-4 py-3"
                 >
                   <div className="flex items-center gap-3">
                     <DiceBearAvatar name={tx.description} />

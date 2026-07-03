@@ -10,7 +10,7 @@ export function BentoStats() {
     <section className="border-b border-border py-16 md:py-20">
       <div className="mx-auto max-w-5xl px-6">
         <div className="grid grid-cols-2 gap-4">
-          <div className="col-span-2 rounded-xl border border-border bg-card p-6 md:p-8">
+          <div className="col-span-2 rounded-xl bg-card  bg-card p-6 md:p-8">
             <div className="mb-1 flex items-center gap-2">
               <Shield01Icon className="size-4 text-naira-green" />
               <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
@@ -23,7 +23,7 @@ export function BentoStats() {
             </p>
           </div>
 
-          <div className="rounded-xl border border-border bg-card p-5">
+          <div className="rounded-xl bg-card  bg-card p-5">
             <div className="mb-3 flex size-10 items-center justify-center rounded-full bg-muted">
               <UserGroupIcon className="size-4 text-primary" />
             </div>
@@ -33,7 +33,7 @@ export function BentoStats() {
             </p>
           </div>
 
-          <div className="rounded-xl border border-border bg-card p-5">
+          <div className="rounded-xl bg-card  bg-card p-5">
             <div className="mb-3 flex size-10 items-center justify-center rounded-full bg-muted">
               <CheckmarkCircle01Icon className="size-4 text-naira-green" />
             </div>
@@ -43,7 +43,7 @@ export function BentoStats() {
             </p>
           </div>
 
-          <div className="col-span-2 rounded-xl border border-border bg-card p-6 md:p-8">
+          <div className="col-span-2 rounded-xl bg-card  bg-card p-6 md:p-8">
             <div className="mb-1 flex items-center justify-between">
               <h3 className="text-lg font-semibold">How it works</h3>
               <SavingsIcon className="size-4 text-muted-foreground" />

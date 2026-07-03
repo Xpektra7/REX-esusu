@@ -160,6 +160,8 @@ async function mockRequest<T>(
 
   if (path === "/auth/verify" && method === "POST") {
     // Accept any OTP (len >= 4) + password (len >= 8). Returns tokens + user.
+    // If name+email provided → signup (needs onboarding). Otherwise → login (onboarding done).
+    const isSignup = !!body.name && !!body.email;
     return {
       code: "00",
       description: "Verification successful",
@@ -172,8 +174,8 @@ async function mockRequest<T>(
           name: body.name || "Chioma Okafor",
           email: body.email || "chioma@example.com",
         },
-        needsBvn: true,
-        pinSet: false,
+        needsBvn: isSignup,
+        pinSet: !isSignup,
       } as T,
     };
   }

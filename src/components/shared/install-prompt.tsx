@@ -54,7 +54,7 @@ export function InstallPrompt() {
   if (state === "installed") return null;
 
   return (
-    <div className="flex flex-col items-center gap-4 rounded-xl border border-border bg-card p-8 text-center">
+    <div className="flex flex-col items-center gap-4 rounded-xl bg-card  bg-card p-8 text-center">
       <div className="flex size-12 items-center justify-center rounded-full bg-primary">
         <SmartPhone01Icon className="size-6 text-primary-foreground" />
       </div>

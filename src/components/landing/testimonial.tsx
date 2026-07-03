@@ -34,11 +34,11 @@ export function Testimonial() {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const scroll = (direction: "left" | "right") => {
-    if (!scrollRef.current) return;
-    const card = scrollRef.current.children[0] as HTMLElement;
-    const scrollAmount = card?.offsetWidth + 24 || 320;
-    scrollRef.current.scrollBy({
-      left: direction === "left" ? -scrollAmount : scrollAmount,
+    const el = scrollRef.current;
+    if (!el) return;
+    const cardWidth = el.scrollWidth / testimonials.length;
+    el.scrollBy({
+      left: direction === "left" ? -cardWidth : cardWidth,
       behavior: "smooth",
     });
   };
@@ -66,7 +66,7 @@ export function Testimonial() {
                 key={t.name}
                 className="w-[85vw] max-w-md shrink-0 snap-start"
               >
-                <div className="flex h-full flex-col rounded-xl border border-border bg-card p-8 md:p-10">
+                <div className="flex h-full flex-col rounded-xl bg-card  bg-card p-8 md:p-10">
                   <p className="flex-1 text-base italic leading-relaxed text-foreground md:text-lg">
                     &ldquo;{t.quote}
                   </p>
@@ -85,7 +85,7 @@ export function Testimonial() {
               type="button"
               onClick={() => scroll("left")}
               aria-label="Previous testimonial"
-              className="flex size-10 items-center justify-center rounded-full border border-border hover:bg-accent transition-colors"
+              className="flex size-10 items-center justify-center rounded-full bg-card  hover:bg-accent transition-colors"
             >
               <ArrowLeft01Icon className="size-4" />
             </button>
@@ -93,7 +93,7 @@ export function Testimonial() {
               type="button"
               onClick={() => scroll("right")}
               aria-label="Next testimonial"
-              className="flex size-10 items-center justify-center rounded-full border border-border hover:bg-accent transition-colors"
+              className="flex size-10 items-center justify-center rounded-full bg-card  hover:bg-accent transition-colors"
             >
               <ArrowRight01Icon className="size-4" />
             </button>

@@ -65,9 +65,7 @@ export default function SignUpPage() {
     <Card className="relative w-full max-w-md">
       <CardHeader className="text-center">
         <CardTitle className="text-2xl">Welcome to Esusu</CardTitle>
-        <CardDescription>
-          Enter your details to get started.
-        </CardDescription>
+        <CardDescription>Enter your details to get started.</CardDescription>
       </CardHeader>
 
       <CardContent>
@@ -96,7 +94,7 @@ export default function SignUpPage() {
                   value={field.state.value}
                   onBlur={field.handleBlur}
                   onChange={(e) => field.handleChange(e.target.value)}
-                  className="w-full rounded-xl border border-border bg-background px-4 py-3.5 text-base outline-none focus:ring-2 focus:ring-ring transition-all"
+                  className="w-full rounded-xl bg-background px-4 py-3.5 text-base outline-none focus:ring-2 focus:ring-ring transition-all"
                   required
                 />
               </div>
@@ -120,7 +118,7 @@ export default function SignUpPage() {
                   value={field.state.value}
                   onBlur={field.handleBlur}
                   onChange={(e) => field.handleChange(e.target.value)}
-                  className="w-full rounded-xl border border-border bg-background px-4 py-3.5 text-base outline-none focus:ring-2 focus:ring-ring transition-all"
+                  className="w-full rounded-xl bg-background px-4 py-3.5 text-base outline-none focus:ring-2 focus:ring-ring transition-all"
                   required
                 />
               </div>
@@ -138,7 +136,7 @@ export default function SignUpPage() {
                   Phone Number
                 </label>
 
-                <div className="flex items-center rounded-xl border border-border bg-background px-4 py-3.5 focus-within:ring-2 focus-within:ring-ring transition-all">
+                <div className="flex items-center rounded-xl bg-background px-4 py-3.5 focus-within:ring-2 focus-within:ring-ring transition-all">
                   <div className="flex items-center gap-2 pr-4 border-r border-border">
                     <div className="flex w-6 h-4 overflow-hidden rounded-sm shrink-0">
                       <div className="w-1/3 bg-green-700" />
@@ -177,7 +175,7 @@ export default function SignUpPage() {
               placeholder="At least 8 characters"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-xl border border-border bg-background px-4 py-3.5 text-base outline-none focus:ring-2 focus:ring-ring transition-all"
+              className="w-full rounded-xl bg-background px-4 py-3.5 text-base outline-none focus:ring-2 focus:ring-ring transition-all"
               required
               minLength={8}
             />

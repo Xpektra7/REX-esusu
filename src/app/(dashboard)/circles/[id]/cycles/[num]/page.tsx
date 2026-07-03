@@ -54,7 +54,7 @@ export default function CycleDetailPage(props: {
         <Link href={`/circles/${id}`}>
           <button
             type="button"
-            className="rounded-lg border border-border px-4 py-2 text-sm"
+            className="rounded-lg bg-card  px-4 py-2 text-sm"
           >
             Back to Circle
           </button>

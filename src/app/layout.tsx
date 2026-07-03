@@ -47,6 +47,9 @@ export default function RootLayout({
       lang="en"
       className={cn("h-full", "antialiased", inter.variable, manrope.variable)}
     >
+      <head>
+        <link rel="preconnect" href="https://api.dicebear.com" />
+      </head>
       <body className="min-h-full relative flex flex-col">
         {children}
         <Toaster />

@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { Copy01Icon, Share08Icon } from "hugeicons-react";
+import { Copy01Icon } from "hugeicons-react";
 import { toast } from "sonner";
 import { PageBreadcrumbs } from "@/components/shared/page-breadcrumbs";
 import { Card } from "@/components/ui/card";
@@ -53,10 +53,10 @@ export default function ReferralsPage() {
         <Card className="p-5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-[10px] font-semibold tracking-[0.05em] text-muted-foreground uppercase">
+              <p className="text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
                 Your Referral Code
               </p>
-              <p className="mt-1 font-heading text-2xl font-bold tracking-wider">
+              <p className="mt-1 text-foreground font-heading text-2xl font-bold tracking-wider">
                 {referral.code}
               </p>
             </div>
@@ -87,7 +87,7 @@ export default function ReferralsPage() {
             {referral.referred.map((r, i) => (
               <div
                 key={r.name || i}
-                className="flex items-center justify-between rounded-xl border border-border px-4 py-3"
+                className="flex items-center justify-between rounded-xl bg-card  px-4 py-3"
               >
                 <p className="text-sm font-medium">{r.name}</p>
                 <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-semibold text-primary">
@@ -97,8 +97,14 @@ export default function ReferralsPage() {
             ))}
           </div>
         ) : (
-          <Card className="flex flex-col items-center gap-3 p-8 text-center">
-            <Share08Icon className="size-8 text-muted-foreground" />
+          <Card className="flex flex-col items-center justify-center gap-3 p-8 h-64 text-center">
+            <img
+              src="/illustrations/referral.svg"
+              alt=""
+              loading="lazy"
+              decoding="async"
+              className="size-32 object-contain"
+            />
             <p className="text-sm text-muted-foreground">
               No referrals yet. Share your code to start earning.
             </p>

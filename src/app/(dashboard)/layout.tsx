@@ -1,8 +1,15 @@
+import dynamic from "next/dynamic";
 import { AppBar } from "@/components/layout/app-bar";
 import { BottomNav } from "@/components/layout/bottom-nav";
-import { RightPanel } from "@/components/layout/right-panel";
-import { SideNav } from "@/components/layout/side-nav";
 import { Providers } from "@/components/shared/providers";
+
+const SideNav = dynamic(
+  () => import("@/components/layout/side-nav").then((m) => m.SideNav),
+);
+
+const RightPanel = dynamic(
+  () => import("@/components/layout/right-panel").then((m) => m.RightPanel),
+);
 
 export default function DashboardLayout({
   children,
@@ -11,9 +18,9 @@ export default function DashboardLayout({
 }) {
   return (
     <Providers>
-      <div className="flex min-h-screen flex-col bg-background lg:flex-row">
-        <div className="hidden lg:block lg:w-56 xl:w-64 shrink-0">
-          <div className="fixed left-0 top-0 h-full w-56 xl:w-64">
+      <div className="mx-auto flex min-h-screen w-full max-w-6xl flex-col bg-background lg:flex-row">
+        <div className="hidden lg:block lg:w-60 xl:w-68 shrink-0">
+          <div className="sticky top-0 h-screen">
             <SideNav />
           </div>
         </div>
@@ -27,8 +34,8 @@ export default function DashboardLayout({
           </main>
         </div>
 
-        <div className="hidden lg:block lg:w-72 xl:w-80 shrink-0">
-          <div className="fixed right-0 top-0 h-full w-72 xl:w-80">
+        <div className="hidden lg:block lg:w-80 xl:w-88 shrink-0">
+          <div className="sticky top-0 h-screen">
             <RightPanel />
           </div>
         </div>

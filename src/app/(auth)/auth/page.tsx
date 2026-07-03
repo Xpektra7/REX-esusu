@@ -115,7 +115,7 @@ export default function AuthPage() {
                   Phone Number
                 </label>
 
-                <div className="flex items-center rounded-xl border border-border bg-background px-4 py-3.5 focus-within:ring-2 focus-within:ring-ring transition-all">
+                <div className="flex items-center rounded-xl -bac-background px-4 py-3.5 focus-within:ring-2 focus-within:ring-ring transition-all">
                   {/* Flag + prefix */}
                   <div className="flex items-center gap-2 pr-4 border-r border-border">
                     <div className="flex w-6 h-4 overflow-hidden rounded-sm shrink-0">
@@ -162,7 +162,7 @@ export default function AuthPage() {
               }
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-xl border border-border bg-background px-4 py-3.5 text-base outline-none focus:ring-2 focus:ring-ring transition-all"
+              className="w-full rounded-xl bg-card  bg-background px-4 py-3.5 text-base outline-none focus:ring-2 focus:ring-ring transition-all"
               required
               minLength={8}
             />
@@ -188,7 +188,7 @@ export default function AuthPage() {
                       value={field.state.value}
                       onBlur={field.handleBlur}
                       onChange={(e) => field.handleChange(e.target.value)}
-                      className="w-full rounded-xl border border-border bg-background px-4 py-3.5 text-base outline-none focus:ring-2 focus:ring-ring transition-all"
+                      className="w-full rounded-xl bg-card  bg-background px-4 py-3.5 text-base outline-none focus:ring-2 focus:ring-ring transition-all"
                     />
                   </div>
                 )}
@@ -211,7 +211,7 @@ export default function AuthPage() {
                       value={field.state.value}
                       onBlur={field.handleBlur}
                       onChange={(e) => field.handleChange(e.target.value)}
-                      className="w-full rounded-xl border border-border bg-background px-4 py-3.5 text-base outline-none focus:ring-2 focus:ring-ring transition-all"
+                      className="w-full rounded-xl bg-card  bg-background px-4 py-3.5 text-base outline-none focus:ring-2 focus:ring-ring transition-all"
                     />
                   </div>
                 )}
@@ -260,6 +260,8 @@ export default function AuthPage() {
                   <img
                     src={`https://api.dicebear.com/10.x/identicon/svg?rowColor=f5c211&backgroundColor=000000&seed=${a.initials}`}
                     alt={a.initials}
+                    loading="lazy"
+                    decoding="async"
                     className="object-cover"
                   />
                 </div>

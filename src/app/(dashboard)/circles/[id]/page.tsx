@@ -60,7 +60,7 @@ export default function CircleDetailPage(props: {
         <Link href="/circles">
           <button
             type="button"
-            className="rounded-lg border border-border px-4 py-2 text-sm"
+            className="rounded-lg bg-card  px-4 py-2 text-sm"
           >
             Back to Circles
           </button>

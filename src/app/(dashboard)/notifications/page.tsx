@@ -1,7 +1,6 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Notification01Icon } from "hugeicons-react";
 import { toast } from "sonner";
 import { PageBreadcrumbs } from "@/components/shared/page-breadcrumbs";
 import { Button } from "@/components/ui/button";
@@ -88,8 +87,14 @@ export default function NotificationsPage() {
           <Skeleton className="h-20 rounded-xl" />
         </div>
       ) : notifications.length === 0 ? (
-        <div className="flex flex-col items-center gap-4 rounded-xl border border-border p-8 text-center">
-          <Notification01Icon className="size-8 text-muted-foreground" />
+        <div className="flex flex-col items-center gap-4 rounded-xl bg-card  p-8 text-center">
+          <img
+            src="/illustrations/empty-mailbox.svg"
+            alt=""
+            loading="lazy"
+            decoding="async"
+            className="size-32 object-contain"
+          />
           <p className="text-sm text-muted-foreground">No notifications yet.</p>
         </div>
       ) : (

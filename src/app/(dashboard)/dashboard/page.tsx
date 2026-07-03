@@ -55,11 +55,13 @@ export default function DashboardPage() {
             ))}
           </div>
         ) : (
-          <div className="flex flex-col items-center gap-4 rounded-xl border border-border p-8 text-center">
+          <div className="flex flex-col items-center gap-4 rounded-xl bg-card  p-8 text-center">
             <img
-              src="/illustrations/empty.svg"
+              src="/illustrations/circles.svg"
               alt=""
-              className="size-40 object-contain opacity-60"
+              loading="lazy"
+              decoding="async"
+              className="size-40 object-contain "
             />
             <p className="text-sm text-muted-foreground">
               No circles yet. Create or join one to start saving.
@@ -80,9 +82,11 @@ export default function DashboardPage() {
         <h2 className="mb-4 text-lg font-bold">Recent Activity</h2>
         <div className="flex flex-col items-center gap-3 py-8 text-center">
           <img
-            src="/illustrations/empty.svg"
+            src="/illustrations/no-data.svg"
             alt=""
-            className="size-32 object-contain opacity-40"
+            loading="lazy"
+            decoding="async"
+            className="size-32 object-contain "
           />
           <p className="text-sm text-muted-foreground">
             No activity yet. Join or create a circle to get started.

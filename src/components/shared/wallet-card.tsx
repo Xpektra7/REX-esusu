@@ -44,7 +44,7 @@ export function WalletCard({ balance }: { balance: number }) {
             className={cn(
               "flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-3",
               "bg-card-foreground text-card text-xs font-bold tracking-wider",
-              "hover:opacity-90 transition-opacity",
+              "hover: transition-opacity",
             )}
           >
             <PlusSignIcon className="size-4" />
@@ -55,7 +55,7 @@ export function WalletCard({ balance }: { balance: number }) {
             className={cn(
               "flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-3",
               "bg-background text-card-foreground text-xs font-bold tracking-wider",
-              "hover:opacity-90 transition-opacity",
+              "hover: transition-opacity",
             )}
           >
             <ArrowUp01Icon className="size-4" />

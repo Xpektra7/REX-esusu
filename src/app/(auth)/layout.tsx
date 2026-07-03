@@ -10,6 +10,8 @@ export default function AuthLayout({
         <img
           src="/icon-512.svg"
           alt="Esusu logo"
+          fetchPriority="high"
+          decoding="async"
           className="size-12 text-primary-foreground"
         />
       </div>

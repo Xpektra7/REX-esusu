@@ -112,7 +112,7 @@ export default function CreateCirclePage() {
         <div className="flex flex-col gap-2">
           <label
             htmlFor="amount"
-            className="text-[10px] font-semibold tracking-[0.05em] text-muted-foreground uppercase"
+            className="text-[10px] font-semibold tracking-wider text-muted-foreground uppercase"
           >
             Amount per Member (₦)
           </label>
@@ -138,7 +138,7 @@ export default function CreateCirclePage() {
         </div>
 
         <div className="flex flex-col gap-2">
-          <span className="text-[10px] font-semibold tracking-[0.05em] text-muted-foreground uppercase">
+          <span className="text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
             Contribution Frequency
           </span>
           <div className="flex gap-2">
