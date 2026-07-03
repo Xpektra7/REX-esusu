@@ -25,14 +25,14 @@ export function Hero() {
         <div className="flex flex-col gap-3 sm:flex-row">
           <Link
             href="/auth"
-            className={cn(buttonVariants({ size: "lg" }), "gap-1 font-bold p-3")}
+            className={cn(buttonVariants({ size: "lg" }), "gap-2")}
           >
             Start Your Circle
             <ArrowRight01Icon className="size-4" />
           </Link>
           <Link
             href="/about"
-            className={cn(buttonVariants({ variant: "outline", size: "lg" }), "p-3 font-bold" )}
+            className={cn(buttonVariants({ variant: "outline", size: "lg" }))}
           >
             Explore Public Circles
           </Link>
