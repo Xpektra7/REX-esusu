@@ -31,8 +31,7 @@ async function main() {
   const token2 = await auth("+2348000000124");
   const join = await fetch(`${BASE}/circles/${circleId}/join`, {
     method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token2}` },
-    body: JSON.stringify({ invite_code: code }),
-  }).then(r => r.json());
+    body: JSON.stringify({ inviteCode: code }),
   console.log(`Alice joined: ${join.code}`);
 
   // 3. Top up wallets (₦10,000 = 1,000,000 kobo each)
