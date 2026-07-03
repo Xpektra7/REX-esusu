@@ -19,14 +19,20 @@ import {
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
+interface RawTx {
+  type: string;
+  amountKobo: number;
+  reference: string;
+  status: string;
+  createdAt: string;
+}
+
 interface Transaction {
   type: "credit" | "debit";
   amount: number;
   description: string;
   date: string;
 }
-
-type WalletData = { balance: number; transactions: Transaction[] };
 
 export default function WalletPage() {
   const [hidden, setHidden] = useState(false);
@@ -36,8 +42,19 @@ export default function WalletPage() {
     queryFn: () => api.wallet.get(),
   });
 
-  const wallet = res?.data as WalletData | undefined;
-  const transactions = wallet?.transactions ?? [];
+  const { data: txRes } = useQuery({
+    queryKey: ["wallet-transactions"],
+    queryFn: () => api.wallet.transactions(),
+  });
+
+  const balanceKobo = res?.data?.balanceKobo ?? 0;
+  const rawTxs = (txRes?.data as { transactions?: RawTx[] })?.transactions ?? [];
+  const transactions: Transaction[] = rawTxs.map((t) => ({
+    type: t.type as "credit" | "debit",
+    amount: t.amountKobo,
+    description: t.reference,
+    date: t.createdAt,
+  }));
 
   return (
     <div className="flex flex-col gap-6">
@@ -71,7 +88,7 @@ export default function WalletPage() {
             </div>
 
             <p className="py-3 font-heading text-3xl font-semibold text-card-foreground">
-              {hidden ? "****" : formatNaira(wallet?.balance ?? 0, 2)}
+              {hidden ? "****" : formatNaira(balanceKobo, 2)}
             </p>
 
             <div className="flex gap-3">
