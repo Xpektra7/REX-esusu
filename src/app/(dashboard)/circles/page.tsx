@@ -43,6 +43,11 @@ export default function CirclesPage() {
         </div>
       ) : (
         <div className="flex flex-col items-center gap-4 rounded-xl border border-border p-8 text-center">
+          <img
+            src="/illustrations/empty.svg"
+            alt=""
+            className="size-40 object-contain opacity-60"
+          />
           <p className="text-sm text-muted-foreground">
             No circles yet. Create one to start saving with your group.
           </p>

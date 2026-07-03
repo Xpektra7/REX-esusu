@@ -32,7 +32,7 @@ export default function PublicLayout({
               Contact
             </Link>
             <Link
-              href="/auth"
+              href="/signin"
               className="text-sm font-medium text-foreground hover:text-primary"
             >
               Sign In

@@ -53,7 +53,7 @@ export default function WalletPage() {
   });
 
   const wallet = res?.data as WalletData | undefined;
-  const transactions = (txRes?.data ?? []) as WalletTransaction[];
+  const transactions = ((txRes?.data as { transactions: WalletTransaction[] } | undefined)?.transactions ?? []) as WalletTransaction[];
 
   return (
     <div className="flex flex-col gap-6">
@@ -89,7 +89,7 @@ export default function WalletPage() {
 
             <div className="flex gap-3">
               <Link
-                href="/wallet"
+                href="/wallet/topup"
                 className={cn(
                   "flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-3",
                   "bg-card-foreground text-card text-xs font-bold tracking-wider hover:opacity-90 transition-opacity",
@@ -119,7 +119,12 @@ export default function WalletPage() {
         </h2>
 
         {transactions.length === 0 ? (
-          <Card className="flex flex-col items-center gap-3 p-8 text-center">
+          <Card className="flex flex-col items-center gap-4 p-8 text-center">
+            <img
+              src="/illustrations/empty.svg"
+              alt=""
+              className="size-32 object-contain opacity-40"
+            />
             <p className="text-sm text-muted-foreground">
               No transactions yet.
             </p>

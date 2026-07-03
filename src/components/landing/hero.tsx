@@ -24,7 +24,7 @@ export function Hero() {
 
         <div className="flex flex-col gap-3 sm:flex-row">
           <Link
-            href="/auth"
+            href="/signin"
             className={cn(buttonVariants({ size: "lg" }), "gap-2")}
           >
             Start Your Circle

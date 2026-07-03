@@ -1,5 +1,4 @@
 "use client";
-export const dynamic = "force-dynamic";
 
 import { useForm } from "@tanstack/react-form";
 import { useRouter } from "next/navigation";

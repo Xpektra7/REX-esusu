@@ -15,17 +15,7 @@ import {
 import { api } from "@/lib/api";
 import { useAuthStore } from "@/stores/auth-store";
 
-/**
- * BVN KYC step.
- *
- * 3 steps:
- *   1. input    — user types their 11-digit BVN
- *   2. verifying — calls api.auth.verifyBvn() server-side
- *   3. confirm   — shows the returned name and asks "Is this you?"
- *
- * On confirm → marks BVN as verified in the store, redirects to /auth/pin?mode=set.
- */
-export default function KycPage() {
+export default function BvnPage() {
   const router = useRouter();
   const { accessToken, setBvnVerified, needsBvn, user } = useAuthStore();
 
@@ -34,19 +24,15 @@ export default function KycPage() {
   const [verifiedName, setVerifiedName] = useState("");
   const [error, setError] = useState<string | null>(null);
 
-  // Guard: if not authenticated send to /auth.
-  // If BVN is already done, skip ahead to PIN setup instead.
   useEffect(() => {
     if (!accessToken) {
-      router.replace("/auth");
+      router.replace("/signin");
     } else if (!needsBvn) {
-      router.replace("/auth/pin?mode=set");
+      router.replace("/signup/pin");
     }
   }, [accessToken, needsBvn, router]);
 
-  if (!accessToken || !needsBvn) {
-    return null;
-  }
+  if (!accessToken || !needsBvn) return null;
 
   const handleVerify = async () => {
     setError(null);
@@ -73,12 +59,9 @@ export default function KycPage() {
 
   const handleConfirm = () => {
     setBvnVerified();
-    router.push("/auth/pin?mode=set");
+    router.push("/signup/pin");
   };
 
-  // ------------------------------------------------------------------
-  // Render
-  // ------------------------------------------------------------------
   return (
     <Card>
       <CardHeader>
@@ -91,10 +74,9 @@ export default function KycPage() {
       </CardHeader>
 
       <CardContent>
-        {/* Step 1 — BVN input */}
         {step === "input" && (
-          <div className="space-y-4">
-            <div className="space-y-4">
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-4">
               <label htmlFor="bvn" className="block text-sm font-medium">
                 Bank Verification Number (BVN)
               </label>
@@ -117,7 +99,6 @@ export default function KycPage() {
           </div>
         )}
 
-        {/* Step 2 — Verifying spinner */}
         {step === "verifying" && (
           <div className="flex flex-col items-center py-8">
             <Shield01Icon className="size-10 animate-pulse text-primary" />
@@ -127,9 +108,8 @@ export default function KycPage() {
           </div>
         )}
 
-        {/* Step 3 — Name confirmation */}
         {step === "confirm" && (
-          <div className="space-y-4 py-4">
+          <div className="flex flex-col gap-4 py-4">
             <div className="flex flex-col items-center gap-3 rounded-xl border border-border p-6 text-center">
               <div className="flex size-12 items-center justify-center rounded-full bg-primary/10">
                 <IdVerifiedIcon className="size-6 text-primary" />

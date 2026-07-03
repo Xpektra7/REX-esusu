@@ -5,7 +5,7 @@
 - [X] `npx shadcn@latest init` — pick preset
 - [X] Install additional deps: zustand, @tanstack/react-query, lucide-react, sonner, date-fns
 - [X] Add shadcn components as needed (button, card, input, form, dialog, sheet, table, badge, avatar, separator, toast, dropdown-menu, tabs, skeleton)
-- [X] Set up globals.css with Nomba gold (#FFCC00) theme
+- [X] Set up globals.css with Nomba gold (#FCC800) theme
 - [ ] Create `tailwind.config.ts` with nomba color tokens
 - [ ] Create `src/types/index.ts` — all TS interfaces
 - [ ] Create `src/lib/utils.ts` — cn(), currency format, date format, phone/BVN masking, trust score colors

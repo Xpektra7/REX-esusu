@@ -129,7 +129,7 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    if (!name || !email) return error("Name and email are required for signup");
+    if (!name || !email) return error("No account found with this phone number. Sign up first.");
 
     const emailCheck = await db
       .select()

@@ -1,7 +1,7 @@
 # UI Agent Rules — Esusu
 
 ## Brand Colors (Strict)
-- **Primary:** #FFCC00 (gold/yellow)
+- **Primary:** #FCC800 (gold/yellow)
 - **Neutral:** #000000 (black), #FFFFFF (white), gray-50 to gray-900 scale
 - All colors must use CSS variables from `globals.css` — no hardcoded Tailwind colors like `text-red-400`, `bg-blue-500`, `text-green-600`, etc.
 - If a needed color isn't in the CSS variables, stop and ask.

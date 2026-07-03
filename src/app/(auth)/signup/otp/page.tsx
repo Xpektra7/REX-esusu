@@ -21,27 +21,20 @@ import {
 import { api } from "@/lib/api";
 import { useAuthStore } from "@/stores/auth-store";
 
-/**
- * OTP verification form.
- *
- * Reads phone, flow, name, email from query params (set by /auth).
- * On submit, calls verify() with OTP + password.
- * If signup, also sends name + email.
- * Mock mode accepts any OTP (>= 6 chars) and any password (>= 8).
- *
- * On success:
- *   - needsBvn  → redirect to /auth/kyc
- *   - !pinSet   → redirect to /auth/pin?mode=set
- *   - otherwise → dashboard
- */
 function OtpForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const setAuth = useAuthStore((s) => s.setAuth);
 
-  // Values set in sessionStorage by the /auth page (not in URL — avoids PII in browser history).
   const phone = searchParams.get("phone") || "";
-  const flow = searchParams.get("flow") || "login";
+  const [otp, setOtp] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const password =
+    typeof window !== "undefined"
+      ? sessionStorage.getItem("pending_password") || ""
+      : "";
   const name =
     typeof window !== "undefined"
       ? sessionStorage.getItem("pending_name") || ""
@@ -51,26 +44,13 @@ function OtpForm() {
       ? sessionStorage.getItem("pending_email") || ""
       : "";
 
-  const [otp, setOtp] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-
-  // Password was stored in sessionStorage by the /auth page (not in URL).
-  const password =
-    typeof window !== "undefined"
-      ? sessionStorage.getItem("pending_password") || ""
-      : "";
-
-  // If someone navigates here directly without a phone, kick them back.
   useEffect(() => {
     if (!phone) {
-      router.replace("/auth");
+      router.replace("/signup");
     }
   }, [phone, router]);
 
-  if (!phone) {
-    return null;
-  }
+  if (!phone) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -78,15 +58,13 @@ function OtpForm() {
     setLoading(true);
 
     try {
-      // Verify OTP + password. Mock accepts any values.
       const res = await api.auth.verify({
         phone,
         otp,
         password,
-        ...(flow === "signup" ? { name, email } : {}),
+        name,
+        email,
       });
-
-      // Cast the response into the shape the store expects.
       const data = res.data as unknown as {
         token: string;
         refreshToken: string;
@@ -95,10 +73,10 @@ function OtpForm() {
         pinSet: boolean;
       };
 
-      // Clean up password from sessionStorage.
       sessionStorage.removeItem("pending_password");
+      sessionStorage.removeItem("pending_name");
+      sessionStorage.removeItem("pending_email");
 
-      // Persist auth state (tokens + user + onboarding flags).
       setAuth({
         access_token: data.token,
         refresh_token: data.refreshToken,
@@ -107,14 +85,7 @@ function OtpForm() {
         pin_set: data.pinSet,
       });
 
-      // Decide where to send the user next.
-      if (data.needsBvn) {
-        router.push("/auth/kyc");
-      } else if (!data.pinSet) {
-        router.push("/auth/pin?mode=set");
-      } else {
-        router.push("/dashboard");
-      }
+      router.push("/signup/bvn");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Verification failed");
     } finally {
@@ -122,13 +93,10 @@ function OtpForm() {
     }
   };
 
-  // ------------------------------------------------------------------
-  // Render
-  // ------------------------------------------------------------------
   return (
     <Card className="w-fit">
       <CardHeader>
-        <CardTitle>Verify your login</CardTitle>
+        <CardTitle>Verify your email</CardTitle>
         <CardDescription>
           Enter the verification code sent to{" "}
           <span className="font-medium">{email || phone}</span>.
@@ -136,9 +104,8 @@ function OtpForm() {
       </CardHeader>
 
       <form onSubmit={handleSubmit}>
-        <CardContent className="space-y-4 mb-4">
-          {/* OTP input — 6 digits, split 3+3 */}
-          <div className="space-y-4">
+        <CardContent className="flex flex-col gap-4 mb-4">
+          <div className="flex flex-col gap-4">
             <div className="flex items-center justify-between">
               <label htmlFor="otp" className="mb-1 block text-sm font-medium">
                 Verification code
@@ -151,7 +118,7 @@ function OtpForm() {
                   try {
                     await api.auth.sendOtp(phone);
                   } catch {
-                    /* silent — mock always "succeeds" */
+                    /* silent */
                   }
                 }}
               >
@@ -198,11 +165,7 @@ function OtpForm() {
   );
 }
 
-/**
- * Wrapper required by Next.js — `useSearchParams` must be inside a
- * `<Suspense>` boundary or the build will fail.
- */
-export default function OtpPage() {
+export default function SignUpOtpPage() {
   return (
     <Suspense
       fallback={

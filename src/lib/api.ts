@@ -915,6 +915,19 @@ export const api = {
         method: "POST",
         body: JSON.stringify(payload),
       }),
+
+    /** Generates a payment reference for wallet top-up. */
+    topup: (payload: { amountKobo: number }) =>
+      request<{
+        virtualAccount: {
+          accountNumber: string;
+          accountName: string;
+          bankCode: string;
+        };
+        amountKobo: number;
+        reference: string;
+        instructions: string;
+      }>("/wallet/topup", { method: "POST", body: JSON.stringify(payload) }),
   },
 
   notifications: {

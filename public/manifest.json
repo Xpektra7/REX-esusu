@@ -4,8 +4,8 @@
   "description": "Digital Ajo/Esusu platform powered by Nomba",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#FFCC00",
+  "background_color": "#FCC800",
+  "theme_color": "#FCC800",
   "orientation": "portrait-primary",
   "icons": [
     {

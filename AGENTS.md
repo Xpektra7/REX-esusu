@@ -14,7 +14,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 ## UI Rules
 Read `UI-RULES.md` before writing any frontend code. Key constraints:
-- Colors: gold (#FFCC00) / black / white only — use CSS variables, no hardcoded Tailwind colors
+- Colors: gold (#FCC800) / black / white only — use CSS variables, no hardcoded Tailwind colors
 - No shadows, no glow, no zoom on hover, minimal animation
 - shadcn components first, hugeicons only
 - Flat design, clean borders, generous spacing

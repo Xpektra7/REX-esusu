@@ -156,7 +156,7 @@ export default function ProfilePage() {
         <SettingsRow
           icon={<Shield01Icon className="size-4" />}
           label="Change PIN"
-          href="/auth/pin?mode=set"
+          href="/signup/pin"
         />
       </div>
 
@@ -178,7 +178,7 @@ export default function ProfilePage() {
               /* ignore */
             }
             clearAuth();
-            router.push("/auth");
+            router.push("/signin");
           }}
           className={cn(
             "flex items-center gap-3 rounded-xl border border-destructive/30 px-4 py-3 transition-colors hover:bg-muted/50",

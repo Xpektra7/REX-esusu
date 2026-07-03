@@ -56,6 +56,11 @@ export default function DashboardPage() {
           </div>
         ) : (
           <div className="flex flex-col items-center gap-4 rounded-xl border border-border p-8 text-center">
+            <img
+              src="/illustrations/empty.svg"
+              alt=""
+              className="size-40 object-contain opacity-60"
+            />
             <p className="text-sm text-muted-foreground">
               No circles yet. Create or join one to start saving.
             </p>
@@ -73,9 +78,16 @@ export default function DashboardPage() {
 
       <section>
         <h2 className="mb-4 text-lg font-bold">Recent Activity</h2>
-        <p className="text-sm text-muted-foreground">
-          No activity yet. Join or create a circle to get started.
-        </p>
+        <div className="flex flex-col items-center gap-3 py-8 text-center">
+          <img
+            src="/illustrations/empty.svg"
+            alt=""
+            className="size-32 object-contain opacity-40"
+          />
+          <p className="text-sm text-muted-foreground">
+            No activity yet. Join or create a circle to get started.
+          </p>
+        </div>
       </section>
     </div>
   );

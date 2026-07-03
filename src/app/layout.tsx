@@ -19,7 +19,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   minimumScale: 1,
   viewportFit: "cover",
-  themeColor: "#FFCC00",
+  themeColor: "#FCC800",
 };
 
 export const metadata: Metadata = {
@@ -47,7 +47,7 @@ export default function RootLayout({
       lang="en"
       className={cn("h-full", "antialiased", inter.variable, manrope.variable)}
     >
-      <body className="min-h-full flex flex-col">
+      <body className="min-h-full relative flex flex-col">
         {children}
         <Toaster />
       </body>

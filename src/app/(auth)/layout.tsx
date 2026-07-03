@@ -13,7 +13,7 @@ export default function AuthLayout({
           className="size-12 text-primary-foreground"
         />
       </div>
-      <div className="w-full max-w-sm">{children}</div>
+      <div className="w-fit max-w-sm">{children}</div>
     </div>
   );
 }
