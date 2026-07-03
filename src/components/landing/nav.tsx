@@ -12,17 +12,17 @@ export function Nav() {
         <div className="flex items-center gap-6">
           <Link
             href="/about"
-            className="text-sm text-muted-foreground hover:text-foreground"
+            className="text-sm text-muted-foreground hover:text-foreground font-bold"
           >
             About
           </Link>
           <Link
             href="/faq"
-            className="text-sm text-muted-foreground hover:text-foreground"
+            className="text-sm text-muted-foreground hover:text-foreground font-bold"
           >
             FAQ
           </Link>
-          <Link href="/auth" className={cn(buttonVariants({}))}>
+          <Link href="/auth" className={cn(buttonVariants({}), "font-bold p-3")}>
             Get Started
           </Link>
         </div>
