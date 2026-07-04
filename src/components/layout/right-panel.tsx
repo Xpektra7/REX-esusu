@@ -44,7 +44,7 @@ export function RightPanel() {
   ).slice(0, 5);
 
   return (
-    <aside className="flex h-full flex-col gap-4 overflow-y-auto p-4">
+    <aside className="flex h-full flex-col gap-4 overflow-y-auto p-4 pl-0">
       {/*Recent Notifications*/}
       <div className="flex flex-col gap-3 rounded-xl bg-card p-4">
         <div className="flex items-center justify-between">
@@ -111,7 +111,10 @@ export function RightPanel() {
         {txsLoading ? (
           <div className="flex flex-col gap-2">
             {[1, 2, 3].map((n) => (
-              <div key={n} className="flex items-center justify-between px-3 py-2">
+              <div
+                key={n}
+                className="flex items-center justify-between px-3 py-2"
+              >
                 <div className="flex flex-col gap-1">
                   <Skeleton className="h-3 w-24 rounded" />
                   <Skeleton className="h-2.5 w-16 rounded" />

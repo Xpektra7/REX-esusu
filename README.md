@@ -23,9 +23,9 @@ Esusu is a digital **Ajo/Esusu platform** that lets groups of people save money 
 ## Quick Start
 
 ```bash
-npm install
+bun install
 cp .env.example .env
-npm run dev
+bun run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000). The app runs in **mock mode** by default — no real API keys needed.
@@ -46,14 +46,15 @@ You can also add or change whitelisted numbers in the `OTP_WHITELIST` variable i
 
 ### Environment Variables
 
-| Variable | What it's for |
-|---|---|
-| `JWT_SECRET` | Signs authentication tokens |
-| `BVN_ENCRYPTION_KEY` | Encrypts BVN data at rest |
-| `DATABASE_URL` | PostgreSQL connection (Neon, Supabase, etc.) |
-| `NOMBA_*` | Nomba API credentials for virtual accounts and payments |
-| `NOMBA_WEBHOOK_SECRET` | Verifies Nomba webhook signatures |
-| `OTP_WHITELIST` | Phone numbers that always get a fixed OTP in development |
+| Variable | Description | How to get |
+|---|---|---|
+| `JWT_SECRET` | Signs auth tokens | `openssl rand -hex 32` |
+| `BVN_ENCRYPTION_KEY` | Encrypts BVN data | `openssl rand -hex 32` |
+| `DATABASE_URL` | Postgres connection | Your DB provider (Neon, Supabase, etc.) |
+| `NOMBA_*` | Nomba API credentials | Nomba dashboard → API Keys / Account Settings |
+| `NOMBA_WEBHOOK_SECRET` | Webhook signature verification | Nomba dashboard → Webhooks |
+| `OTP_WHITELIST` | Dev phone numbers with fixed OTP | JSON array, see `.env.example` |
+
 
 ## Built With
 

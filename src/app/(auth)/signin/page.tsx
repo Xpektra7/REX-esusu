@@ -46,7 +46,11 @@ export default function SignInPage() {
       const phone = phoneResult.data.phone;
 
       try {
-        await api.auth.sendOtp(phone);
+        const res = await api.auth.sendOtp(phone);
+        if (res.data.isNewUser) {
+          router.push(`/signup?phone=${encodeURIComponent(phone)}`);
+          return;
+        }
         sessionStorage.setItem("pending_password", password);
         router.push(`/signin/otp?phone=${encodeURIComponent(phone)}`);
       } catch {

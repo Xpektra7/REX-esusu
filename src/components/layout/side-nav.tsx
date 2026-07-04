@@ -38,7 +38,7 @@ export function SideNav() {
   };
 
   return (
-    <aside className="flex h-full flex-col border-r border-border bg-background">
+    <aside className="flex h-full max-h-210 flex-col border-r border-border bg-background">
       <div className="flex items-center gap-3 px-6 py-5">
         <img
           src="/icon-512.svg"
@@ -53,7 +53,9 @@ export function SideNav() {
       <nav className="flex flex-1 flex-col gap-1 px-3 py-2">
         {navItems.map((item) => {
           const Icon = item.icon;
-          const isActive = pathname.startsWith(item.href) || (item.href === "/dashboard" && pathname === "/");
+          const isActive =
+            pathname.startsWith(item.href) ||
+            (item.href === "/dashboard" && pathname === "/");
 
           return (
             <Link

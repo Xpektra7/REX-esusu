@@ -154,7 +154,7 @@ async function mockRequest<T>(
     return {
       code: "00",
       description: "OTP sent successfully",
-      data: { expires_in_seconds: 300 } as T,
+      data: { expires_in_seconds: 300, isNewUser: false } as T,
     };
   }
 
@@ -747,10 +747,13 @@ export const api = {
   auth: {
     /** Sends a 6-digit OTP to the given phone number. */
     sendOtp: (phone: string) =>
-      request<{ expires_in_seconds: number }>("/auth/send-otp", {
-        method: "POST",
-        body: JSON.stringify({ phone }),
-      }),
+      request<{ expires_in_seconds: number; isNewUser: boolean }>(
+        "/auth/send-otp",
+        {
+          method: "POST",
+          body: JSON.stringify({ phone }),
+        },
+      ),
 
     /** Verifies OTP + password, returns auth tokens + user data. */
     verify: (payload: {

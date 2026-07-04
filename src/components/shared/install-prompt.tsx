@@ -19,6 +19,11 @@ export function InstallPrompt() {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
+    if (!window.matchMedia("(pointer: coarse)").matches) {
+      setState("installed");
+      return;
+    }
+
     if (window.matchMedia("(display-mode: standalone)").matches) {
       setState("installed");
       return;

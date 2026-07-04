@@ -44,7 +44,7 @@ function SettingsRow({
     <Link
       href={href}
       className={cn(
-        "flex items-center gap-3 rounded-xl bg-card  px-4 py-3 transition-colors hover:bg-muted/50",
+        "flex items-center gap-3 rounded-xl bg-card border border-transparent px-4 py-3 transition-colors hover:border-primary",
         variant === "danger" && "border-destructive/30",
       )}
     >
