@@ -34,20 +34,20 @@ async function provisionVirtualAccount(
   accountName: string,
   bvn?: string,
 ) {
+  const subAccountId = process.env.NOMBA_SUB_ACCOUNT_ID || "";
   const baseUrl = process.env.NOMBA_BASE_URL || "https://api.nomba.com/v1";
   const isLive = !baseUrl.includes("sandbox");
 
   async function createVA(url: string): Promise<Record<string, unknown>> {
-    const result = await nombaPost(
-      "/v1/accounts/virtual",
-      {
-        accountRef: userId,
-        accountName,
-        bvn: bvn || "",
-        expiryDate: "2027-12-31",
-      },
-      url,
-    );
+    const vaPath = subAccountId
+      ? `/v1/accounts/virtual/${subAccountId}`
+      : "/v1/accounts/virtual";
+    const result = await nombaPost(vaPath, {
+      accountRef: userId,
+      accountName,
+      bvn: bvn || "",
+      expiryDate: "2027-12-31",
+    }, url);
     const vaBody = result?.data || result;
     if (vaBody) {
       await db.insert(virtualAccounts).values({
