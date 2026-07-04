@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { AlertCircleIcon } from "hugeicons-react";
+import { AlertCircleIcon, Coins02Icon } from "hugeicons-react";
 import Link from "next/link";
 import { use } from "react";
 import { ContributionRow } from "@/components/circles/contribution-row";
@@ -10,6 +10,7 @@ import { RecipientHeroCard } from "@/components/circles/recipient-hero-card";
 import { ShortfallAlert } from "@/components/circles/shortfall-alert";
 import { PageBreadcrumbs } from "@/components/shared/page-breadcrumbs";
 import { Card } from "@/components/ui/card";
+import { Empty, EmptyDescription, EmptyHeader, EmptyMedia } from "@/components/ui/empty";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/lib/api";
@@ -54,7 +55,7 @@ export default function CycleDetailPage(props: {
         <Link href={`/circles/${id}`}>
           <button
             type="button"
-            className="rounded-lg bg-card  px-4 py-2 text-sm"
+            className="rounded-lg card-interactive px-4 py-2 text-sm"
           >
             Back to Circle
           </button>
@@ -154,9 +155,14 @@ export default function CycleDetailPage(props: {
           Member Contributions
         </h2>
         {cycle.contributions.length === 0 ? (
-          <p className="py-4 text-center text-sm text-muted-foreground">
-            No contributions recorded.
-          </p>
+          <Empty className="p-4">
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <Coins02Icon className="size-6" />
+              </EmptyMedia>
+              <EmptyDescription>No contributions recorded.</EmptyDescription>
+            </EmptyHeader>
+          </Empty>
         ) : (
           <div className="flex flex-col gap-2">
             {cycle.contributions.map((c) => (
@@ -175,7 +181,7 @@ export default function CycleDetailPage(props: {
 
       <Separator />
 
-      <CycleActions />
+      <CycleActions circleId={id} />
     </div>
   );
 }

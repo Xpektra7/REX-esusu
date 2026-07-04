@@ -1,7 +1,9 @@
 "use client";
 
+import { Refresh01Icon } from "hugeicons-react";
 import Link from "next/link";
 import { CycleBadge } from "@/components/circles/cycle-badge";
+import { Empty, EmptyDescription, EmptyHeader, EmptyMedia } from "@/components/ui/empty";
 import { formatNaira } from "@/lib/utils";
 
 interface CycleItem {
@@ -19,9 +21,14 @@ interface CycleHistoryListProps {
 export function CycleHistoryList({ cycles, circleId }: CycleHistoryListProps) {
   if (cycles.length === 0) {
     return (
-      <p className="py-4 text-center text-sm text-muted-foreground">
-        No cycles completed yet.
-      </p>
+      <Empty>
+        <EmptyHeader>
+          <EmptyMedia variant="icon">
+            <Refresh01Icon className="size-6" />
+          </EmptyMedia>
+          <EmptyDescription>No cycles completed yet.</EmptyDescription>
+        </EmptyHeader>
+      </Empty>
     );
   }
 
@@ -31,7 +38,7 @@ export function CycleHistoryList({ cycles, circleId }: CycleHistoryListProps) {
         <Link
           key={cycle.cycleNumber}
           href={`/circles/${circleId}/cycles/${cycle.cycleNumber}`}
-          className="flex items-center justify-between rounded-xl bg-card px-4 py-3 transition-colors hover:bg-primary/50"
+          className="flex items-center justify-between rounded-xl card-interactive px-4 py-3"
         >
           <div>
             <p className="text-sm font-medium">Cycle #{cycle.cycleNumber}</p>

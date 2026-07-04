@@ -5,6 +5,12 @@ import { Copy01Icon } from "hugeicons-react";
 import { toast } from "sonner";
 import { PageBreadcrumbs } from "@/components/shared/page-breadcrumbs";
 import { Card } from "@/components/ui/card";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+} from "@/components/ui/empty";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/lib/api";
@@ -97,18 +103,22 @@ export default function ReferralsPage() {
             ))}
           </div>
         ) : (
-          <Card className="flex flex-col items-center justify-center gap-3 p-8 h-64 text-center">
-            <img
-              src="/illustrations/referral.svg"
-              alt=""
-              loading="lazy"
-              decoding="async"
-              className="size-32 object-contain"
-            />
-            <p className="text-sm text-muted-foreground">
-              No referrals yet. Share your code to start earning.
-            </p>
-          </Card>
+          <Empty>
+            <EmptyHeader>
+              <EmptyMedia variant="default">
+                <img
+                  src="/illustrations/referral.svg"
+                  alt=""
+                  loading="lazy"
+                  decoding="async"
+                  className="size-32 object-contain"
+                />
+              </EmptyMedia>
+              <EmptyDescription>
+                No referrals yet. Share your code to start earning.
+              </EmptyDescription>
+            </EmptyHeader>
+          </Empty>
         )}
       </section>
     </div>

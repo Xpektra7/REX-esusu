@@ -1,6 +1,8 @@
 "use client";
 
+import { Coins02Icon } from "hugeicons-react";
 import { DebtBadge } from "@/components/circles/debt-badge";
+import { Empty, EmptyDescription, EmptyHeader, EmptyMedia } from "@/components/ui/empty";
 import { formatNaira } from "@/lib/utils";
 
 interface DebtItem {
@@ -17,9 +19,14 @@ interface DebtHistoryListProps {
 export function DebtHistoryList({ debts }: DebtHistoryListProps) {
   if (debts.length === 0) {
     return (
-      <p className="py-4 text-center text-sm text-muted-foreground">
-        No debts recorded.
-      </p>
+      <Empty>
+        <EmptyHeader>
+          <EmptyMedia variant="icon">
+            <Coins02Icon className="size-6" />
+          </EmptyMedia>
+          <EmptyDescription>No debts recorded.</EmptyDescription>
+        </EmptyHeader>
+      </Empty>
     );
   }
 

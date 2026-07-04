@@ -40,7 +40,7 @@ export function WalletCard({ balance }: { balance: number }) {
 
         <div className="flex gap-3">
           <Link
-            href="/wallet"
+            href="/wallet/topup"
             className={cn(
               "flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-3",
               "bg-card-foreground text-card text-xs font-bold tracking-wider",

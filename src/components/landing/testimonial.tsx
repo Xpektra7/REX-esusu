@@ -85,7 +85,7 @@ export function Testimonial() {
               type="button"
               onClick={() => scroll("left")}
               aria-label="Previous testimonial"
-              className="flex size-10 items-center justify-center rounded-full bg-card  hover:bg-accent transition-colors"
+              className="flex size-10 items-center justify-center rounded-full card-interactive"
             >
               <ArrowLeft01Icon className="size-4" />
             </button>
@@ -93,7 +93,7 @@ export function Testimonial() {
               type="button"
               onClick={() => scroll("right")}
               aria-label="Next testimonial"
-              className="flex size-10 items-center justify-center rounded-full bg-card  hover:bg-accent transition-colors"
+              className="flex size-10 items-center justify-center rounded-full card-interactive"
             >
               <ArrowRight01Icon className="size-4" />
             </button>

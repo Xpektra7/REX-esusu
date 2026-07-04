@@ -233,6 +233,14 @@ export interface ApiResponse<T> {
   data: T;
 }
 
+export interface ActivityItem {
+  id: string;
+  type: "contribution" | "payout" | "circle_join" | "circle_create" | "topup";
+  description: string;
+  amountKobo?: number;
+  createdAt: string;
+}
+
 export interface AuthTokens {
   accessToken: string;
   refreshToken: string;

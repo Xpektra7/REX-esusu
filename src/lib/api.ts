@@ -108,7 +108,7 @@ const BASE_URL = "/api/v1";
 
 // Mock mode — when true, returns fake data so the UI works without a backend.
 // Call setMockMode(false) once the real API is ready.
-let mockMode = false;
+let mockMode = true;
 
 export function setMockMode(enabled: boolean) {
   mockMode = enabled;
@@ -332,6 +332,14 @@ async function mockRequest<T>(
         inviteCode: "ESUSU-XYZ",
         link: "https://esusu.app/join/ESUSU-XYZ",
       } as T,
+    };
+  }
+
+  if (path.endsWith("/remind") && method === "POST") {
+    return {
+      code: "00",
+      description: "Reminders sent to pending members",
+      data: { notified: 2 } as T,
     };
   }
 
@@ -578,6 +586,7 @@ async function mockRequest<T>(
           id: "notif_001",
           title: "Payout Received",
           body: "You received ₦50,000 from Weekend Travelers cycle #4.",
+          type: "payout",
           read: false,
           createdAt: new Date(Date.now() - 3600000).toISOString(),
         },
@@ -585,6 +594,7 @@ async function mockRequest<T>(
           id: "notif_002",
           title: "Contribution Due",
           body: "Your ₦25,000 contribution to Rent Savers is due tomorrow.",
+          type: "contribution_due",
           read: true,
           createdAt: new Date(Date.now() - 172800000).toISOString(),
         },
@@ -592,6 +602,7 @@ async function mockRequest<T>(
           id: "notif_003",
           title: "Member Joined",
           body: "Tunde Balogun has joined Weekend Travelers.",
+          type: "member_join",
           read: false,
           createdAt: new Date(Date.now() - 604800000).toISOString(),
         },
@@ -599,6 +610,7 @@ async function mockRequest<T>(
           id: "notif_004",
           title: "Circle Completed",
           body: "Weekly Savers has completed all 12 cycles. Congratulations!",
+          type: "circle_completed",
           read: true,
           createdAt: new Date(Date.now() - 1209600000).toISOString(),
         },
@@ -652,6 +664,59 @@ async function mockRequest<T>(
 
   if (path.endsWith("/pay") && method === "POST") {
     return { code: "00", description: "Debt paid", data: {} as T };
+  }
+
+  if (path === "/contact" && method === "POST") {
+    console.log("[contact form submission]", body);
+    return {
+      code: "00",
+      description: "Message received. We'll get back to you shortly.",
+      data: {} as T,
+    };
+  }
+
+  if (path === "/activity" && method === "GET") {
+    return {
+      code: "00",
+      description: "OK",
+      data: {
+        items: [
+          {
+            id: "act_001",
+            type: "contribution",
+            description: "Contributed ₦5,000 to Weekend Travelers",
+            amountKobo: 500000,
+            createdAt: new Date(Date.now() - 3600000).toISOString(),
+          },
+          {
+            id: "act_002",
+            type: "payout",
+            description: "Received ₦50,000 from Rent Savers",
+            amountKobo: 5000000,
+            createdAt: new Date(Date.now() - 86400000).toISOString(),
+          },
+          {
+            id: "act_003",
+            type: "circle_join",
+            description: "Joined Weekend Travelers circle",
+            createdAt: new Date(Date.now() - 172800000).toISOString(),
+          },
+          {
+            id: "act_004",
+            type: "circle_create",
+            description: "Created Rent Savers circle",
+            createdAt: new Date(Date.now() - 604800000).toISOString(),
+          },
+          {
+            id: "act_005",
+            type: "topup",
+            description: "Topped up wallet with ₦20,000",
+            amountKobo: 2000000,
+            createdAt: new Date(Date.now() - 1209600000).toISOString(),
+          },
+        ] as import("@/types").ActivityItem[],
+      } as T,
+    };
   }
 
   // Fallback: unknown route
@@ -784,7 +849,8 @@ export const api = {
       }),
 
     /** Logs out the current session. */
-    logout: () => request<Record<string, unknown>>("/auth/logout", { method: "POST" }),
+    logout: () =>
+      request<Record<string, unknown>>("/auth/logout", { method: "POST" }),
 
     /** Refreshes the access token using a refresh token. */
     refresh: (refreshToken: string) =>
@@ -822,7 +888,9 @@ export const api = {
 
     /** Activates a pending circle so members can start contributing. */
     activate: (id: string) =>
-      request<Record<string, unknown>>(`/circles/${id}/activate`, { method: "POST" }),
+      request<Record<string, unknown>>(`/circles/${id}/activate`, {
+        method: "POST",
+      }),
 
     /** Joins a circle using an invite code. */
     join: (id: string, inviteCode: string) =>
@@ -833,7 +901,9 @@ export const api = {
 
     /** Leaves a circle (only possible if no outstanding debts). */
     leave: (id: string) =>
-      request<Record<string, unknown>>(`/circles/${id}/leave`, { method: "POST" }),
+      request<Record<string, unknown>>(`/circles/${id}/leave`, {
+        method: "POST",
+      }),
 
     /** Generates an invite link for a circle. */
     invite: (id: string) =>
@@ -843,6 +913,12 @@ export const api = {
 
     /** Returns a report on circle health, contributions, and defaults. */
     report: (id: string) => request<unknown>(`/circles/${id}/report`),
+
+    /** Sends reminders to pending members. */
+    remind: (id: string) =>
+      request<{ notified: number }>(`/circles/${id}/remind`, {
+        method: "POST",
+      }),
   },
 
   cycles: {
@@ -867,7 +943,9 @@ export const api = {
 
     /** Manually closes a cycle (admin only). */
     close: (id: string) =>
-      request<Record<string, unknown>>(`/cycles/${id}/close`, { method: "POST" }),
+      request<Record<string, unknown>>(`/cycles/${id}/close`, {
+        method: "POST",
+      }),
   },
 
   contributions: {
@@ -941,11 +1019,15 @@ export const api = {
 
     /** Marks a single notification as read. */
     markRead: (id: string) =>
-      request<Record<string, unknown>>(`/notifications/${id}/read`, { method: "PATCH" }),
+      request<Record<string, unknown>>(`/notifications/${id}/read`, {
+        method: "PATCH",
+      }),
 
     /** Marks all notifications as read. */
     markAllRead: () =>
-      request<Record<string, unknown>>("/notifications/read-all", { method: "POST" }),
+      request<Record<string, unknown>>("/notifications/read-all", {
+        method: "POST",
+      }),
   },
 
   users: {
@@ -958,6 +1040,26 @@ export const api = {
         method: "PATCH",
         body: JSON.stringify(payload),
       }),
+  },
+
+  contact: {
+    /** Sends a contact form message. */
+    send: (payload: {
+      name: string;
+      email: string;
+      subject: string;
+      message: string;
+    }) =>
+      request<Record<string, unknown>>("/contact", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      }),
+  },
+
+  activity: {
+    /** Recent activity feed for the dashboard. */
+    list: () =>
+      request<{ items: import("@/types").ActivityItem[] }>("/activity"),
   },
 
   bankCodes: () =>
@@ -979,6 +1081,7 @@ export const api = {
     list: () => request<{ outgoing: unknown[]; incoming: unknown[] }>("/debts"),
 
     /** Pays a specific debt. */
-    pay: (id: string) => request<Record<string, unknown>>(`/debts/${id}/pay`, { method: "POST" }),
+    pay: (id: string) =>
+      request<Record<string, unknown>>(`/debts/${id}/pay`, { method: "POST" }),
   },
 };
