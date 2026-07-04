@@ -1,8 +1,8 @@
 "use client";
 
 import { useForm } from "@tanstack/react-form";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -15,13 +15,18 @@ import { api } from "@/lib/api";
 import { passwordSchema, phoneSchema } from "@/lib/validations";
 import Link from "next/link";
 
-export default function SignUpPage() {
+function SignUpForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [error, setError] = useState<string | null>(null);
   const [password, setPassword] = useState("");
 
   const form = useForm({
-    defaultValues: { phone: "", name: "", email: "" },
+    defaultValues: {
+      phone: searchParams.get("phone") || "",
+      name: "",
+      email: "",
+    },
     onSubmit: async ({ value }) => {
       setError(null);
 
@@ -198,5 +203,21 @@ export default function SignUpPage() {
         </Link>
       </CardContent>
     </Card>
+  );
+}
+
+export default function SignUpPage() {
+  return (
+    <Suspense
+      fallback={
+        <Card>
+          <CardHeader>
+            <CardTitle>Loading...</CardTitle>
+          </CardHeader>
+        </Card>
+      }
+    >
+      <SignUpForm />
+    </Suspense>
   );
 }

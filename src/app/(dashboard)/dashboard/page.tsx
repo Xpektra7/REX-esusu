@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/lib/api";
+import { AppBar } from "@/components/layout/app-bar";
 
 export default function DashboardPage() {
   const { data: walletRes, isLoading: walletLoading } = useQuery({
@@ -25,7 +26,8 @@ export default function DashboardPage() {
   const circleList = (circlesRes?.data?.circles ?? []) as CircleData[];
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="relative flex flex-col gap-6">
+      <AppBar />
       {walletLoading ? (
         <Skeleton className="h-44 rounded-xl" />
       ) : (
@@ -55,7 +57,7 @@ export default function DashboardPage() {
             ))}
           </div>
         ) : (
-          <div className="flex flex-col items-center gap-4 rounded-xl bg-card  p-8 text-center">
+          <div className="flex flex-col h-64 items-center gap-4 rounded-xl bg-card  p-8 text-center">
             <img
               src="/illustrations/circles.svg"
               alt=""
@@ -80,7 +82,7 @@ export default function DashboardPage() {
 
       <section>
         <h2 className="mb-4 text-lg font-bold">Recent Activity</h2>
-        <div className="flex flex-col items-center gap-3 py-8 text-center">
+        <div className="flex flex-col h-64 items-center gap-4 rounded-xl bg-card  p-8 text-center">
           <img
             src="/illustrations/no-data.svg"
             alt=""
