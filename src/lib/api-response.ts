@@ -28,3 +28,20 @@ export function conflict(description = "Conflict") {
     { status: 409 },
   );
 }
+export function paginated<T>(
+  items: T[],
+  page: number,
+  limit: number,
+  total: number,
+  description = "Success",
+){
+  return NextResponse.json({
+    code: '00',
+    description, 
+    data: items,
+    pagination:{
+      page, limit, total, totalPages: Math.ceil(total/limit),
+      hasMore: page * limit < total
+    },
+  })
+}
