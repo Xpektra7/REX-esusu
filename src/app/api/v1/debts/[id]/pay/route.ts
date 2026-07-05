@@ -56,7 +56,15 @@ export async function POST(
       }
 
       const remaining = debt.amountKobo - debt.paidKobo;
+      if (remaining <= 0) {
+        return { kind: "conflict" as const, message: "Debt is already cleared" };
+      }
+
       const payAmount = requestedAmount ?? remaining;
+
+      if (payAmount <= 0) {
+        return { kind: "error" as const, message: "Amount must be greater than zero" };
+      }
 
       if (payAmount > remaining) {
         return { kind: "error" as const, message: "Amount exceeds remaining debt" };
