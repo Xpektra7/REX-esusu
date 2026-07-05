@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
 
   const { searchParams } = new URL(req.url);
   const parsed = paginationSchema.safeParse(Object.fromEntries(searchParams));
-  if (!parsed.success) return error("Invalid pagination parameters");
+  if (!parsed.success) return error("Invalid pagination parameters", "01", 422);
   const { page, limit } = parsed.data;
   const offset = (page - 1) * limit;
 
