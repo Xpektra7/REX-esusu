@@ -1,29 +1,27 @@
 "use client";
 
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { Loading01Icon } from "hugeicons-react";
+import { useMutation } from "@tanstack/react-query";
+import { BankIcon, Loading01Icon } from "hugeicons-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
+import { BankSearchInput } from "@/components/shared/bank-search-input";
 import { PageBreadcrumbs } from "@/components/shared/page-breadcrumbs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/lib/api";
 import { withdrawSchema } from "@/lib/validations";
 
 export default function WithdrawPage() {
   const router = useRouter();
   const [amount, setAmount] = useState("");
-  const [bankCode, setBankCode] = useState("");
   const [accountNumber, setAccountNumber] = useState("");
+  const [selectedBank, setSelectedBank] = useState<{
+    bankCode: string;
+    bankName: string;
+    accountName: string;
+  } | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
-
-  const { data: banksRes, isLoading: banksLoading } = useQuery({
-    queryKey: ["bank-codes"],
-    queryFn: () => api.bankCodes(),
-  });
-  const banks = banksRes?.data?.banks ?? [];
 
   const mutation = useMutation({
     mutationFn: (data: {
@@ -44,10 +42,15 @@ export default function WithdrawPage() {
     e.preventDefault();
     setErrors({});
 
+    if (!selectedBank) {
+      setErrors({ bankCode: "Please select a bank" });
+      return;
+    }
+
     const amountKobo = Math.round(parseFloat(amount) * 100);
     const parsed = withdrawSchema.safeParse({
       amountKobo: amountKobo,
-      bankCode: bankCode,
+      bankCode: selectedBank.bankCode,
       accountNumber: accountNumber,
     });
 
@@ -105,56 +108,25 @@ export default function WithdrawPage() {
         </div>
 
         <div className="flex flex-col gap-2">
-          <label
-            htmlFor="bankCode"
-            className="text-[10px] font-semibold tracking-[0.05em] text-muted-foreground uppercase"
-          >
-            Bank
-          </label>
-          {banksLoading ? (
-            <Skeleton className="h-10 w-full rounded-lg" />
-          ) : (
-            <select
-              value={bankCode}
-              onChange={(e) => setBankCode(e.target.value)}
-              className="flex h-10 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-              aria-invalid={!!errors.bankCode}
-            >
-              <option value="">Select bank</option>
-              {banks.map((bank) => (
-                <option key={bank.code} value={bank.code}>
-                  {bank.name}
-                </option>
-              ))}
-            </select>
-          )}
-          {errors.bankCode && (
-            <p className="text-sm text-destructive">{errors.bankCode}</p>
-          )}
-        </div>
-
-        <div className="flex flex-col gap-2">
-          <label
-            htmlFor="accountNumber"
-            className="text-[10px] font-semibold tracking-[0.05em] text-muted-foreground uppercase"
-          >
-            Account Number
-          </label>
-          <Input
-            id="accountNumber"
-            type="text"
-            inputMode="numeric"
-            maxLength={10}
-            placeholder="0123456789"
+          <span className="text-[10px] font-semibold tracking-[0.05em] text-muted-foreground uppercase flex items-center gap-1.5">
+            <BankIcon className="size-3" />
+          Bank Account
+          </span>
+          <BankSearchInput
             value={accountNumber}
-            onChange={(e) =>
-              setAccountNumber(e.target.value.replace(/\D/g, ""))
-            }
-            aria-invalid={!!errors.accountNumber}
+            onChange={setAccountNumber}
+            onSelect={(match) => {
+              setSelectedBank(match);
+              setErrors((prev) => {
+                const next = { ...prev };
+                delete next.bankCode;
+                delete next.accountNumber;
+                return next;
+              });
+            }}
+            selected={selectedBank}
+            error={errors.bankCode || errors.accountNumber}
           />
-          {errors.accountNumber && (
-            <p className="text-sm text-destructive">{errors.accountNumber}</p>
-          )}
         </div>
 
         <Button type="submit" className="w-full" disabled={mutation.isPending}>

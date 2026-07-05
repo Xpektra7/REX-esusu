@@ -6,6 +6,7 @@ import Link from "next/link";
 import { use } from "react";
 import { ContributionRow } from "@/components/circles/contribution-row";
 import { CycleActions } from "@/components/circles/cycle-actions";
+import { GraceCountdown } from "@/components/circles/grace-countdown";
 import { RecipientHeroCard } from "@/components/circles/recipient-hero-card";
 import { ShortfallAlert } from "@/components/circles/shortfall-alert";
 import { PageBreadcrumbs } from "@/components/shared/page-breadcrumbs";
@@ -126,6 +127,13 @@ export default function CycleDetailPage(props: {
           </span>
         </Card>
       </div>
+
+      {circle && cycle.status === "active" && (
+        <GraceCountdown
+          deadlineAt={cycle.deadlineAt}
+          gracePeriodHours={circle.gracePeriodHours}
+        />
+      )}
 
       <ShortfallAlert
         shortfall={shortfall}

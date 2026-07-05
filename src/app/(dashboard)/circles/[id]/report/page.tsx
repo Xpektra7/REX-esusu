@@ -1,16 +1,18 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { AlertCircleIcon } from "hugeicons-react";
+import { AlertCircleIcon, Download01Icon } from "hugeicons-react";
 import Link from "next/link";
 import { use } from "react";
 import { CycleHistoryList } from "@/components/circles/cycle-history-list";
 import { DebtHistoryList } from "@/components/circles/debt-history-list";
 import { ReportSummaryCards } from "@/components/circles/report-summary-cards";
 import { PageBreadcrumbs } from "@/components/shared/page-breadcrumbs";
+import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/lib/api";
+import { downloadReportCsv } from "@/lib/csv";
 import type { CirclePageData, ReportData } from "@/types";
 
 export default function ReportPage(props: { params: Promise<{ id: string }> }) {
@@ -72,11 +74,27 @@ export default function ReportPage(props: { params: Promise<{ id: string }> }) {
         ]}
       />
 
-      <div>
-        <h1 className="text-xl font-bold">Circle Report</h1>
-        <p className="text-sm text-muted-foreground">
-          Reconciliation audit trail
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-xl font-bold">Circle Report</h1>
+          <p className="text-sm text-muted-foreground">
+            Reconciliation audit trail
+          </p>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() =>
+            downloadReportCsv(
+              circle?.name ?? "circle",
+              report.cycles,
+              report.debts,
+            )
+          }
+        >
+          <Download01Icon className="size-4" />
+          CSV
+        </Button>
       </div>
 
       <ReportSummaryCards

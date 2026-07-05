@@ -75,8 +75,12 @@ export function RightPanel() {
     queryFn: () => api.wallet.transactions(),
   });
 
-  const notifications = ((Array.isArray(notifRes?.data) ? notifRes.data : []) as NotificationItem[]).slice(0, 5);
-  const transactions = ((Array.isArray(txRes?.data) ? txRes.data : []) as TransactionItem[]).slice(0, 5);
+  const notifications = (
+    (Array.isArray(notifRes?.data) ? notifRes.data : []) as NotificationItem[]
+  ).slice(0, 5);
+  const transactions = (
+    (Array.isArray(txRes?.data) ? txRes.data : []) as TransactionItem[]
+  ).slice(0, 5);
 
   return (
     <aside className="flex h-full flex-col gap-4 overflow-y-auto p-4 pl-0">
@@ -142,8 +146,8 @@ export function RightPanel() {
         </div>
       </section>
 
-      <section className="flex min-h-0 flex-1 flex-col gap-3 rounded-xl bg-card p-4">
-        <div className="flex items-center justify-between">
+      <section className="flex min-h-0 flex-1 flex-col rounded-xl bg-card">
+        <div className="flex items-center justify-between p-4 pb-0">
           <h3 className="flex items-center gap-2 text-sm font-bold tracking-wider">
             <Wallet01Icon className="size-3" />
             Recent Transactions
