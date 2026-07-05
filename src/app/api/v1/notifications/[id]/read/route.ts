@@ -2,7 +2,7 @@ import { and, eq } from "drizzle-orm";
 import type { NextRequest } from "next/server";
 import { db } from "@/db";
 import { notifications } from "@/db/schema";
-import { notFound, success } from "@/lib/api-response";
+import { error, notFound, success } from "@/lib/api-response";
 import { requireAuth } from "@/lib/middleware";
 
 export async function PATCH(
@@ -14,13 +14,17 @@ export async function PATCH(
   const userId = auth.user.userId;
   const { id } = await params;
 
-  const result = await db
-    .update(notifications)
-    .set({ read: true })
-    .where(and(eq(notifications.id, id), eq(notifications.userId, userId)))
-    .returning();
+  try {
+    const result = await db
+      .update(notifications)
+      .set({ read: true })
+      .where(and(eq(notifications.id, id), eq(notifications.userId, userId)))
+      .returning();
 
-  if (result.length === 0) return notFound("Notification not found");
+    if (result.length === 0) return notFound("Notification not found");
 
-  return success({ message: "Marked as read" });
+    return success({ message: "Marked as read" });
+  } catch (e) {
+    return error((e as Error).message);
+  }
 }

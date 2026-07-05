@@ -34,14 +34,17 @@ export function paginated<T>(
   limit: number,
   total: number,
   description = "Success",
-){
+) {
   return NextResponse.json({
-    code: '00',
-    description, 
+    code: "00",
+    description,
     data: items,
-    pagination:{
-      page, limit, total, totalPages: Math.ceil(total/limit),
-      hasMore: page * limit < total
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+      hasMore: page * limit < total,
     },
-  })
+  });
 }

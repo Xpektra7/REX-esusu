@@ -2,8 +2,9 @@ import { desc, eq } from "drizzle-orm";
 import type { NextRequest } from "next/server";
 import { db } from "@/db";
 import { notifications } from "@/db/schema";
-import { paginated } from "@/lib/api-response";
+import { error, paginated } from "@/lib/api-response";
 import { requireAuth } from "@/lib/middleware";
+import { paginationSchema } from "@/lib/validations/pagination";
 
 export async function GET(req: NextRequest) {
   const auth = requireAuth(req);
@@ -11,26 +12,26 @@ export async function GET(req: NextRequest) {
   const userId = auth.user.userId;
 
   const { searchParams } = new URL(req.url);
-  const page = Math.max(1, Number(searchParams.get("page")) || 1);
-  const limit = Math.min(
-    100,
-    Math.max(1, Number(searchParams.get("limit")) || 20),
-  );
+  const parsed = paginationSchema.safeParse(Object.fromEntries(searchParams));
+  if (!parsed.success) return error("Invalid pagination parameters");
+  const { page, limit } = parsed.data;
   const offset = (page - 1) * limit;
 
-  const rows = await db
-    .select()
-    .from(notifications)
-    .where(eq(notifications.userId, userId))
-    .orderBy(desc(notifications.createdAt))
-    .limit(limit)
-    .offset(offset);
+  try {
+    const rows = await db
+      .select()
+      .from(notifications)
+      .where(eq(notifications.userId, userId))
+      .orderBy(desc(notifications.createdAt))
+      .limit(limit)
+      .offset(offset);
 
-  const [{ count: total }] = await db
-    .select({
-      count: db.$count(notifications, eq(notifications.userId, userId)),
-    })
-    .from(notifications);
+    const [{ count: total }] = await db
+      .select({ count: db.$count(notifications, eq(notifications.userId, userId)) })
+      .from(notifications);
 
-  return paginated(rows, page, limit, total);
+    return paginated(rows, page, limit, total);
+  } catch (e) {
+    return error((e as Error).message);
+  }
 }
