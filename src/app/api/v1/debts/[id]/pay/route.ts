@@ -1,5 +1,6 @@
 import { and, eq } from "drizzle-orm";
 import type { NextRequest } from "next/server";
+import { z } from "zod";
 import { db } from "@/db";
 import { debts, membersCircles, virtualAccounts, walletTransactions } from "@/db/schema";
 import { conflict, error, notFound, success } from "@/lib/api-response";
@@ -15,6 +16,8 @@ export async function POST(
   const userId = auth.user.userId;
   const { id } = await params;
 
+  const idParsed = z.string().uuid().safeParse(id);
+  if (!idParsed.success) return error("Invalid debt id", "01", 422);
   try {
     const raw = await req.text();
     let body: unknown = {};
