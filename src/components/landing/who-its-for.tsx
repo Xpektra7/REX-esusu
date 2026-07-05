@@ -48,7 +48,7 @@ export default function WhoItsFor() {
           {audienceCards.map((card) => (
             <Card
               key={card.caption}
-              className="overflow-hidden border-border bg-card" 
+              className="overflow-hidden border-border bg-card"
             >
               <div className="relative aspect-square w-full bg-muted">
                 <Image
