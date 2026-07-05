@@ -15,7 +15,7 @@ import { Empty, EmptyDescription, EmptyHeader, EmptyMedia } from "@/components/u
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/lib/api";
-import { formatNaira } from "@/lib/utils";
+import { formatNaira, rotationLabel } from "@/lib/utils";
 import type { CirclePageData, CycleDetailData } from "@/types";
 
 export default function CycleDetailPage(props: {
@@ -83,6 +83,10 @@ export default function CycleDetailPage(props: {
     (c) => c.status === "paid",
   ).length;
 
+  const rl = circle
+    ? rotationLabel(cycle.cycleNumber, circle.cycleCount, circle.members?.length ?? 0)
+    : null;
+
   return (
     <div className="flex flex-col gap-6">
       <PageBreadcrumbs
@@ -90,12 +94,14 @@ export default function CycleDetailPage(props: {
           { label: "Home", href: "/dashboard" },
           { label: "Circles", href: "/circles" },
           { label: circle?.name ?? "Circle", href: `/circles/${id}` },
-          { label: `Cycle #${cycle.cycleNumber}` },
+          { label: rl ? `Rotation ${rl.rotation} · Round ${rl.round}` : `Cycle #${cycle.cycleNumber}` },
         ]}
       />
 
       <h1 className="text-xl font-bold">
-        Cycle #{cycle.cycleNumber} Contribution
+        {rl
+          ? `Rotation ${rl.rotation} of ${rl.totalRotations} · Round ${rl.round} of ${circle?.members?.length ?? "—"}`
+          : `Cycle #${cycle.cycleNumber} Contribution`}
       </h1>
 
       {recipient && (

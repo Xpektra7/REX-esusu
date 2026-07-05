@@ -1,7 +1,8 @@
 "use client";
 
-import { Coins02Icon } from "hugeicons-react";
+import { Coins02Icon, Notification01Icon } from "hugeicons-react";
 import { useState } from "react";
+import { toast } from "sonner";
 import { DebtBadge } from "@/components/circles/debt-badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,6 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia } from "@/components/ui/empty";
 import { Separator } from "@/components/ui/separator";
+import { api } from "@/lib/api";
 import { formatNaira } from "@/lib/utils";
 
 interface DebtItem {
@@ -39,6 +41,19 @@ function DebtBreakdownDialog({
   const daysSince = Math.floor(
     (Date.now() - new Date(debt.createdAt).getTime()) / 86400000,
   );
+  const [reminding, setReminding] = useState(false);
+
+  const handleRemind = async () => {
+    setReminding(true);
+    try {
+      await api.notifications.sendRemind(debt.memberName, debt.amountKobo, debt.cycle);
+      toast.success(`Reminder sent to ${debt.memberName}`);
+    } catch {
+      toast.error("Failed to send reminder");
+    } finally {
+      setReminding(false);
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -82,8 +97,9 @@ function DebtBreakdownDialog({
           {debt.status === "active" && (
             <>
               <Separator />
-              <Button className="w-full" size="lg">
-                Pay Debt
+              <Button className="w-full" size="lg" onClick={handleRemind} disabled={reminding}>
+                <Notification01Icon className="size-4" />
+                {reminding ? "Sending..." : "Remind"}
               </Button>
             </>
           )}

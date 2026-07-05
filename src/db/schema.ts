@@ -50,6 +50,7 @@ export const circles = pgTable(
       .default("absorb")
       .notNull(),
     gracePeriodHours: integer("grace_period_hours").default(24).notNull(),
+    allowMidCycleJoin: boolean("allow_mid_cycle_join").default(false).notNull(),
     status: varchar("status", { length: 20 }).default("pending").notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -73,6 +74,7 @@ export const membersCircles = pgTable(
     role: varchar("role", { length: 20 }).default("member").notNull(),
     status: varchar("status", { length: 20 }).default("invited").notNull(),
     rotationOrder: integer("rotation_order"),
+    joinedAtCycle: integer("joined_at_cycle"),
     missedCycles: integer("missed_cycles").default(0).notNull(),
     joinedAt: timestamp("joined_at").defaultNow().notNull(),
     leftAt: timestamp("left_at"),

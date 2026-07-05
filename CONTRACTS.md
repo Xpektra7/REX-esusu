@@ -49,8 +49,10 @@ Prefix: `/api/v1` | Response: `{ code, description, data }` | Auth: Bearer
 | ✅ | Debts | GET | /debts | - | outgoing[], incoming[] with fineKobo |
 | ✅ | Debts | POST | /debts/:id/pay | - | {} |
 | 🔴 | Contact | POST | /contact | name, email, subject, message | {} |
+| 🔴 | Notifs | POST | /notifications/send-remind | memberName, amountKobo, cycle | {} |
+| 🔴 | Circles | GET,PATCH | /circles/:id/settings | - / allowMidCycleJoin | settings + toggles |
 
-**Summary:** 35 exist ✅ | 6 need backend 🔴
+**Summary:** 35 exist ✅ | 8 need backend 🔴
 
 - `/auth/change-password`
 - `/auth/change-pin`
@@ -58,4 +60,6 @@ Prefix: `/api/v1` | Response: `{ code, description, data }` | Auth: Bearer
 - `GET,PATCH /users/settings`
 - `/circles/:id/remind`
 - `/contact`
+- `/notifications/send-remind`
+- `GET,PATCH /circles/:id/settings`
 ENDOFFILE

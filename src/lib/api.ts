@@ -354,6 +354,16 @@ async function mockRequest<T>(
     };
   }
 
+  // Circle settings — matches /circles/{id}/settings
+  const settingsMatch = path.match(/^\/circles\/([^/]+)\/settings$/);
+  if (settingsMatch && method === "PATCH") {
+    return {
+      code: "00",
+      description: "Settings updated",
+      data: {} as T,
+    };
+  }
+
   // Circle detail with members — matches /circles/{id} but NOT /circles/{id}/cycles/{num}
   const circlesDetailMatch = path.match(/^\/circles\/([^/]+)$/);
   if (circlesDetailMatch && method === "GET") {
@@ -372,6 +382,7 @@ async function mockRequest<T>(
         currentCycle: 4,
         defaultResolutionRule: "absorb",
         gracePeriodHours: 24,
+        allowMidCycleJoin: false,
         status: "active",
         createdAt: "2025-01-15T00:00:00Z",
         updatedAt: new Date().toISOString(),
@@ -631,6 +642,10 @@ async function mockRequest<T>(
 
   if (path.includes("/read") && (method === "PATCH" || method === "POST")) {
     return { code: "00", description: "Marked as read", data: {} as T };
+  }
+
+  if (path === "/notifications/send-remind" && method === "POST") {
+    return { code: "00", description: "Reminder sent", data: {} as T };
   }
 
   // --- Users ---
@@ -1080,6 +1095,13 @@ export const api = {
       request<{ notified: number }>(`/circles/${id}/remind`, {
         method: "POST",
       }),
+
+    /** Updates circle settings. */
+    updateSettings: (id: string, payload: { allowMidCycleJoin?: boolean }) =>
+      request<unknown>(`/circles/${id}/settings`, {
+        method: "PATCH",
+        body: JSON.stringify(payload),
+      }),
   },
 
   cycles: {
@@ -1188,6 +1210,13 @@ export const api = {
     markAllRead: () =>
       request<Record<string, unknown>>("/notifications/read-all", {
         method: "POST",
+      }),
+
+    /** Sends a debt reminder notification to a member. */
+    sendRemind: (memberName: string, amountKobo: number, cycle: number) =>
+      request<Record<string, unknown>>("/notifications/send-remind", {
+        method: "POST",
+        body: JSON.stringify({ memberName, amountKobo, cycle }),
       }),
   },
 

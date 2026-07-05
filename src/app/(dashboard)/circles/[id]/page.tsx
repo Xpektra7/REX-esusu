@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { AlertCircleIcon } from "hugeicons-react";
+import { AlertCircleIcon, Settings01Icon } from "hugeicons-react";
 import Link from "next/link";
 import { use } from "react";
 import { toast } from "sonner";
@@ -86,9 +86,17 @@ export default function CircleDetailPage(props: {
       />
       <div className="flex items-center gap-2 justify-between">
         <h1 className="text-2xl font-bold">{circle.name}</h1>
-        <Badge variant={circle.status === "active" ? "default" : "outline"}>
-          {circle.status.charAt(0).toUpperCase() + circle.status.slice(1)}
-        </Badge>
+        <div className="flex items-center gap-2">
+          <Link
+            href={`/circles/${id}/settings`}
+            className="flex size-8 items-center justify-center rounded-full bg-muted text-muted-foreground hover:bg-muted/80 transition-colors"
+          >
+            <Settings01Icon className="size-4" />
+          </Link>
+          <Badge variant={circle.status === "active" ? "default" : "outline"}>
+            {circle.status.charAt(0).toUpperCase() + circle.status.slice(1)}
+          </Badge>
+        </div>
       </div>
       <HeroPotCard
         totalPot={totalPot}
@@ -97,6 +105,7 @@ export default function CircleDetailPage(props: {
         cycleCount={circle.cycleCount}
         contributionAmount={circle.contributionAmount}
         frequency={circle.frequency}
+        memberCount={members.length}
       />
 
       <NextPayoutCard

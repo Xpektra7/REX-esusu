@@ -223,6 +223,7 @@ export interface CirclePageData {
   cycleCount: number;
   currentCycle: number;
   gracePeriodHours: number;
+  allowMidCycleJoin: boolean;
   inviteCode?: string;
   cyclePeriodDays?: number;
   deadlineAt?: string;
