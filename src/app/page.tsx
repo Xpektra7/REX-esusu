@@ -15,7 +15,7 @@ export default function Home() {
       <Nav />
       <main className="flex-1">
         <Hero />
-        <WhoItsFor/>
+        <WhoItsFor />
         <BentoStats />
         <HowItWorks />
         <Features />
