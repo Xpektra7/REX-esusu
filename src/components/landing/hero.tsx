@@ -34,7 +34,7 @@ export function Hero() {
             href="/about"
             className={cn(buttonVariants({ variant: "outline", size: "lg" }))}
           >
-            Explore Public Circles
+            About Esusu
           </Link>
         </div>
       </div>

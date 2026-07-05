@@ -1,19 +1,21 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { AlertCircleIcon } from "hugeicons-react";
+import { AlertCircleIcon, Coins02Icon } from "hugeicons-react";
 import Link from "next/link";
 import { use } from "react";
 import { ContributionRow } from "@/components/circles/contribution-row";
 import { CycleActions } from "@/components/circles/cycle-actions";
+import { GraceCountdown } from "@/components/circles/grace-countdown";
 import { RecipientHeroCard } from "@/components/circles/recipient-hero-card";
 import { ShortfallAlert } from "@/components/circles/shortfall-alert";
 import { PageBreadcrumbs } from "@/components/shared/page-breadcrumbs";
 import { Card } from "@/components/ui/card";
+import { Empty, EmptyDescription, EmptyHeader, EmptyMedia } from "@/components/ui/empty";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/lib/api";
-import { formatNaira } from "@/lib/utils";
+import { formatNaira, rotationLabel } from "@/lib/utils";
 import type { CirclePageData, CycleDetailData } from "@/types";
 
 export default function CycleDetailPage(props: {
@@ -54,7 +56,7 @@ export default function CycleDetailPage(props: {
         <Link href={`/circles/${id}`}>
           <button
             type="button"
-            className="rounded-lg bg-card  px-4 py-2 text-sm"
+            className="rounded-lg card-interactive px-4 py-2 text-sm"
           >
             Back to Circle
           </button>
@@ -81,6 +83,10 @@ export default function CycleDetailPage(props: {
     (c) => c.status === "paid",
   ).length;
 
+  const rl = circle
+    ? rotationLabel(cycle.cycleNumber, circle.cycleCount, circle.members?.length ?? 0)
+    : null;
+
   return (
     <div className="flex flex-col gap-6">
       <PageBreadcrumbs
@@ -88,12 +94,14 @@ export default function CycleDetailPage(props: {
           { label: "Home", href: "/dashboard" },
           { label: "Circles", href: "/circles" },
           { label: circle?.name ?? "Circle", href: `/circles/${id}` },
-          { label: `Cycle #${cycle.cycleNumber}` },
+          { label: rl ? `Rotation ${rl.rotation} · Round ${rl.round}` : `Cycle #${cycle.cycleNumber}` },
         ]}
       />
 
       <h1 className="text-xl font-bold">
-        Cycle #{cycle.cycleNumber} Contribution
+        {rl
+          ? `Rotation ${rl.rotation} of ${rl.totalRotations} · Round ${rl.round} of ${circle?.members?.length ?? "—"}`
+          : `Cycle #${cycle.cycleNumber} Contribution`}
       </h1>
 
       {recipient && (
@@ -126,6 +134,13 @@ export default function CycleDetailPage(props: {
         </Card>
       </div>
 
+      {circle && cycle.status === "active" && (
+        <GraceCountdown
+          deadlineAt={cycle.deadlineAt}
+          gracePeriodHours={circle.gracePeriodHours}
+        />
+      )}
+
       <ShortfallAlert
         shortfall={shortfall}
         pendingCount={pendingCount}
@@ -154,9 +169,14 @@ export default function CycleDetailPage(props: {
           Member Contributions
         </h2>
         {cycle.contributions.length === 0 ? (
-          <p className="py-4 text-center text-sm text-muted-foreground">
-            No contributions recorded.
-          </p>
+          <Empty className="p-4">
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <Coins02Icon className="size-6" />
+              </EmptyMedia>
+              <EmptyDescription>No contributions recorded.</EmptyDescription>
+            </EmptyHeader>
+          </Empty>
         ) : (
           <div className="flex flex-col gap-2">
             {cycle.contributions.map((c) => (
@@ -175,7 +195,7 @@ export default function CycleDetailPage(props: {
 
       <Separator />
 
-      <CycleActions />
+      <CycleActions circleId={id} />
     </div>
   );
 }

@@ -42,3 +42,14 @@ export function getGreeting(name: string): string {
   if (h < 17) return `Hello, ${name}`;
   return `Hey, ${name}`;
 }
+
+export function rotationLabel(
+  currentCycle: number,
+  totalCycles: number,
+  memberCount: number,
+): { rotation: number; totalRotations: number; round: number } {
+  const totalRotations = Math.ceil(totalCycles / memberCount);
+  const rotation = Math.ceil(currentCycle / memberCount);
+  const round = ((currentCycle - 1) % memberCount) + 1;
+  return { rotation, totalRotations, round };
+}

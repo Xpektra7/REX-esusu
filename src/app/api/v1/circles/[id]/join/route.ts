@@ -15,12 +15,17 @@ export async function POST(
   try {
     const { id } = await params;
     const { inviteCode } = await req.json();
+
     const [circle] = await db
       .select()
       .from(circles)
       .where(eq(circles.id, id))
       .limit(1);
     if (!circle) return error("Circle not found", "04", 404);
+
+    if (circle.status === "active" && !circle.allowMidCycleJoin) {
+      return error("Joining mid-cycle is disabled", "05", 403);
+    }
 
     const [code] = await db
       .select()
@@ -56,6 +61,7 @@ export async function POST(
       role: "member",
       status: "active",
       rotationOrder,
+      joinedAtCycle: circle.currentCycle,
     });
 
     await db
