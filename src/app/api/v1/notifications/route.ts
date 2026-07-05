@@ -26,9 +26,7 @@ export async function GET(req: NextRequest) {
       .limit(limit)
       .offset(offset);
 
-    const [{ count: total }] = await db
-      .select({ count: db.$count(notifications, eq(notifications.userId, userId)) })
-      .from(notifications);
+    const total = await db.$count(notifications, eq(notifications.userId, userId));
 
     return paginated(rows, page, limit, total);
   } catch (e) {
