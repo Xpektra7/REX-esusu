@@ -1,74 +1,96 @@
-// who-its-for.tsx
+"use client";
+
 import Image from "next/image";
-import { Card, CardContent } from "@/components/ui/card";
 
 interface AudienceCard {
   src: string;
   alt: string;
-  caption: string;
+  title: string;
+  description: string;
 }
 
 const audienceCards: AudienceCard[] = [
   {
     src: "/X.jpg",
-    alt: "Student saving with Esusu",
-    caption: "Farmers and Artisans.",
+    alt: "Farmer working the land",
+    title: "Farmers & Artisans",
+    description:
+      "Seasonal earners who need savings that flex with their cash flow.",
   },
   {
     src: "/african market woman shopping from local market Stock Photo _ Adobe Stock.jpg",
-    alt: "Market trader using Esusu to save daily earnings",
-    caption: "Market Traders.",
+    alt: "Market trader at her stall",
+    title: "Market Traders",
+    description:
+      "Daily-income earners saving a portion of each day\u2019s sales with people they trust.",
   },
   {
     src: "/alns.jpg",
-    alt: "Salary earner saving a portion of their income",
-    caption: "Cooperative Groups.",
+    alt: "Cooperative group members",
+    title: "Cooperative Groups",
+    description:
+      "Organised groups that need transparent tracking, automated collections, and fair payouts.",
   },
   {
     src: "/sjedwhebd.jpg.jpg",
-    alt: "Small business owner managing savings",
-    caption: "Salary Earners.",
+    alt: "Professional reviewing finances",
+    title: "Salary Earners",
+    description:
+      "Monthly earners automating contributions toward goals without thinking about it.",
   },
   {
     src: "/Vibrant African Friends Sharing Moments with Phones in a Park _ Free Photo.jpg",
-    alt: "Friends and family saving together in a group",
-    caption: "Students and Young Earners.",
+    alt: "Young friends saving together",
+    title: "Students & Young Earners",
+    description:
+      "First-time savers building the habit together in small, manageable circles.",
   },
 ];
 
+function ParallaxCard({ card }: { card: AudienceCard }) {
+  return (
+    <div
+      className="relative mx-auto w-[50vw] aspect-video min-h-100 overflow-hidden rounded-xl"
+    >
+      <div className="absolute inset-0 will-change-transform">
+        <Image
+          src={card.src}
+          alt={card.alt}
+          fill
+          className="object-cover"
+          sizes="(max-width: 720px) 80vw, 720px"
+        />
+        <div className="absolute inset-0 bg-linear-to-t from-foreground/70 via-foreground/20 to-foreground/10" />
+      </div>
+
+      <div className="absolute inset-x-0 bottom-0 p-8 md:p-12">
+        <h3 className="text-3xl font-bold text-background md:text-4xl lg:text-5xl">
+          {card.title}
+        </h3>
+        <p className="mt-2 max-w-md text-base text-background/70 md:text-lg">
+          {card.description}
+        </p>
+      </div>
+    </div>
+  );
+}
+
 export default function WhoItsFor() {
   return (
-    <section>
-      <div className="py-8 px-4 max-w-4xl mx-auto">
-        <h2 className="text-center text-3xl font-semibold text-foreground">
+    <section className="border-b border-border py-16 md:py-20">
+      <div className="mx-auto max-w-5xl px-6">
+        <h2 className="text-center text-2xl font-bold md:text-3xl">
           Who is Esusu for?
         </h2>
+        <p className="mx-auto mt-2 max-w-lg text-center text-sm text-muted-foreground">
+          Built for real people, real communities, real savings.
+        </p>
+      </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 border border-border rounded-2xl p-6 md:p-8 mt-8">
-          {audienceCards.map((card) => (
-            <Card
-              key={card.caption}
-              className="overflow-hidden border-border bg-card"
-            >
-              <div className="relative aspect-square w-full bg-muted">
-                <Image
-                  src={card.src}
-                  alt={card.alt}
-                  fill
-                  className="object-cover border border-border border-t-foreground"
-                  sizes="(min-width: 768px) 33vw, (min-width: 640px) 50vw, 100vw"
-                />
-              </div>
-              <CardContent className="p-4">
-                <p className="text-center text-sm sm:text-base text-card-foreground font-bold">
-                  {card.caption}
-                </p>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        <hr className="mt-8 border-border" />
+      <div className="mx-auto mt-10 flex max-w-5xl flex-col gap-8 px-6">
+        {audienceCards.map((card) => (
+          <ParallaxCard key={card.title} card={card} />
+        ))}
       </div>
     </section>
   );

@@ -88,7 +88,7 @@ export function RightPanel() {
   return (
     <aside className="flex h-full flex-col gap-4 overflow-y-auto p-4 pl-0">
       {/*Recent Notifications*/}
-      <section className="flex min-h-0 h-fit flex-1 flex-col rounded-xl bg-card">
+      <section className="flex min-h-0 h-fit flex-col rounded-xl bg-card">
         <div className="flex items-center justify-between p-4 pb-0">
           <h3 className="flex items-center gap-2 text-sm font-bold tracking-wider">
             <Notification01Icon className="size-3" />
@@ -117,17 +117,16 @@ export function RightPanel() {
               ))}
             </div>
           ) : notifications.length > 0 ? (
-            <ItemGroup className="bg-transparent">
-              <ItemSeparator />
-
+            <ItemGroup className="bg-transparent gap-0!">
               {notifications.map((n) => {
                 const meta = notifIcons[n.type] ?? {
                   icon: <Notification01Icon className="size-6" />,
                   bg: "bg-primary text-foreground",
                 };
                 return (
-                  <>
-                    <Item key={n.id} variant="muted" size="xs">
+                  <div key={n.id}>
+                    <ItemSeparator />
+                    <Item variant="muted" size="xs">
                       <ItemMedia
                         variant="icon"
                         className={`rounded-full size-8 ${meta.bg} p-0!`}
@@ -147,8 +146,7 @@ export function RightPanel() {
                         </ItemDescription>
                       </ItemContent>
                     </Item>
-                    <ItemSeparator />
-                  </>
+                  </div>
                 );
               })}
             </ItemGroup>
@@ -193,41 +191,48 @@ export function RightPanel() {
               ))}
             </div>
           ) : transactions.length > 0 ? (
-            <ItemGroup className="bg-transparent">
+            <ItemGroup className="bg-transparent gap-0!">
               {transactions.map((tx) => {
                 const isCredit = tx.type === "credit";
                 return (
-                  <Item key={tx.id} variant="muted" size="xs">
-                    <ItemMedia
-                      variant="icon"
-                      className={cn(
-                        "rounded-full size-6",
-                        isCredit
-                          ? "bg-muted text-foreground"
-                          : "bg-primary text-foreground",
-                      )}
-                    >
-                      {isCredit ? (
-                        <ArrowDown01Icon className="size-3" />
-                      ) : (
-                        <ArrowUp01Icon className="size-3" />
-                      )}
-                    </ItemMedia>
-                    <ItemContent>
-                      <ItemTitle>{tx.description}</ItemTitle>
-                      <ItemDescription>{timeAgo(tx.createdAt)}</ItemDescription>
-                    </ItemContent>
-                    <ItemActions>
-                      <span
-                        className={`text-xs font-bold ${
-                          isCredit ? "text-primary" : "text-muted-foreground"
-                        }`}
+                  <div key={tx.id}>
+                    <ItemSeparator />
+                    <Item variant="muted" size="xs">
+                      <ItemMedia
+                        variant="icon"
+                        className={cn(
+                          "rounded-full size-6 p-0!",
+                          isCredit
+                            ? "bg-muted text-foreground"
+                            : "bg-primary text-foreground",
+                        )}
                       >
-                        {isCredit ? "+" : "-"}
-                        {formatNaira(tx.amountKobo)}
-                      </span>
-                    </ItemActions>
-                  </Item>
+                        {isCredit ? (
+                          <ArrowDown01Icon className="size-3" />
+                        ) : (
+                          <ArrowUp01Icon className="size-3" />
+                        )}
+                      </ItemMedia>
+                      <ItemContent>
+                        <ItemTitle className="line-clamp-1">
+                          {tx.description}
+                        </ItemTitle>
+                        <ItemDescription className="line-clamp-1">
+                          {timeAgo(tx.createdAt)}
+                        </ItemDescription>
+                      </ItemContent>
+                      <ItemActions>
+                        <span
+                          className={`text-xs font-bold ${
+                            isCredit ? "text-primary" : "text-muted-foreground"
+                          }`}
+                        >
+                          {isCredit ? "+" : "-"}
+                          {formatNaira(tx.amountKobo)}
+                        </span>
+                      </ItemActions>
+                    </Item>
+                  </div>
                 );
               })}
             </ItemGroup>

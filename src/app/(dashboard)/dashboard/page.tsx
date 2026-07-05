@@ -18,6 +18,7 @@ import {
   ItemDescription,
   ItemGroup,
   ItemMedia,
+  ItemSeparator,
   ItemTitle,
 } from "@/components/ui/item";
 import { Separator } from "@/components/ui/separator";
@@ -151,27 +152,29 @@ export default function DashboardPage() {
             <Skeleton className="h-16 rounded-xl" />
           </div>
         ) : activityItems.length > 0 ? (
-          <ItemGroup>
+          <ItemGroup className="gap-0!">
             {activityItems.map((item) => {
               const meta = iconMap[item.type];
               return (
-                <Item
-                  key={item.id}
-                  variant="muted"
-                  size="sm"
-                  className="hover:border-primary"
-                >
-                  <ItemMedia
-                    variant="icon"
-                    className={`rounded-full size-9 ${meta.bg}`}
+                <div key={item.id}>
+                  <ItemSeparator />
+                  <Item
+                    variant="muted"
+                    size="sm"
+                    className="hover:border-primary"
                   >
-                    {meta.icon}
-                  </ItemMedia>
-                  <ItemContent>
-                    <ItemTitle>{item.description}</ItemTitle>
-                    <ItemDescription>{timeAgo(item.createdAt)}</ItemDescription>
-                  </ItemContent>
-                </Item>
+                    <ItemMedia
+                      variant="icon"
+                      className={`rounded-full size-9 ${meta.bg} p-0!`}
+                    >
+                      {meta.icon}
+                    </ItemMedia>
+                    <ItemContent>
+                      <ItemTitle className="line-clamp-1">{item.description}</ItemTitle>
+                      <ItemDescription className="line-clamp-1">{timeAgo(item.createdAt)}</ItemDescription>
+                    </ItemContent>
+                  </Item>
+                </div>
               );
             })}
           </ItemGroup>
