@@ -23,7 +23,6 @@ export function notFound(description = "Not found") {
 }
 
 export function conflict(description = "Conflict") {
-  
   return NextResponse.json(
     { code: "05", description, data: null },
     { status: 409 },
