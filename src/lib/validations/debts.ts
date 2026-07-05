@@ -1,5 +1,5 @@
 import { z } from "zod";
 
 export const payDebtSchema = z.object({
-  amount: z.number().positive().optional(),
+  amount: z.coerce.number().int().positive().optional(),
 });
