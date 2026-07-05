@@ -16,9 +16,18 @@ export async function POST(
   const { id } = await params;
 
   try {
-    const body = await req.json().catch(() => ({}));
+    const raw = await req.text();
+    let body: unknown = {};
+    if (raw) {
+      try {
+        body = JSON.parse(raw);
+      } catch {
+        return error("Invalid JSON body", "01", 400);
+      }
+    }
+
     const parsed = payDebtSchema.safeParse(body);
-    if (!parsed.success) return error("Invalid request body");
+    if (!parsed.success) return error("Invalid request body", "01", 422);
     const requestedAmount = parsed.data.amount;
 
     const result = await db.transaction(async (tx) => {
