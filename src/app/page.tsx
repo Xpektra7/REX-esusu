@@ -7,6 +7,7 @@ import { HowItWorks } from "@/components/landing/how-it-works";
 import { Nav } from "@/components/landing/nav";
 import { Security } from "@/components/landing/security";
 import { Testimonial } from "@/components/landing/testimonial";
+import WhoItsFor from "@/components/landing/who-its-for";
 
 export default function Home() {
   return (
@@ -14,6 +15,7 @@ export default function Home() {
       <Nav />
       <main className="flex-1">
         <Hero />
+        <WhoItsFor/>
         <BentoStats />
         <HowItWorks />
         <Features />
