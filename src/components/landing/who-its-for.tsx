@@ -55,7 +55,7 @@ export default function WhoItsFor() {
                   src={card.src}
                   alt={card.alt}
                   fill
-                  className="object-cover border border-t-black"
+                  className="object-cover border border-border border-t-foreground"
                   sizes="(min-width: 768px) 33vw, (min-width: 640px) 50vw, 100vw"
                 />
               </div>
