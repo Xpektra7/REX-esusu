@@ -151,7 +151,7 @@ export default function DashboardPage() {
             <Skeleton className="h-16 rounded-xl" />
           </div>
         ) : activityItems.length > 0 ? (
-          <ItemGroup className="items-center gap-4 rounded-xl bg-card p-4 text-center">
+          <ItemGroup>
             {activityItems.map((item) => {
               const meta = iconMap[item.type];
               return (

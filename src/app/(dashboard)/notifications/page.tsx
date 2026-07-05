@@ -128,27 +128,29 @@ export default function NotificationsPage() {
           </EmptyHeader>
         </Empty>
       ) : (
-        <ItemGroup>
-          {notifications.map((n) => {
-            const meta = notifIcons[n.type] ?? {
-              icon: <Notification01Icon className="size-4" />,
-              bg: "bg-primary text-foreground",
-            };
-            return (
-              <Item key={n.id} variant="muted" size="sm">
-                <ItemMedia
-                  variant="icon"
-                  className={cn("rounded-full size-8", meta.bg)}
-                >
-                  {meta.icon}
-                </ItemMedia>
-                <ItemContent>
-                  <ItemTitle>{n.title}</ItemTitle>
-                  <ItemDescription>{n.body}</ItemDescription>
-                </ItemContent>
-              </Item>
-            );
-          })}
+          <ItemGroup>
+            {notifications.map((n) => {
+              const meta = notifIcons[n.type] ?? {
+                icon: <Notification01Icon className="size-4" />,
+                bg: "bg-primary text-foreground",
+              };
+              return (
+                <Item key={n.id} variant="muted" size="sm">
+                  <ItemMedia
+                    variant="icon"
+                    className={cn("rounded-full size-8", meta.bg)}
+                  >
+                    {meta.icon}
+                  </ItemMedia>
+                  <ItemContent
+                    className={cn(n.read && "text-muted-foreground")}
+                  >
+                    <ItemTitle className={cn(n.read && "text-muted-foreground")}>{n.title}</ItemTitle>
+                    <ItemDescription className={cn(n.read && "text-muted-foreground")}>{n.body}</ItemDescription>
+                  </ItemContent>
+                </Item>
+              );
+            })}
         </ItemGroup>
       )}
     </div>

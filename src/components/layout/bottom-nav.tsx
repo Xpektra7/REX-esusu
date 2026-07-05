@@ -2,7 +2,6 @@
 
 import {
   Home01Icon,
-  Settings01Icon,
   UserGroupIcon,
   UserIcon,
   Wallet01Icon,
@@ -15,7 +14,6 @@ const tabs = [
   { href: "/dashboard", label: "Home", icon: Home01Icon },
   { href: "/circles", label: "Circles", icon: UserGroupIcon },
   { href: "/wallet", label: "Wallet", icon: Wallet01Icon },
-  { href: "/settings", label: "Settings", icon: Settings01Icon },
   { href: "/profile", label: "Profile", icon: UserIcon },
 ] as const;
 
