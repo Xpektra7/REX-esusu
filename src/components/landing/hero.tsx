@@ -1,9 +1,14 @@
+"use client";
+
 import { ArrowRight01Icon } from "hugeicons-react";
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useAuthStore } from "@/stores/auth-store";
 
 export function Hero() {
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+
   return (
     <section className="border-b border-border">
       <div className="mx-auto flex max-w-5xl flex-col items-center gap-6 px-6 py-20 text-center md:py-28">
@@ -23,13 +28,23 @@ export function Hero() {
         </p>
 
         <div className="flex flex-col gap-3 sm:flex-row">
-          <Link
-            href="/signin"
-            className={cn(buttonVariants({ size: "lg" }), "gap-2")}
-          >
-            Start Your Circle
-            <ArrowRight01Icon className="size-4" />
-          </Link>
+          {isAuthenticated ? (
+            <Link
+              href="/dashboard"
+              className={cn(buttonVariants({ size: "lg" }), "gap-2")}
+            >
+              Go to Dashboard
+              <ArrowRight01Icon className="size-4" />
+            </Link>
+          ) : (
+            <Link
+              href="/signin"
+              className={cn(buttonVariants({ size: "lg" }), "gap-2")}
+            >
+              Start Your Circle
+              <ArrowRight01Icon className="size-4" />
+            </Link>
+          )}
           <Link
             href="/about"
             className={cn(buttonVariants({ variant: "outline", size: "lg" }))}

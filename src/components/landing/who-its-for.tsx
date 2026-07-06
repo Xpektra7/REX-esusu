@@ -49,9 +49,7 @@ const audienceCards: AudienceCard[] = [
 
 function ParallaxCard({ card }: { card: AudienceCard }) {
   return (
-    <div
-      className="relative mx-auto w-[50vw] aspect-video min-h-100 overflow-hidden rounded-xl"
-    >
+    <div className="relative mx-auto w-full md:w-[50vw] aspect-video min-h-100 overflow-hidden rounded-xl">
       <div className="absolute inset-0 will-change-transform">
         <Image
           src={card.src}

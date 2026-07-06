@@ -5,6 +5,7 @@ import { InformationCircleIcon, Loading01Icon } from "hugeicons-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
+import { ActionPinDialog } from "@/components/shared/action-pin-dialog";
 import { PageBreadcrumbs } from "@/components/shared/page-breadcrumbs";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -26,6 +27,7 @@ export default function CreateCirclePage() {
   const router = useRouter();
   const [form, setForm] = useState(initial);
   const [errors, setErrors] = useState<FormErrors>({});
+  const [pinDialogOpen, setPinDialogOpen] = useState(false);
 
   const mutation = useMutation({
     mutationFn: (data: {
@@ -60,6 +62,12 @@ export default function CreateCirclePage() {
       setErrors(fieldErrors);
       return;
     }
+    setPinDialogOpen(true);
+  }
+
+  function doCreate() {
+    const parsed = createCircleSchema.safeParse(form);
+    if (!parsed.success) return;
     const { defaultResolutionRule: _, ...apiData } = parsed.data;
     mutation.mutate({
       ...apiData,
@@ -137,52 +145,54 @@ export default function CreateCirclePage() {
           )}
         </div>
 
-        <div className="flex flex-col gap-2">
-          <span className="text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
-            Contribution Frequency
-          </span>
-          <div className="flex gap-2">
-            {freqOptions.map((opt) => (
-              <button
-                key={opt.value}
-                type="button"
-                onClick={() => handleChange("frequency", opt.value)}
-                className={cn(
-                  "flex flex-1 items-center justify-center gap-2 rounded-full px-4 py-2.5 text-xs font-bold tracking-wider transition-colors",
-                  form.frequency === opt.value
-                    ? "bg-primary text-card-foreground"
-                    : "bg-muted text-muted-foreground hover:bg-muted/80",
-                )}
-              >
-                {opt.label}
-              </button>
-            ))}
+        <div className="grid grid-cols-2 gap-4">
+          <div className="flex flex-col gap-2">
+            <span className="text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
+              Frequency
+            </span>
+            <div className="flex gap-2">
+              {freqOptions.map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => handleChange("frequency", opt.value)}
+                  className={cn(
+                    "flex flex-1 items-center justify-center gap-2 rounded-full px-4 py-2.5 text-xs font-bold tracking-wider transition-colors",
+                    form.frequency === opt.value
+                      ? "bg-primary text-card-foreground"
+                      : "bg-muted text-muted-foreground hover:bg-muted/80",
+                  )}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+            {errors.frequency && (
+              <p className="text-sm text-destructive">{errors.frequency}</p>
+            )}
           </div>
-          {errors.frequency && (
-            <p className="text-sm text-destructive">{errors.frequency}</p>
-          )}
-        </div>
 
-        <div className="flex flex-col gap-2">
-          <label
-            htmlFor="cycleCount"
-            className="text-[10px] font-semibold tracking-[0.05em] text-muted-foreground uppercase"
-          >
-            Number of Cycles
-          </label>
-          <Input
-            id="cycleCount"
-            type="number"
-            min={2}
-            max={100}
-            placeholder="12"
-            value={form.cycleCount || ""}
-            onChange={(e) => handleChange("cycleCount", Number(e.target.value))}
-            aria-invalid={!!errors.cycleCount}
-          />
-          {errors.cycleCount && (
-            <p className="text-sm text-destructive">{errors.cycleCount}</p>
-          )}
+          <div className="flex flex-col gap-2">
+            <label
+              htmlFor="cycleCount"
+              className="text-[10px] font-semibold tracking-[0.05em] text-muted-foreground uppercase"
+            >
+              Number of Cycles
+            </label>
+            <Input
+              id="cycleCount"
+              type="number"
+              min={2}
+              max={100}
+              placeholder="12"
+              value={form.cycleCount || ""}
+              onChange={(e) => handleChange("cycleCount", Number(e.target.value))}
+              aria-invalid={!!errors.cycleCount}
+            />
+            {errors.cycleCount && (
+              <p className="text-sm text-destructive">{errors.cycleCount}</p>
+            )}
+          </div>
         </div>
 
         {/* Tip Card */}
@@ -195,8 +205,8 @@ export default function CreateCirclePage() {
               Quick Tip
             </span>
             <p className="mt-1 text-xs text-muted-foreground">
-              Shorter cycles (weekly) keep momentum high. Longer cycles
-              (monthly) work better for larger contributions.
+              Weekly frequency keeps momentum high. Monthly works better for
+              larger contributions.
             </p>
           </div>
         </Card>
@@ -212,6 +222,12 @@ export default function CreateCirclePage() {
           {mutation.isPending ? "Creating..." : "Create Circle"}
         </Button>
       </form>
+
+      <ActionPinDialog
+        open={pinDialogOpen}
+        onOpenChange={setPinDialogOpen}
+        onSuccess={doCreate}
+      />
     </div>
   );
 }

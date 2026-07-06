@@ -5,6 +5,7 @@ import { BankIcon, Loading01Icon } from "hugeicons-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
+import { ActionPinDialog } from "@/components/shared/action-pin-dialog";
 import { BankSearchInput } from "@/components/shared/bank-search-input";
 import { PageBreadcrumbs } from "@/components/shared/page-breadcrumbs";
 import { Button } from "@/components/ui/button";
@@ -22,6 +23,7 @@ export default function WithdrawPage() {
     accountName: string;
   } | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [pinDialogOpen, setPinDialogOpen] = useState(false);
 
   const mutation = useMutation({
     mutationFn: (data: {
@@ -38,7 +40,7 @@ export default function WithdrawPage() {
     },
   });
 
-  function handleSubmit(e: React.FormEvent) {
+  function attemptSubmit(e: React.FormEvent) {
     e.preventDefault();
     setErrors({});
 
@@ -64,7 +66,17 @@ export default function WithdrawPage() {
       return;
     }
 
-    mutation.mutate(parsed.data);
+    setPinDialogOpen(true);
+  }
+
+  function doWithdraw() {
+    if (!selectedBank) return;
+    const amountKobo = Math.round(parseFloat(amount) * 100);
+    mutation.mutate({
+      amountKobo,
+      bankCode: selectedBank.bankCode,
+      accountNumber,
+    });
   }
 
   return (
@@ -84,7 +96,7 @@ export default function WithdrawPage() {
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+      <form onSubmit={attemptSubmit} className="flex flex-col gap-5">
         <div className="flex flex-col gap-2">
           <label
             htmlFor="withdrawAmount"
@@ -136,6 +148,12 @@ export default function WithdrawPage() {
           {mutation.isPending ? "Processing..." : "Withdraw"}
         </Button>
       </form>
+
+      <ActionPinDialog
+        open={pinDialogOpen}
+        onOpenChange={setPinDialogOpen}
+        onSuccess={doWithdraw}
+      />
     </div>
   );
 }

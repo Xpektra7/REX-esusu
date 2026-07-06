@@ -3,8 +3,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft01Icon } from "hugeicons-react";
 import Link from "next/link";
-import { use } from "react";
+import { use, useState } from "react";
 import { toast } from "sonner";
+import { ActionPinDialog } from "@/components/shared/action-pin-dialog";
 import { PageBreadcrumbs } from "@/components/shared/page-breadcrumbs";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -16,6 +17,7 @@ export default function CircleSettingsPage(props: {
 }) {
   const { id } = use(props.params);
   const queryClient = useQueryClient();
+  const [pinDialogOpen, setPinDialogOpen] = useState(false);
 
   const { data: res, isLoading } = useQuery({
     queryKey: ["circle", id],
@@ -35,6 +37,11 @@ export default function CircleSettingsPage(props: {
   });
 
   const toggleMidCycle = () => {
+    if (!circle) return;
+    setPinDialogOpen(true);
+  };
+
+  const doSaveMidCycle = () => {
     if (!circle) return;
     updateMutation.mutate({ allowMidCycleJoin: !circle.allowMidCycleJoin });
   };
@@ -113,6 +120,12 @@ export default function CircleSettingsPage(props: {
           </button>
         </div>
       </Card>
+
+      <ActionPinDialog
+        open={pinDialogOpen}
+        onOpenChange={setPinDialogOpen}
+        onSuccess={doSaveMidCycle}
+      />
     </div>
   );
 }

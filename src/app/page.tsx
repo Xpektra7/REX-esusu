@@ -1,5 +1,4 @@
 import { InstallPrompt } from "@/components/shared/install-prompt";
-import { BentoStats } from "@/components/landing/bento-stats";
 import { Features } from "@/components/landing/features";
 import { Footer } from "@/components/landing/footer";
 import { Hero } from "@/components/landing/hero";
@@ -16,7 +15,6 @@ export default function Home() {
       <main className="flex-1">
         <Hero />
         <WhoItsFor />
-        <BentoStats />
         <HowItWorks />
         <Features />
         <Testimonial />

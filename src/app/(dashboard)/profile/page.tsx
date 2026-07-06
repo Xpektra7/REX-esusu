@@ -13,6 +13,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { DiceBearAvatar } from "@/components/shared/dicebear-avatar";
 import { PageBreadcrumbs } from "@/components/shared/page-breadcrumbs";
+import { ActionPinDialog } from "@/components/shared/action-pin-dialog";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
@@ -83,6 +84,7 @@ export default function ProfilePage() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const clearAuth = useAuthStore((s) => s.clearAuth);
+  const [pinDialogOpen, setPinDialogOpen] = useState(false);
 
   const { data: res, isLoading } = useQuery({
     queryKey: ["profile"],
@@ -210,15 +212,7 @@ const [scoreOpen, setScoreOpen] = useState(false);
         />
         <button
           type="button"
-          onClick={async () => {
-            try {
-              await api.auth.logout();
-            } catch {
-              /* ignore */
-            }
-            clearAuth();
-            router.push("/signin");
-          }}
+          onClick={() => setPinDialogOpen(true)}
           className={cn(
             "flex items-center gap-3 rounded-xl border border-destructive/30 px-4 py-3 transition-colors hover:bg-muted/50 w-full text-left",
           )}
@@ -301,6 +295,20 @@ const [scoreOpen, setScoreOpen] = useState(false);
           </div>
         </DialogContent>
       </Dialog>
+
+      <ActionPinDialog
+        open={pinDialogOpen}
+        onOpenChange={setPinDialogOpen}
+        onSuccess={async () => {
+          try {
+            await api.auth.logout();
+          } catch {
+            /* ignore */
+          }
+          clearAuth();
+          router.push("/signin");
+        }}
+      />
     </div>
   );
 }

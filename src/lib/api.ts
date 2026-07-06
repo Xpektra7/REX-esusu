@@ -110,8 +110,7 @@ const mockMembers = [
 const BASE_URL = "/api/v1";
 
 // Mock mode — when true, returns fake data so the UI works without a backend.
-// Call setMockMode(false) once the real API is ready.
-let mockMode = true;
+let mockMode = false;
 
 export function setMockMode(enabled: boolean) {
   mockMode = enabled;
@@ -212,7 +211,7 @@ async function mockRequest<T>(
       }
       throw new Error("Wrong PIN");
     }
-    return { code: "00", description: "PIN verified", data: {} as T };
+    return { code: "00", description: "PIN verified", data: { verified: true } as T };
   }
 
   if (path === "/auth/logout" && method === "POST") {
