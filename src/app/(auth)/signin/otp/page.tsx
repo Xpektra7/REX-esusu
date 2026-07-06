@@ -26,7 +26,7 @@ function OtpForm() {
   const searchParams = useSearchParams();
   const setAuth = useAuthStore((s) => s.setAuth);
 
-  const phone = searchParams.get("phone") || "";
+  const email = searchParams.get("email") || "";
   const [otp, setOtp] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -37,12 +37,12 @@ function OtpForm() {
       : "";
 
   useEffect(() => {
-    if (!phone) {
+    if (!email) {
       router.replace("/signin");
     }
-  }, [phone, router]);
+  }, [email, router]);
 
-  if (!phone) return null;
+  if (!email) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,11 +50,11 @@ function OtpForm() {
     setLoading(true);
 
     try {
-      const res = await api.auth.verify({ phone, otp, password });
+      const res = await api.auth.verify({ email, otp, password });
       const data = res.data as unknown as {
         token: string;
         refreshToken: string;
-        user: { id: string; phone: string; name: string; email: string };
+        user: { id: string; name: string; email: string };
         needsBvn: boolean;
         pinSet: boolean;
       };
@@ -83,7 +83,7 @@ function OtpForm() {
         <CardTitle>Verify your login</CardTitle>
         <CardDescription>
           Enter the verification code sent to{" "}
-          <span className="font-medium">{phone}</span>.
+          <span className="font-medium">{email}</span>.
         </CardDescription>
       </CardHeader>
 
@@ -100,7 +100,7 @@ function OtpForm() {
                 size="xs"
                 onClick={async () => {
                   try {
-                    await api.auth.sendOtp(phone);
+                    await api.auth.sendOtp(email);
                   } catch {
                     /* silent */
                   }

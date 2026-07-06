@@ -152,26 +152,26 @@ export default function DashboardPage() {
             <Skeleton className="h-16 rounded-xl" />
           </div>
         ) : activityItems.length > 0 ? (
-          <ItemGroup className="gap-0!">
-            {activityItems.map((item) => {
+          <ItemGroup className="bg-card gap-0! py-2">
+            {activityItems.map((item, i) => {
               const meta = iconMap[item.type];
               return (
                 <div key={item.id}>
-                  <ItemSeparator />
-                  <Item
-                    variant="muted"
-                    size="sm"
-                    className="hover:border-primary"
-                  >
+                  <ItemSeparator className={i === 0 ? "hidden" : ""} />
+                  <Item variant="muted" size="xs">
                     <ItemMedia
                       variant="icon"
-                      className={`rounded-full size-9 ${meta.bg} p-0!`}
+                      className={`rounded-full size-6 ${meta.bg} p-0!`}
                     >
                       {meta.icon}
                     </ItemMedia>
                     <ItemContent>
-                      <ItemTitle className="line-clamp-1">{item.description}</ItemTitle>
-                      <ItemDescription className="line-clamp-1">{timeAgo(item.createdAt)}</ItemDescription>
+                      <ItemTitle className="line-clamp-1">
+                        {item.description}
+                      </ItemTitle>
+                      <ItemDescription className="line-clamp-1">
+                        {timeAgo(item.createdAt)}
+                      </ItemDescription>
                     </ItemContent>
                   </Item>
                 </div>

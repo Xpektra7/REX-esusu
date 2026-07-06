@@ -1,7 +1,7 @@
 export interface User {
   id: string;
-  phone: string;
   email: string;
+  phone?: string;
   name: string;
   bvnLast4: string;
   trustScore: number;
@@ -270,8 +270,8 @@ export interface UserSettings {
 export interface UserProfile {
   id: string;
   name: string;
-  phone: string;
   email: string;
+  phone?: string;
   bvnLast4: string;
   trustScore: number;
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertCircleIcon, Mail01Icon, UserIcon } from "hugeicons-react";
+import { AlertCircleIcon, Mail01Icon } from "hugeicons-react";
 import { useState } from "react";
 import { DeleteAccountDialog } from "@/components/settings/delete-account-dialog";
 import { Separator } from "@/components/ui/separator";
@@ -14,8 +14,6 @@ interface AccountSectionProps {
 export function AccountSection({ user }: AccountSectionProps) {
   const [deleteOpen, setDeleteOpen] = useState(false);
 
-  const maskedPhone = user.phone.replace(/(\d{5})\d{4}(\d{2})/, "$1****$2");
-
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-3 rounded-xl bg-card px-4 py-3">
@@ -25,19 +23,6 @@ export function AccountSection({ user }: AccountSectionProps) {
         <div>
           <p className="text-xs text-muted-foreground">Email</p>
           <p className="text-sm font-medium">{user.email}</p>
-        </div>
-      </div>
-
-      <div className="flex items-center gap-3 rounded-xl bg-card px-4 py-3">
-        <div className="flex size-9 items-center justify-center rounded-full bg-primary/10 text-primary">
-          <UserIcon className="size-4" />
-        </div>
-        <div>
-          <p className="text-xs text-muted-foreground">Phone</p>
-          <p className="text-sm font-medium">{maskedPhone}</p>
-          <p className="text-[10px] text-muted-foreground">
-            Cannot change — contact support
-          </p>
         </div>
       </div>
 

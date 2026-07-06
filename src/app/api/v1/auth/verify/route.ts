@@ -3,9 +3,9 @@ import { eq } from "drizzle-orm";
 import type { NextRequest } from "next/server";
 import { db } from "@/db";
 import { users, virtualAccounts } from "@/db/schema";
-import { conflict, error, success } from "@/lib/api-response";
+import { error, success } from "@/lib/api-response";
 import {
-  findUserByPhone,
+  findUserByEmail,
   hashPassword,
   signToken,
   verifyPassword,
@@ -78,13 +78,13 @@ async function provisionVirtualAccount(
 
 export async function POST(req: NextRequest) {
   try {
-    const { phone, otp, password, name, email, bvn } = await req.json();
-    if (!phone || !otp || !password)
-      return error("Phone, OTP, and password are required");
+    const { email, otp, password, name, bvn } = await req.json();
+    if (!email || !otp || !password)
+      return error("Email, OTP, and password are required");
 
-    if (!(await verifyOtp(phone, otp))) return error("Invalid or expired OTP");
+    if (!(await verifyOtp(email, otp))) return error("Invalid or expired OTP");
 
-    const existing = await findUserByPhone(phone);
+    const existing = await findUserByEmail(email);
 
     if (existing) {
       if (existing.lockedUntil && existing.lockedUntil > new Date()) {
@@ -118,31 +118,22 @@ export async function POST(req: NextRequest) {
       return success({
         user: {
           id: existing.id,
-          phone: existing.phone,
           name: existing.name,
           email: existing.email,
         },
-        token: signToken(existing.id, existing.phone),
-        refreshToken: signToken(existing.id, existing.phone),
+        token: signToken(existing.id, existing.email),
+        refreshToken: signToken(existing.id, existing.email),
         needsBvn: !existing.bvnLast4,
         pinSet: !!existing.pinHash,
       });
     }
 
-    if (!name || !email) return error("No account found with this phone number. Sign up first.");
-
-    const emailCheck = await db
-      .select()
-      .from(users)
-      .where(eq(users.email, email))
-      .limit(1);
-    if (emailCheck.length > 0) return conflict("Email already registered");
+    if (!name) return error("No account found with this email. Sign up first.");
 
     const passwordHash = await hashPassword(password);
     const [user] = await db
       .insert(users)
       .values({
-        phone,
         name,
         email,
         passwordHash,
@@ -164,12 +155,11 @@ export async function POST(req: NextRequest) {
       {
         user: {
           id: user.id,
-          phone: user.phone,
           name: user.name,
           email: user.email,
         },
-        token: signToken(user.id, user.phone),
-        refreshToken: signToken(user.id, user.phone),
+        token: signToken(user.id, user.email),
+        refreshToken: signToken(user.id, user.email),
         needsBvn: !bvn,
         pinSet: false,
       },

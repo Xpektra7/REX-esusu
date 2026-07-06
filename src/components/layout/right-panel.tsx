@@ -86,10 +86,10 @@ export function RightPanel() {
   ).slice(0, 5);
 
   return (
-    <aside className="flex h-full flex-col gap-4 overflow-y-auto p-4 pl-0">
+    <aside className="flex h-full flex-col gap-4 overflow-y-auto p-4 pl-0 pt-8">
       {/*Recent Notifications*/}
-      <section className="flex min-h-0 h-fit flex-col rounded-xl bg-card">
-        <div className="flex items-center justify-between p-4 pb-0">
+      <section className="flex min-h-0 h-fit flex-col gap-4">
+        <div className="flex items-center justify-between">
           <h3 className="flex items-center gap-2 text-sm font-bold tracking-wider">
             <Notification01Icon className="size-3" />
             Notifications
@@ -102,7 +102,7 @@ export function RightPanel() {
           </Link>
         </div>
 
-        <div className="flex-1 h-fit">
+        <div className="flex-1 h-fit rounded-xl bg-card">
           {notifsLoading ? (
             <div className="flex flex-col gap-2">
               {[1, 2, 3].map((n) => (
@@ -117,15 +117,15 @@ export function RightPanel() {
               ))}
             </div>
           ) : notifications.length > 0 ? (
-            <ItemGroup className="bg-transparent gap-0!">
-              {notifications.map((n) => {
+            <ItemGroup className="bg-transparent gap-0! py-2">
+              {notifications.map((n, i) => {
                 const meta = notifIcons[n.type] ?? {
                   icon: <Notification01Icon className="size-6" />,
                   bg: "bg-primary text-foreground",
                 };
                 return (
                   <div key={n.id}>
-                    <ItemSeparator />
+                    <ItemSeparator className={i === 0 ? "hidden" : ""} />
                     <Item variant="muted" size="xs">
                       <ItemMedia
                         variant="icon"
@@ -160,8 +160,8 @@ export function RightPanel() {
         </div>
       </section>
 
-      <section className="flex min-h-0 flex-1 flex-col rounded-xl bg-card">
-        <div className="flex items-center justify-between p-4 pb-0">
+      <section className="flex min-h-0 flex-1 flex-col gap-4">
+        <div className="flex items-center justify-between">
           <h3 className="flex items-center gap-2 text-sm font-bold tracking-wider">
             <Wallet01Icon className="size-3" />
             Recent Transactions
@@ -174,7 +174,7 @@ export function RightPanel() {
           </Link>
         </div>
 
-        <div className="flex-1">
+        <div className="flex rounded-xl bg-card">
           {txsLoading ? (
             <div className="flex flex-col gap-2">
               {[1, 2, 3].map((n) => (
@@ -191,12 +191,12 @@ export function RightPanel() {
               ))}
             </div>
           ) : transactions.length > 0 ? (
-            <ItemGroup className="bg-transparent gap-0!">
-              {transactions.map((tx) => {
+            <ItemGroup className="bg-transparent gap-0! py-2">
+              {transactions.map((tx, i) => {
                 const isCredit = tx.type === "credit";
                 return (
                   <div key={tx.id}>
-                    <ItemSeparator />
+                    <ItemSeparator className={i === 0 ? "hidden" : ""} />
                     <Item variant="muted" size="xs">
                       <ItemMedia
                         variant="icon"

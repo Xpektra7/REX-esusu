@@ -39,6 +39,10 @@ export function proxy(request: NextRequest) {
     return NextResponse.redirect(signinUrl);
   }
 
+  if (isAuthenticated && pathname === "/") {
+    return NextResponse.redirect(new URL("/dashboard", request.url));
+  }
+
   if (isPublic && isAuthenticated && pathname.startsWith("/signin")) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }

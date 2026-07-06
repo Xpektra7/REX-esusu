@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { ActionPinDialog } from "@/components/shared/action-pin-dialog";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -24,8 +25,9 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [pinDialogOpen, setPinDialogOpen] = useState(false);
 
-  const handleDelete = async () => {
+  const handleDeleteClick = () => {
     setError(null);
     if (confirm !== "DELETE") {
       setError('Type "DELETE" to confirm');
@@ -35,6 +37,12 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
       setError("Enter your password");
       return;
     }
+    setPinDialogOpen(true);
+  };
+
+  const doDelete = async () => {
+    setError(null);
+    if (confirm !== "DELETE" || !password) return;
     setLoading(true);
     try {
       await api.users.deleteAccount(password);
@@ -48,48 +56,56 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent showCloseButton={false}>
-        <DialogHeader>
-          <DialogTitle>Delete Account</DialogTitle>
-          <DialogDescription>
-            This action is irreversible. All your data, circles, and contributions will be permanently removed.
-          </DialogDescription>
-        </DialogHeader>
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent showCloseButton={false}>
+          <DialogHeader>
+            <DialogTitle>Delete Account</DialogTitle>
+            <DialogDescription>
+              This action is irreversible. All your data, circles, and contributions will be permanently removed.
+            </DialogDescription>
+          </DialogHeader>
 
-        <Separator />
+          <Separator />
 
-        <div className="flex flex-col gap-3">
-          <input
-            type="text"
-            placeholder='Type "DELETE" to confirm'
-            value={confirm}
-            onChange={(e) => setConfirm(e.target.value)}
-            className="w-full rounded-lg bg-background px-4 py-3 text-base outline-none focus:ring-2 focus:ring-ring transition-all"
-          />
-          <input
-            type="password"
-            placeholder="Current password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full rounded-lg bg-background px-4 py-3 text-base outline-none focus:ring-2 focus:ring-ring transition-all"
-          />
-          {error && <p className="text-sm text-destructive">{error}</p>}
-        </div>
+          <div className="flex flex-col gap-3">
+            <input
+              type="text"
+              placeholder='Type "DELETE" to confirm'
+              value={confirm}
+              onChange={(e) => setConfirm(e.target.value)}
+              className="w-full rounded-lg bg-background px-4 py-3 text-base outline-none focus:ring-2 focus:ring-ring transition-all"
+            />
+            <input
+              type="password"
+              placeholder="Current password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full rounded-lg bg-background px-4 py-3 text-base outline-none focus:ring-2 focus:ring-ring transition-all"
+            />
+            {error && <p className="text-sm text-destructive">{error}</p>}
+          </div>
 
-        <div className="flex gap-3 justify-end">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-          <Button
-            variant="destructive"
-            onClick={handleDelete}
-            disabled={loading || confirm !== "DELETE" || !password}
-          >
-            {loading ? "Deleting..." : "Delete Account"}
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+          <div className="flex gap-3 justify-end">
+            <Button variant="outline" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteClick}
+              disabled={loading || confirm !== "DELETE" || !password}
+            >
+              {loading ? "Deleting..." : "Delete Account"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <ActionPinDialog
+        open={pinDialogOpen}
+        onOpenChange={setPinDialogOpen}
+        onSuccess={doDelete}
+      />
+    </>
   );
 }

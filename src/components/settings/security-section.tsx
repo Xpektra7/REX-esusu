@@ -3,6 +3,7 @@
 import { Shield01Icon } from "hugeicons-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { ActionPinDialog } from "@/components/shared/action-pin-dialog";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -17,6 +18,7 @@ import { cn } from "@/lib/utils";
 export function SecuritySection() {
   const router = useRouter();
   const [passwordOpen, setPasswordOpen] = useState(false);
+  const [pinDialogOpen, setPinDialogOpen] = useState(false);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -33,6 +35,12 @@ export function SecuritySection() {
       setError("New password must be at least 8 characters");
       return;
     }
+    setPinDialogOpen(true);
+  };
+
+  const doChangePassword = async () => {
+    setError(null);
+    if (newPassword !== confirmPassword || newPassword.length < 8) return;
     setLoading(true);
     try {
       await api.auth.changePassword({ currentPassword, newPassword });
@@ -131,6 +139,12 @@ export function SecuritySection() {
           </div>
         </DialogContent>
       </Dialog>
+
+      <ActionPinDialog
+        open={pinDialogOpen}
+        onOpenChange={setPinDialogOpen}
+        onSuccess={doChangePassword}
+      />
     </div>
   );
 }

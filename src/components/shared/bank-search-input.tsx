@@ -115,48 +115,44 @@ export function BankSearchInput({
         </ComboboxContent>
       </Combobox>
 
-      {selectedBank && (
-        <>
-          <span className="text-[10px] font-semibold tracking-[0.05em] text-muted-foreground uppercase">
-            Account Number
-          </span>
-          <input
-            type="text"
-            inputMode="numeric"
-            maxLength={10}
-            placeholder="0123456789"
-            value={value}
-            onChange={(e) => onChange(e.target.value.replace(/\D/g, ""))}
-            className="flex h-10 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-          />
+      <span className="text-[10px] font-semibold tracking-[0.05em] text-muted-foreground uppercase">
+        Account Number
+      </span>
+      <input
+        type="text"
+        inputMode="numeric"
+        maxLength={10}
+        placeholder="0123456789"
+        value={value}
+        onChange={(e) => onChange(e.target.value.replace(/\D/g, ""))}
+        className="flex h-10 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+      />
 
-          {lookupLoading && (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Loading01Icon className="size-4 animate-spin" />
-              Verifying account...
-            </div>
-          )}
+      {lookupLoading && (
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Loading01Icon className="size-4 animate-spin" />
+          Verifying account...
+        </div>
+      )}
 
-          {lookupResult && (
-            <div className="flex items-center justify-between rounded-lg border border-primary/30 bg-primary/5 px-3 py-2">
-              <div className="flex flex-col">
-                <span className="text-sm font-semibold">
-                  {selectedBank.name}
-                </span>
-                <span className="text-xs text-muted-foreground">
-                  {lookupResult}
-                </span>
-              </div>
-              <button
-                type="button"
-                onClick={handleClear}
-                className="text-xs text-muted-foreground hover:text-foreground underline"
-              >
-                Change
-              </button>
-            </div>
-          )}
-        </>
+      {!lookupLoading && lookupResult && selectedBank && (
+        <div className="flex items-center justify-between rounded-lg border border-primary/30 bg-primary/5 px-3 py-2">
+          <div className="flex flex-col">
+            <span className="text-sm font-semibold">
+              {selectedBank.name}
+            </span>
+            <span className="text-xs text-muted-foreground">
+              {lookupResult}
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={handleClear}
+            className="text-xs text-muted-foreground hover:text-foreground underline"
+          >
+            Change
+          </button>
+        </div>
       )}
 
       {error && <p className="text-sm text-destructive">{error}</p>}

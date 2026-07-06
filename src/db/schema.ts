@@ -14,8 +14,8 @@ export const users = pgTable(
   "users",
   {
     id: uuid("id").defaultRandom().primaryKey(),
-    phone: varchar("phone", { length: 20 }).unique().notNull(),
-    email: varchar("email", { length: 255 }).unique(),
+    phone: varchar("phone", { length: 20 }),
+    email: varchar("email", { length: 255 }).notNull().unique(),
     name: varchar("name", { length: 255 }).notNull(),
     passwordHash: text("password_hash").notNull(),
     pinHash: text("pin_hash"),
@@ -204,13 +204,13 @@ export const otpCodes = pgTable(
   "otp_codes",
   {
     id: uuid("id").defaultRandom().primaryKey(),
-    phone: varchar("phone", { length: 20 }).notNull(),
+    email: varchar("email", { length: 255 }).notNull(),
     otp: varchar("otp", { length: 6 }).notNull(),
     expiresAt: timestamp("expires_at").notNull(),
     verifiedAt: timestamp("verified_at"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
-  (table) => [index("idx_otp_phone_expires").on(table.phone, table.expiresAt)],
+  (table) => [index("idx_otp_email_expires").on(table.email, table.expiresAt)],
 );
 
 export const webhookEvents = pgTable(
