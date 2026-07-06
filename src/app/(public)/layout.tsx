@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { cn } from "@/lib/utils";
+import { buttonVariants } from "@/components/ui/button";
 
 export default function PublicLayout({
   children,
@@ -9,31 +11,31 @@ export default function PublicLayout({
     <div className="flex min-h-screen flex-col">
       <header className="sticky top-0 z-50 border-b border-border bg-background">
         <nav className="mx-auto flex h-14 max-w-5xl items-center justify-between px-6">
-          <Link href="/" className="text-lg font-bold">
-            Esusu
+          <Link href="/" className={cn(buttonVariants({ size: "lg" }), "font-bold text-white bg-black hover:bg-white hover:text-black")}>
+            Back
           </Link>
           <div className="flex items-center gap-6">
             <Link
               href="/about"
-              className="text-sm text-muted-foreground hover:text-foreground"
+              className="text-sm text-muted-foreground hover:text-foreground font-bold"
             >
               About
             </Link>
             <Link
               href="/faq"
-              className="text-sm text-muted-foreground hover:text-foreground"
+              className="text-sm text-muted-foreground hover:text-foreground font-bold"
             >
               FAQ
             </Link>
             <Link
               href="/contact"
-              className="text-sm text-muted-foreground hover:text-foreground"
+              className="text-sm text-muted-foreground hover:text-foreground font-bold"
             >
               Contact
             </Link>
             <Link
               href="/signin"
-              className="text-sm font-medium text-foreground hover:text-primary"
+              className={cn(buttonVariants({ size: "lg" }), "font-bold")}
             >
               Sign In
             </Link>
