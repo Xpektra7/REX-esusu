@@ -971,23 +971,22 @@ async function request<T>(
 // ---------------------------------------------------------------------------
 export const api = {
   auth: {
-    /** Sends a 6-digit OTP to the given phone number. */
-    sendOtp: (phone: string) =>
+    /** Sends a 6-digit OTP to the given email address. */
+    sendOtp: (email: string) =>
       request<{ expires_in_seconds: number; isNewUser: boolean }>(
         "/auth/send-otp",
         {
           method: "POST",
-          body: JSON.stringify({ phone }),
+          body: JSON.stringify({ email }),
         },
       ),
 
     /** Verifies OTP + password, returns auth tokens + user data. */
     verify: (payload: {
-      phone: string;
+      email: string;
       otp: string;
       password: string;
       name?: string;
-      email?: string;
       bvn?: string;
     }) =>
       request<{ token: string; refresh_token: string; user: unknown }>(

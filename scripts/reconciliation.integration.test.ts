@@ -26,6 +26,7 @@ describe.skip(!HAS_DB ? "Integration tests (DATABASE_URL not set)" : "Reconcilia
     for (const name of ["Alice", "Bob", "Carol"]) {
       const [u] = await db.insert(users).values({
         phone: `+2348000000${testUserIds.length + 1}`,
+        email: `user${testUserIds.length + 1}@test.com`,
         name,
         passwordHash: "test-hash",
       }).returning({ id: users.id });

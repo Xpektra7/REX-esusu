@@ -8,7 +8,6 @@ import { createJSONStorage, persist } from "zustand/middleware";
 /** Shape of the authenticated user object stored in the store. */
 interface AuthUser {
   id: string;
-  phone: string;
   name: string;
   email: string;
 }

@@ -12,74 +12,60 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { api } from "@/lib/api";
-import { passwordSchema, phoneSchema } from "@/lib/validations";
 
-// ------------------------------------------------------------------
-// Constants for the avatar stack
-// ------------------------------------------------------------------
 const avatarInitials = [
   { initials: "CO", bg: "bg-blue-100", text: "text-blue-800" },
   { initials: "AA", bg: "bg-green-100", text: "text-green-800" },
   { initials: "TO", bg: "bg-amber-100", text: "text-amber-800" },
 ];
 
-// ------------------------------------------------------------------
-// Auth Page
-// ------------------------------------------------------------------
 export default function AuthPage() {
   const router = useRouter();
   const [flow, setFlow] = useState<"login" | "signup">("login");
   const [error, setError] = useState<string | null>(null);
 
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const form = useForm({
     defaultValues: {
-      phone: "",
-      name: "",
       email: "",
+      name: "",
     },
 
     onSubmit: async ({ value }) => {
       setError(null);
 
-      const phoneResult = phoneSchema.safeParse({ phone: value.phone });
-      if (!phoneResult.success) {
-        setError("Enter a valid Nigerian phone number (+234...)");
+      if (!value.email.trim()) {
+        setError("Enter a valid email address");
         return;
       }
 
-      const passwordResult = passwordSchema.safeParse({ password });
-      if (!passwordResult.success) {
+      if (password.length < 8) {
         setError("Password must be at least 8 characters");
         return;
       }
 
-      const phone = phoneResult.data.phone;
-
+      setLoading(true);
       try {
-        await api.auth.sendOtp(phone);
+        await api.auth.sendOtp(value.email);
 
-        // Store password in sessionStorage so the OTP page can use it
-        // without exposing it in URL params (see rule 83).
         sessionStorage.setItem("pending_password", password);
 
         if (flow === "signup") {
           sessionStorage.setItem("pending_name", value.name);
-          sessionStorage.setItem("pending_email", value.email);
         }
-        const params = new URLSearchParams({ phone, flow });
+        const params = new URLSearchParams({ email: value.email, flow });
 
         router.push(`/auth/otp?${params.toString()}`);
       } catch {
         setError("Failed to send OTP. Try again.");
+      } finally {
+        setLoading(false);
       }
     },
   });
 
-  // ------------------------------------------------------------------
-  // Render
-  // ------------------------------------------------------------------
   return (
     <Card className="relative w-full max-w-md">
       <CardHeader className="text-center">
@@ -89,7 +75,7 @@ export default function AuthPage() {
 
         <CardDescription>
           {flow === "login"
-            ? "Enter your phone number to continue."
+            ? "Enter your email to continue."
             : "Enter your details to get started."}
         </CardDescription>
       </CardHeader>
@@ -101,50 +87,33 @@ export default function AuthPage() {
             e.stopPropagation();
             form.handleSubmit();
           }}
-          className="space-y-5"
+          className="flex flex-col gap-5"
         >
-          {/* Phone number with Nigerian flag + +234 prefix */}
           <form.Field
-            name="phone"
+            name="email"
             children={(field) => (
               <div>
                 <label
                   htmlFor={field.name}
                   className="mb-1.5 block text-xs font-semibold uppercase tracking-widest text-muted-foreground"
                 >
-                  Phone Number
+                  Email
                 </label>
 
-                <div className="flex items-center rounded-xl -bac-background px-4 py-3.5 focus-within:ring-2 focus-within:ring-ring transition-all">
-                  {/* Flag + prefix */}
-                  <div className="flex items-center gap-2 pr-4 border-r border-border">
-                    <div className="flex w-6 h-4 overflow-hidden rounded-sm shrink-0">
-                      <div className="w-1/3 bg-green-700" />
-                      <div className="w-1/3 bg-white" />
-                      <div className="w-1/3 bg-green-700" />
-                    </div>
-
-                    <span className="text-base font-semibold text-foreground">
-                      +234
-                    </span>
-                  </div>
-
-                  {/* Actual input */}
-                  <input
-                    id={field.name}
-                    type="tel"
-                    placeholder="801 234 5678"
-                    value={field.state.value}
-                    onBlur={field.handleBlur}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    className="flex-1 bg-transparent border-none focus:ring-0 px-3 text-base tracking-widest placeholder:tracking-normal placeholder:text-muted-foreground/50 outline-none"
-                  />
-                </div>
+                <input
+                  id={field.name}
+                  type="email"
+                  placeholder="chioma@example.com"
+                  value={field.state.value}
+                  onBlur={field.handleBlur}
+                  onChange={(e) => field.handleChange(e.target.value)}
+                  className="w-full rounded-xl bg-background px-4 py-3.5 text-base outline-none focus:ring-2 focus:ring-ring transition-all"
+                  required
+                />
               </div>
             )}
           />
 
-          {/* Password — shown for both login and signup */}
           <div>
             <label
               htmlFor="password"
@@ -162,15 +131,13 @@ export default function AuthPage() {
               }
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-xl bg-card  bg-background px-4 py-3.5 text-base outline-none focus:ring-2 focus:ring-ring transition-all"
+              className="w-full rounded-xl bg-background px-4 py-3.5 text-base outline-none focus:ring-2 focus:ring-ring transition-all"
               required
               minLength={8}
             />
           </div>
 
-          {/* Name + Email (signup only) */}
           {flow === "signup" && (
-            <>
               <form.Field
                 name="name"
                 children={(field) => (
@@ -188,46 +155,21 @@ export default function AuthPage() {
                       value={field.state.value}
                       onBlur={field.handleBlur}
                       onChange={(e) => field.handleChange(e.target.value)}
-                      className="w-full rounded-xl bg-card  bg-background px-4 py-3.5 text-base outline-none focus:ring-2 focus:ring-ring transition-all"
+                      className="w-full rounded-xl bg-background px-4 py-3.5 text-base outline-none focus:ring-2 focus:ring-ring transition-all"
                     />
                   </div>
                 )}
               />
-
-              <form.Field
-                name="email"
-                children={(field) => (
-                  <div>
-                    <label
-                      htmlFor={field.name}
-                      className="mb-1.5 block text-xs font-semibold uppercase tracking-widest text-muted-foreground"
-                    >
-                      Email
-                    </label>
-                    <input
-                      id={field.name}
-                      type="email"
-                      placeholder="chioma@example.com"
-                      value={field.state.value}
-                      onBlur={field.handleBlur}
-                      onChange={(e) => field.handleChange(e.target.value)}
-                      className="w-full rounded-xl bg-card  bg-background px-4 py-3.5 text-base outline-none focus:ring-2 focus:ring-ring transition-all"
-                    />
-                  </div>
-                )}
-              />
-            </>
           )}
 
           {error && <p className="text-sm text-destructive">{error}</p>}
 
-          <Button type="submit" size="lg" className="w-full py-4 text-base">
-            Continue
+          <Button type="submit" size="lg" className="w-full py-4 text-base" disabled={loading}>
+            {loading ? "Sending OTP..." : "Continue"}
           </Button>
         </form>
       </CardContent>
 
-      {/* Toggle login / signup */}
       <CardContent className="pt-0">
         <button
           type="button"
@@ -243,7 +185,6 @@ export default function AuthPage() {
         </button>
       </CardContent>
 
-      {/* Social proof — shown only on login flow */}
       {flow === "login" && (
         <CardContent className="pt-0 text-center">
           <div className="border-t border-border pt-6">

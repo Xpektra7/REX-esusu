@@ -26,7 +26,7 @@ function OtpForm() {
   const searchParams = useSearchParams();
   const setAuth = useAuthStore((s) => s.setAuth);
 
-  const phone = searchParams.get("phone") || "";
+  const email = searchParams.get("email") || "";
   const [otp, setOtp] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -39,18 +39,14 @@ function OtpForm() {
     typeof window !== "undefined"
       ? sessionStorage.getItem("pending_name") || ""
       : "";
-  const email =
-    typeof window !== "undefined"
-      ? sessionStorage.getItem("pending_email") || ""
-      : "";
 
   useEffect(() => {
-    if (!phone) {
+    if (!email) {
       router.replace("/signup");
     }
-  }, [phone, router]);
+  }, [email, router]);
 
-  if (!phone) return null;
+  if (!email) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,23 +55,22 @@ function OtpForm() {
 
     try {
       const res = await api.auth.verify({
-        phone,
+        email,
         otp,
         password,
         name,
-        email,
+        bvn: undefined,
       });
       const data = res.data as unknown as {
         token: string;
         refreshToken: string;
-        user: { id: string; phone: string; name: string; email: string };
+        user: { id: string; name: string; email: string };
         needsBvn: boolean;
         pinSet: boolean;
       };
 
       sessionStorage.removeItem("pending_password");
       sessionStorage.removeItem("pending_name");
-      sessionStorage.removeItem("pending_email");
 
       setAuth({
         access_token: data.token,
@@ -99,7 +94,7 @@ function OtpForm() {
         <CardTitle>Verify your email</CardTitle>
         <CardDescription>
           Enter the verification code sent to{" "}
-          <span className="font-medium">{email || phone}</span>.
+          <span className="font-medium">{email}</span>.
         </CardDescription>
       </CardHeader>
 
@@ -116,7 +111,7 @@ function OtpForm() {
                 size="xs"
                 onClick={async () => {
                   try {
-                    await api.auth.sendOtp(phone);
+                    await api.auth.sendOtp(email);
                   } catch {
                     /* silent */
                   }

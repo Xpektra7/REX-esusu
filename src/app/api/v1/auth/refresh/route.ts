@@ -9,7 +9,7 @@ export async function POST(req: NextRequest) {
     if (!token) return error("Refresh token required");
     const payload = verifyToken(token);
     if (!payload) return error("Invalid or expired refresh token", "01", 401);
-    const accessToken = signToken(payload.userId, payload.phone);
+    const accessToken = signToken(payload.userId, payload.email);
     return success({ accessToken, token: accessToken });
   } catch (e) {
     return error((e as Error).message);
