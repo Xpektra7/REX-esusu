@@ -1,7 +1,7 @@
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import type { NextRequest } from "next/server";
 import { db } from "@/db";
-import { circles } from "@/db/schema";
+import { circles, membersCircles } from "@/db/schema";
 import { error, success } from "@/lib/api-response";
 import { requireAuth } from "@/lib/middleware";
 
@@ -20,6 +20,19 @@ export async function PATCH(
       .where(eq(circles.id, id))
       .limit(1);
     if (!circle) return error("Circle not found", "04", 404);
+
+    const [membership] = await db
+      .select()
+      .from(membersCircles)
+      .where(
+        and(
+          eq(membersCircles.circleId, id),
+          eq(membersCircles.userId, auth.user?.userId),
+        ),
+      )
+      .limit(1);
+    if (!membership || membership.role !== "admin")
+      return error("Only admin can update circle settings", "03", 403);
 
     const body = await req.json();
 
