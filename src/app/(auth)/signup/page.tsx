@@ -49,9 +49,10 @@ function SignUpForm() {
 
       setLoading(true);
       try {
-        await api.auth.sendOtp(value.email);
+        const res = await api.auth.sendOtp(value.email);
         sessionStorage.setItem("pending_password", password);
         sessionStorage.setItem("pending_name", name);
+        if (res.data.otp) sessionStorage.setItem("pending_otp", res.data.otp);
         router.push(`/signup/otp?email=${encodeURIComponent(value.email)}`);
       } catch {
         setError("Failed to send OTP. Try again.");

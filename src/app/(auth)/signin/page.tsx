@@ -51,6 +51,7 @@ export default function SignInPage() {
           return;
         }
         sessionStorage.setItem("pending_password", password);
+        if (res.data.otp) sessionStorage.setItem("pending_otp", res.data.otp);
         router.push(`/signin/otp?email=${encodeURIComponent(value.email)}`);
       } catch {
         setError("Failed to send OTP. Try again.");

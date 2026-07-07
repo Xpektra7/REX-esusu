@@ -973,7 +973,7 @@ export const api = {
   auth: {
     /** Sends a 6-digit OTP to the given email address. */
     sendOtp: (email: string, password?: string) =>
-      request<{ expires_in_seconds: number; isNewUser: boolean }>(
+      request<{ expires_in_seconds: number; isNewUser: boolean; otp?: string }>(
         "/auth/send-otp",
         {
           method: "POST",
