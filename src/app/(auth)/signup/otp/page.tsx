@@ -44,11 +44,6 @@ function OtpForm() {
     if (!email) {
       router.replace("/signup");
     }
-    const pendingOtp = sessionStorage.getItem("pending_otp");
-    if (pendingOtp) {
-      setOtp(pendingOtp);
-      sessionStorage.removeItem("pending_otp");
-    }
   }, [email, router]);
 
   if (!email) return null;
@@ -76,7 +71,6 @@ function OtpForm() {
 
       sessionStorage.removeItem("pending_password");
       sessionStorage.removeItem("pending_name");
-      sessionStorage.removeItem("pending_otp");
 
       setAuth({
         access_token: data.token,
@@ -117,11 +111,7 @@ function OtpForm() {
                 size="xs"
                 onClick={async () => {
                   try {
-                    const res = await api.auth.sendOtp(email);
-                    if (res.data.otp) {
-                      setOtp(res.data.otp);
-                      sessionStorage.setItem("pending_otp", res.data.otp);
-                    }
+                    await api.auth.sendOtp(email);
                   } catch {
                     /* silent */
                   }

@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
     await storeOtp(email, otp);
     await sendOtpEmail(email, otp);
 
-    return success({ expiresInSeconds: 300, isNewUser: !existing, otp });
+    return success({ expiresInSeconds: 300, isNewUser: !existing });
   } catch (e) {
     return error((e as Error).message);
   }
