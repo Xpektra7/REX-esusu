@@ -123,7 +123,7 @@ export async function POST(req: NextRequest) {
         },
         token: signToken(existing.id, existing.email),
         refreshToken: signToken(existing.id, existing.email),
-        needsBvn: !existing.bvnLast4,
+        needsBvn: false,
         pinSet: !!existing.pinHash,
       });
     }
@@ -160,7 +160,7 @@ export async function POST(req: NextRequest) {
         },
         token: signToken(user.id, user.email),
         refreshToken: signToken(user.id, user.email),
-        needsBvn: !bvn,
+        needsBvn: false,
         pinSet: false,
       },
       "Account created",

@@ -72,7 +72,7 @@ export const useAuthStore = create<AuthState>()(
       user: null,
       isAuthenticated: false,
       pinSet: false,
-      needsBvn: true,
+      needsBvn: false,
       pinAttempts: 0,
 
       // --- Actions ---
@@ -92,7 +92,7 @@ export const useAuthStore = create<AuthState>()(
           refreshToken: payload.refresh_token ?? payload.refreshToken ?? null,
           user: payload.user,
           isAuthenticated: true,
-          needsBvn: payload.needs_bvn ?? payload.needsBvn ?? true,
+          needsBvn: payload.needs_bvn ?? payload.needsBvn ?? false,
           pinSet: payload.pin_set ?? payload.pinSet ?? false,
         });
       },
@@ -121,7 +121,7 @@ export const useAuthStore = create<AuthState>()(
           refreshToken: null,
           user: null,
           isAuthenticated: false,
-          needsBvn: true,
+      needsBvn: false,
           pinSet: false,
           pinAttempts: 0,
         });

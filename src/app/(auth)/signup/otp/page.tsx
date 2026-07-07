@@ -80,7 +80,7 @@ function OtpForm() {
         pin_set: data.pinSet,
       });
 
-      router.push("/signup/bvn");
+      router.push(data.needsBvn ? "/signup/bvn" : "/signup/pin");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Verification failed");
     } finally {
