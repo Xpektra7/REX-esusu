@@ -30,11 +30,17 @@ export default function AuthPage() {
   const form = useForm({
     defaultValues: {
       email: "",
-      name: "",
+      firstName: "",
+      lastName: "",
     },
 
     onSubmit: async ({ value }) => {
       setError(null);
+
+      if (flow === "signup" && (!value.firstName.trim() || !value.lastName.trim())) {
+        setError("First and last name are required");
+        return;
+      }
 
       if (!value.email.trim()) {
         setError("Enter a valid email address");
@@ -46,6 +52,8 @@ export default function AuthPage() {
         return;
       }
 
+      const name = `${value.firstName.trim()} ${value.lastName.trim()}`;
+
       setLoading(true);
       try {
         await api.auth.sendOtp(value.email);
@@ -53,7 +61,7 @@ export default function AuthPage() {
         sessionStorage.setItem("pending_password", password);
 
         if (flow === "signup") {
-          sessionStorage.setItem("pending_name", value.name);
+          sessionStorage.setItem("pending_name", name);
         }
         const params = new URLSearchParams({ email: value.email, flow });
 
@@ -138,28 +146,54 @@ export default function AuthPage() {
           </div>
 
           {flow === "signup" && (
+            <div className="grid grid-cols-2 gap-4">
               <form.Field
-                name="name"
+                name="firstName"
                 children={(field) => (
                   <div>
                     <label
                       htmlFor={field.name}
                       className="mb-1.5 block text-xs font-semibold uppercase tracking-widest text-muted-foreground"
                     >
-                      Full Name
+                      First Name
                     </label>
                     <input
                       id={field.name}
                       type="text"
-                      placeholder="Chioma Okafor"
+                      placeholder="Chioma"
                       value={field.state.value}
                       onBlur={field.handleBlur}
                       onChange={(e) => field.handleChange(e.target.value)}
                       className="w-full rounded-xl bg-background px-4 py-3.5 text-base outline-none focus:ring-2 focus:ring-ring transition-all"
+                      required
                     />
                   </div>
                 )}
               />
+              <form.Field
+                name="lastName"
+                children={(field) => (
+                  <div>
+                    <label
+                      htmlFor={field.name}
+                      className="mb-1.5 block text-xs font-semibold uppercase tracking-widest text-muted-foreground"
+                    >
+                      Last Name
+                    </label>
+                    <input
+                      id={field.name}
+                      type="text"
+                      placeholder="Okafor"
+                      value={field.state.value}
+                      onBlur={field.handleBlur}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                      className="w-full rounded-xl bg-background px-4 py-3.5 text-base outline-none focus:ring-2 focus:ring-ring transition-all"
+                      required
+                    />
+                  </div>
+                )}
+              />
+            </div>
           )}
 
           {error && <p className="text-sm text-destructive">{error}</p>}
