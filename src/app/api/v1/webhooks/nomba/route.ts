@@ -58,12 +58,30 @@ export async function POST(request: NextRequest) {
     const tsMs = /^\d+$/.test(timestamp)
       ? parseInt(timestamp, 10)
       : new Date(timestamp).getTime();
-    if (Number.isNaN(tsMs) || Math.abs(Date.now() - tsMs) > 300_000) {
+    if (Number.isNaN(tsMs) || Math.abs(Date.now() - tsMs) > 3_600_000) {
       return new Response(
         JSON.stringify({ code: "01", description: "expired" }),
         { status: 401 },
       );
     }
+
+    const existing = await db
+      .select()
+      .from(webhookEvents)
+      .where(eq(webhookEvents.nombaRequestId, payload.requestId))
+      .limit(1);
+    if (existing.length > 0) {
+      return new Response(
+        JSON.stringify({ code: "00", description: "duplicate" }),
+      );
+    }
+
+    await db.insert(webhookEvents).values({
+      nombaRequestId: payload.requestId,
+      eventType: payload.event_type,
+      rawPayload: payload,
+      status: "received",
+    });
 
     processWebhook(payload).catch(console.error);
 
@@ -93,20 +111,6 @@ async function processWebhook(payload: any) {
   const eventType = payload.event_type;
 
   try {
-    const existing = await db
-      .select()
-      .from(webhookEvents)
-      .where(eq(webhookEvents.nombaRequestId, requestId))
-      .limit(1);
-    if (existing.length > 0) return;
-
-    await db.insert(webhookEvents).values({
-      nombaRequestId: requestId,
-      eventType,
-      rawPayload: payload,
-      status: "received",
-    });
-
     switch (eventType) {
       case "payment_success":
         await reconcilePayment(payload);
