@@ -55,7 +55,7 @@ export default function TopUpPage() {
   });
 
   const amountKobo = Math.round(parseFloat(amount || "0") * 100);
-  const isValid = amountKobo >= 10000;
+  const isValid = amountKobo >= 1000;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -97,14 +97,14 @@ export default function TopUpPage() {
             <Input
               id="topupAmount"
               type="number"
-              min={100}
-              step="100"
+              min={10}
+              step="10"
               placeholder="5000"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
             />
             <p className="text-xs text-muted-foreground">
-              Minimum: ₦100
+              Minimum: ₦10
             </p>
           </div>
 

@@ -32,7 +32,7 @@ export default function CreateCirclePage() {
   const mutation = useMutation({
     mutationFn: (data: {
       name: string;
-      contributionAmount: number;
+      contributionAmountKobo: number;
       frequency: "weekly" | "monthly";
       cycleCount: number;
     }) => api.circles.create(data),
@@ -71,7 +71,7 @@ export default function CreateCirclePage() {
     const { defaultResolutionRule: _, ...apiData } = parsed.data;
     mutation.mutate({
       ...apiData,
-      contributionAmount: apiData.contributionAmount * 100,
+      contributionAmountKobo: apiData.contributionAmount * 100,
     });
   }
 
@@ -182,7 +182,7 @@ export default function CreateCirclePage() {
             <Input
               id="cycleCount"
               type="number"
-              min={2}
+              min={1}
               max={100}
               placeholder="12"
               value={form.cycleCount || ""}

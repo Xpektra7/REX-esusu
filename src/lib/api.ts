@@ -1051,7 +1051,7 @@ export const api = {
     /** Creates a new circle. Returns the circle ID + invite code. */
     create: (payload: {
       name: string;
-      contributionAmount: number;
+      contributionAmountKobo: number;
       frequency: string;
       cycleCount: number;
     }) =>

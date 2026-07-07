@@ -113,6 +113,14 @@ const [scoreOpen, setScoreOpen] = useState(false);
       await api.users.update(
         editField === "name" ? { name: editValue.trim() } : { email: editValue.trim() },
       );
+      if (editField === "name") {
+        const currentUser = useAuthStore.getState().user;
+        if (currentUser) {
+          useAuthStore.getState().setAuth({
+            user: { ...currentUser, name: editValue.trim() },
+          });
+        }
+      }
       setEditField(null);
       queryClient.invalidateQueries({ queryKey: ["profile"] });
     } catch {
@@ -138,7 +146,7 @@ const [scoreOpen, setScoreOpen] = useState(false);
           <DiceBearAvatar name={user?.name ?? "User"} className="size-16" />
           <div className="text-center">
             <h1 className="text-lg font-bold">{user?.name ?? "User"}</h1>
-            <p className="text-xs text-muted-foreground">{user?.phone}</p>
+            {user?.phone && <p className="text-xs text-muted-foreground">{user.phone}</p>}
           </div>
         </div>
       )}

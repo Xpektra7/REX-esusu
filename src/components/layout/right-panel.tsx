@@ -29,6 +29,7 @@ import {
   Empty as EmptyState,
   EmptyDescription,
   EmptyHeader,
+  EmptyMedia,
 } from "@/components/ui/empty";
 
 interface NotificationItem {
@@ -153,6 +154,15 @@ export function RightPanel() {
           ) : (
             <EmptyState className="p-4 border-none">
               <EmptyHeader>
+                <EmptyMedia variant="default">
+                  <img
+                    src="/illustrations/empty-mailbox.svg"
+                    alt=""
+                    loading="lazy"
+                    decoding="async"
+                    className="size-24 object-contain"
+                  />
+                </EmptyMedia>
                 <EmptyDescription>No notifications yet</EmptyDescription>
               </EmptyHeader>
             </EmptyState>
@@ -239,6 +249,15 @@ export function RightPanel() {
           ) : (
             <EmptyState className="p-4 border-none">
               <EmptyHeader>
+                <EmptyMedia variant="default">
+                  <img
+                    src="/illustrations/empty-wallet.svg"
+                    alt=""
+                    loading="lazy"
+                    decoding="async"
+                    className="size-24 object-contain"
+                  />
+                </EmptyMedia>
                 <EmptyDescription>No transactions yet</EmptyDescription>
               </EmptyHeader>
             </EmptyState>

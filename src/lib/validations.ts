@@ -36,10 +36,10 @@ export const createCircleSchema = z.object({
   name: z.string().min(2, "Circle name must be at least 2 characters"),
   contributionAmount: z
     .number()
-    .min(100, "Minimum contribution is ₦100")
+    .min(10, "Minimum contribution is ₦10")
     .max(10_000_000),
   frequency: z.enum(["weekly", "monthly"]),
-  cycleCount: z.number().min(2).max(100),
+  cycleCount: z.number().min(1).max(100),
   defaultResolutionRule: z
     .enum(["absorb", "shrink", "end_early"])
     .default("absorb"),
@@ -50,7 +50,7 @@ export const joinCircleSchema = z.object({
 });
 
 export const withdrawSchema = z.object({
-  amountKobo: z.number().min(100, "Minimum withdrawal is ₦100"),
+  amountKobo: z.number().min(10, "Minimum withdrawal is ₦10"),
   bankCode: z.string().min(1, "Select a bank"),
   accountNumber: z
     .string()

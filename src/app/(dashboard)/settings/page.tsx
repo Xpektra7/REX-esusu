@@ -52,7 +52,7 @@ export default function SettingsPage() {
             <h2 className="mb-3 text-sm font-bold uppercase tracking-wider">
               Payment Preferences
             </h2>
-            {settings && <AutoPayToggle enabled={settings.autoPay} />}
+            {settings ? <AutoPayToggle enabled={settings.autoPay} /> : <p className="text-sm text-muted-foreground">Coming soon</p>}
           </Card>
 
           <Separator />
@@ -61,7 +61,7 @@ export default function SettingsPage() {
             <h2 className="mb-3 text-sm font-bold uppercase tracking-wider">
               Notifications
             </h2>
-            {settings && <NotificationPreferences settings={settings} />}
+            {settings ? <NotificationPreferences settings={settings} /> : <p className="text-sm text-muted-foreground">Coming soon</p>}
           </Card>
 
           <Separator />

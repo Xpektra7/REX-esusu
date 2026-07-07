@@ -91,7 +91,6 @@ export function BankSearchInput({
         onValueChange={(bank) => {
           setSelectedBank(bank);
           setLookupResult(null);
-          onSelect(null);
         }}
       >
         <ComboboxInputPrimitive
