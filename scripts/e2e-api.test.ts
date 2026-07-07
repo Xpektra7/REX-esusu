@@ -1000,6 +1000,242 @@ describe("25. Error Handling", () => {
   });
 });
 
+// --- Change Password ---
+describe("26. Auth — Change Password", () => {
+  const newPw = "NewTestPass123!";
+
+  test("POST /auth/change-password: change succeeds", async () => {
+    const d = await api("POST", "/api/v1/auth/change-password",
+      { currentPassword: passwords[0], newPassword: newPw }, JTAs[0]);
+    assert.equal(d.code, "00");
+  });
+
+  test("login with new password works", async () => {
+    const otp = await seedOtp(emails[0]);
+    const d = await api("POST", "/api/v1/auth/verify", {
+      email: emails[0], otp, password: newPw,
+    });
+    assert.equal(d.code, "00");
+    JTAs[0] = d.data.token;
+  });
+
+  test("POST /auth/change-password: wrong current password fails", async () => {
+    const d = await api("POST", "/api/v1/auth/change-password",
+      { currentPassword: "WrongPass1!", newPassword: newPw }, JTAs[0]);
+    assert.notEqual(d.code, "00");
+  });
+
+  test("POST /auth/change-password: missing fields returns error", async () => {
+    const d = await api("POST", "/api/v1/auth/change-password",
+      { currentPassword: newPw }, JTAs[0]);
+    assert.notEqual(d.code, "00");
+  });
+
+  test("restore original password", async () => {
+    const d = await api("POST", "/api/v1/auth/change-password",
+      { currentPassword: newPw, newPassword: passwords[0] }, JTAs[0]);
+    assert.equal(d.code, "00");
+  });
+});
+
+// --- Change PIN ---
+describe("27. Auth — Change PIN", () => {
+  test("POST /auth/change-pin: change with current PIN succeeds", async () => {
+    const d = await api("POST", "/api/v1/auth/change-pin",
+      { currentPin: "1234", newPin: "5678" }, JTAs[0]);
+    assert.equal(d.code, "00");
+  });
+
+  test("verify-pin with new PIN works", async () => {
+    const d = await api("POST", "/api/v1/auth/verify-pin",
+      { pin: "5678" }, JTAs[0]);
+    assert.equal(d.code, "00");
+  });
+
+  test("POST /auth/change-pin: wrong current PIN fails", async () => {
+    const d = await api("POST", "/api/v1/auth/change-pin",
+      { currentPin: "0000", newPin: "1234" }, JTAs[0]);
+    assert.notEqual(d.code, "00");
+  });
+
+  test("POST /auth/change-pin: invalid format fails", async () => {
+    const d = await api("POST", "/api/v1/auth/change-pin",
+      { currentPin: "5678", newPin: "abc" }, JTAs[0]);
+    assert.notEqual(d.code, "00");
+  });
+
+  test("restore original PIN", async () => {
+    const d = await api("POST", "/api/v1/auth/change-pin",
+      { currentPin: "5678", newPin: "1234" }, JTAs[0]);
+    assert.equal(d.code, "00");
+  });
+});
+
+// --- Delete Account ---
+describe("28. Users — Delete Account", () => {
+  test("DELETE /users/me: blocked while active in circles", async () => {
+    const d = await api("DELETE", "/api/v1/users/me",
+      { password: passwords[0] }, JTAs[0]);
+    assert.notEqual(d.code, "00");
+  });
+
+  test("DELETE /users/me: wrong password fails", async () => {
+    const d = await api("DELETE", "/api/v1/users/me",
+      { password: "WrongPass1!" }, JTAs[0]);
+    assert.notEqual(d.code, "00");
+  });
+
+  test("DELETE /users/me: missing password fails", async () => {
+    const d = await api("DELETE", "/api/v1/users/me", {}, JTAs[0]);
+    assert.notEqual(d.code, "00");
+  });
+});
+
+// --- User Settings ---
+describe("29. Users — Settings", () => {
+  test("GET /users/settings returns defaults", async () => {
+    const d = await api("GET", "/api/v1/users/settings", undefined, JTAs[0]);
+    assert.equal(d.code, "00");
+    assert.equal(d.data.autoPay, false);
+    assert.equal(d.data.pushEnabled, true);
+    assert.equal(typeof d.data.reminders.dueDate, "boolean");
+    assert.equal(typeof d.data.notifications.contribution, "boolean");
+  });
+
+  test("PATCH /users/settings toggles autoPay", async () => {
+    const d = await api("PATCH", "/api/v1/users/settings",
+      { autoPay: true }, JTAs[0]);
+    assert.equal(d.code, "00");
+  });
+
+  test("GET /users/settings reflects change", async () => {
+    const d = await api("GET", "/api/v1/users/settings", undefined, JTAs[0]);
+    assert.equal(d.code, "00");
+    assert.equal(d.data.autoPay, true);
+  });
+
+  test("PATCH /users/settings invalid field fails", async () => {
+    const d = await api("PATCH", "/api/v1/users/settings",
+      { autoPay: "not-a-bool" }, JTAs[0]);
+    assert.notEqual(d.code, "00");
+  });
+
+  test("PATCH /users/settings without auth returns 401", async () => {
+    const d = await api("PATCH", "/api/v1/users/settings", { autoPay: false });
+    assert.notEqual(d.code, "00");
+  });
+
+  test("restore autoPay", async () => {
+    const d = await api("PATCH", "/api/v1/users/settings",
+      { autoPay: false }, JTAs[0]);
+    assert.equal(d.code, "00");
+  });
+});
+
+// --- Circle Remind ---
+describe("30. Circles — Remind Members", () => {
+  test("POST /circles/[id]/remind: admin sends reminders", async () => {
+    const d = await api("POST", `/api/v1/circles/${circleId}/remind`,
+      undefined, JTAs[0]);
+    assert.equal(d.code, "00");
+    assert.ok(d.data.notified >= 2);
+  });
+
+  test("POST /circles/[id]/remind: non-admin returns 403", async () => {
+    const d = await api("POST", `/api/v1/circles/${circleId}/remind`,
+      undefined, JTAs[1]);
+    assert.notEqual(d.code, "00");
+  });
+
+  test("POST /circles/[id]/remind: nonexistent circle returns 404", async () => {
+    const d = await api("POST",
+      "/api/v1/circles/00000000-0000-0000-0000-000000000000/remind",
+      undefined, JTAs[0]);
+    assert.notEqual(d.code, "00");
+  });
+
+  test("notifications were created for members", async () => {
+    const d = await api("GET", "/api/v1/notifications", undefined, JTAs[1]);
+    assert.equal(d.code, "00");
+    const reminders = d.data.filter((n: { type: string }) => n.type === "reminder");
+    assert.ok(reminders.length >= 1);
+  });
+});
+
+// --- Contact ---
+describe("31. Contact — Submit Form", () => {
+  test("POST /contact sends message", async () => {
+    const d = await api("POST", "/api/v1/contact", {
+      name: "Test User",
+      email: "test@example.com",
+      subject: "Test Subject",
+      message: "This is a test message.",
+    });
+    assert.equal(d.code, "00");
+  });
+
+  test("POST /contact: missing fields returns error", async () => {
+    const d = await api("POST", "/api/v1/contact", {
+      name: "Test User",
+    });
+    assert.notEqual(d.code, "00");
+  });
+});
+
+// --- Send Reminder Notification ---
+describe("32. Notifications — Send Reminder", () => {
+  test("POST /notifications/send-remind sends to member", async () => {
+    const d = await api("POST", "/api/v1/notifications/send-remind", {
+      memberName: "Alice",
+      amountKobo: 10000,
+      cycle: 3,
+    }, JTAs[0]);
+    assert.equal(d.code, "00");
+    assert.equal(d.data.notified, 1);
+  });
+
+  test("POST /notifications/send-remind: nonexistent member returns 404", async () => {
+    const d = await api("POST", "/api/v1/notifications/send-remind", {
+      memberName: "NonExistentUser",
+      amountKobo: 10000,
+      cycle: 1,
+    }, JTAs[0]);
+    assert.notEqual(d.code, "00");
+  });
+
+  test("POST /notifications/send-remind: missing fields fails", async () => {
+    const d = await api("POST", "/api/v1/notifications/send-remind", {
+      memberName: "Alice",
+    }, JTAs[0]);
+    assert.notEqual(d.code, "00");
+  });
+});
+
+// --- Activity ---
+describe("33. Activity — Feed", () => {
+  test("GET /activity returns items list", async () => {
+    const d = await api("GET", "/api/v1/activity", undefined, JTAs[0]);
+    assert.equal(d.code, "00");
+    assert.ok(Array.isArray(d.data.items));
+    assert.ok(d.data.items.length >= 1);
+  });
+
+  test("GET /activity items have correct shape", async () => {
+    const d = await api("GET", "/api/v1/activity", undefined, JTAs[1]);
+    assert.equal(d.code, "00");
+    for (const item of d.data.items) {
+      assert.equal(typeof item.type, "string");
+      assert.equal(typeof item.description, "string");
+      assert.equal(typeof item.createdAt, "string");
+    }
+  });
+
+  test("GET /activity without auth returns 401", async () => {
+    const d = await api("GET", "/api/v1/activity");
+    assert.notEqual(d.code, "00");
+  });
+});
+
 // ===========================================================================
 // CLEANUP
 // ===========================================================================
