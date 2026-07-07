@@ -63,6 +63,16 @@ export async function reconcilePayment(payload: WebhookPayload) {
 
   if (!va[0]) return handleOrphan(payload);
 
+  const actual = Math.round((txn.transactionAmount || 0) * 100);
+
+  // Always credit the matched VA first. Circle membership must not block
+  // receipt of funds — the reconciliation engine processes the payment
+  // afterwards for contribution/debt allocation.
+  await db
+    .update(virtualAccounts)
+    .set({ balanceKobo: sql`balance_kobo + ${actual}` })
+    .where(eq(virtualAccounts.id, va[0].id));
+
   const ourRef = extractReference(txn.narration || "");
 
   let _contribution: typeof contributions.$inferSelect | null = null;
@@ -75,7 +85,6 @@ export async function reconcilePayment(payload: WebhookPayload) {
     _contribution = results[0] || null;
   }
 
-  const actual = Math.round((txn.transactionAmount || 0) * 100);
   const mcIds = await getMemberCircleIds(va[0].userId);
   const perCircleExpected = await getExpectedPerActiveCircle(mcIds);
   const baseExpectedTotal = Object.values(perCircleExpected).reduce(
@@ -127,13 +136,6 @@ export async function reconcilePayment(payload: WebhookPayload) {
         type: "payment",
       });
     }
-  }
-
-  if (classification === "overpayment" && remaining > 0) {
-    await db
-      .update(virtualAccounts)
-      .set({ balanceKobo: sql`balance_kobo + ${remaining}` })
-      .where(eq(virtualAccounts.id, va[0].id));
   }
 
   return {
