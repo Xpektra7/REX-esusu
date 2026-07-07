@@ -11,9 +11,9 @@ export default function PublicLayout({
     <div className="flex min-h-screen flex-col">
       <header className="sticky top-0 z-50 border-b border-border bg-background">
         <nav className="mx-auto flex h-14 max-w-5xl items-center justify-between px-6">
-          <Link href="/" className={cn(buttonVariants({ size: "lg" }), "font-bold text-white bg-black hover:bg-white hover:text-black")}>
-            Back
-          </Link>
+<Link href="/" className={cn(buttonVariants({ size: "lg" }), "font-bold bg-foreground text-background hover:bg-background hover:text-foreground")}>
+  Esusu
+</Link>
           <div className="flex items-center gap-6">
             <Link
               href="/about"
