@@ -20,7 +20,10 @@ export async function POST(req: NextRequest) {
       bankCode,
     });
 
-    return success(result, "Bank account lookup successful");
+    return success(
+      { accountName: result?.data?.accountName ?? "" },
+      "Bank account lookup successful",
+    );
   } catch (e) {
     return error((e as Error).message);
   }

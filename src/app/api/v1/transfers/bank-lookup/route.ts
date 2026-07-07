@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
       bankCode,
     });
 
-    return success(result);
+    return success({ accountName: result?.data?.accountName ?? "" });
   } catch (e) {
     return error((e as Error).message);
   }
