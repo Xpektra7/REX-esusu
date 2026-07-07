@@ -11,8 +11,8 @@ export async function POST(req: NextRequest) {
 
   try {
     const { amountKobo } = await req.json();
-    if (!amountKobo || amountKobo < 10000)
-      return error("Minimum top-up is ₦100");
+    if (!amountKobo || amountKobo < 1000)
+      return error("Minimum top-up is ₦10");
 
     const [va] = await db
       .select()
