@@ -27,8 +27,9 @@ import sys
 
 WEBHOOK_URL = os.environ.get(
     "WEBHOOK_URL",
-    "https://nomba-lovat.vercel.app/api/v1/webhooks/nomba",
+    "https://rex-esusu.vercel.app/api/v1/webhooks/nomba",
 )
+
 WEBHOOK_SECRET = os.environ.get(
     "WEBHOOK_SECRET",
     "NombaHackathon2026",
