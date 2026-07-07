@@ -1,5 +1,7 @@
+import { UserGroupIcon } from "hugeicons-react";
 import { DiceBearAvatar } from "@/components/shared/dicebear-avatar";
 import { MEMBER_STATUS } from "@/lib/status";
+import { Empty, EmptyDescription, EmptyHeader, EmptyMedia } from "@/components/ui/empty";
 import { cn } from "@/lib/utils";
 import type { MemberItem } from "@/types";
 
@@ -28,9 +30,14 @@ function MemberStatusBadge({ status }: { status: string }) {
 export function MemberList({ members }: { members: MemberItem[] }) {
   if (members.length === 0) {
     return (
-      <p className="py-8 text-center text-sm text-muted-foreground">
-        No members yet.
-      </p>
+      <Empty>
+        <EmptyHeader>
+          <EmptyMedia variant="icon">
+            <UserGroupIcon className="size-6" />
+          </EmptyMedia>
+          <EmptyDescription>No members yet.</EmptyDescription>
+        </EmptyHeader>
+      </Empty>
     );
   }
 

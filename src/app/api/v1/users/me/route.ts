@@ -45,7 +45,7 @@ export async function GET(req: NextRequest) {
 
   return success({
     id: user.id,
-    phone: user.phone,
+    phone: user.phone ?? undefined,
     name: user.name,
     email: user.email,
     bvnLast4: user.bvnLast4,

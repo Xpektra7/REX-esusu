@@ -12,9 +12,14 @@ import { useState } from "react";
 import { DiceBearAvatar } from "@/components/shared/dicebear-avatar";
 import { PageBreadcrumbs } from "@/components/shared/page-breadcrumbs";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+} from "@/components/ui/empty";
 import { api } from "@/lib/api";
 import { cn, formatNaira } from "@/lib/utils";
 
@@ -127,18 +132,20 @@ export default function WalletPage() {
             ))}
           </div>
         ) : transactions.length === 0 ? (
-          <Card className="flex flex-col items-center justify-center gap-4 h-64 text-center">
-            <img
-              src="/illustrations/empty-wallet.svg"
-              alt=""
-              loading="lazy"
-              decoding="async"
-              className="size-32 object-contain"
-            />
-            <p className="text-sm text-muted-foreground">
-              No transactions yet.
-            </p>
-          </Card>
+          <Empty>
+            <EmptyHeader>
+              <EmptyMedia variant="default">
+                <img
+                  src="/illustrations/empty-wallet.svg"
+                  alt=""
+                  loading="lazy"
+                  decoding="async"
+                  className="size-32 object-contain"
+                />
+              </EmptyMedia>
+              <EmptyDescription>No transactions yet.</EmptyDescription>
+            </EmptyHeader>
+          </Empty>
         ) : (
           <div className="flex flex-col gap-2">
             {transactions.map((tx) => {

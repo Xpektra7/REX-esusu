@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -19,22 +19,6 @@ import {
 import { api } from "@/lib/api";
 import { useAuthStore } from "@/stores/auth-store";
 
-/**
- * PIN set / verify page.
- *
- * Two modes controlled by ?mode= query param:
- *
- *   mode=set (default for first-time)
- *     Step 1: enter a 4-digit PIN
- *     Step 2: confirm the same PIN
- *     On match → calls api.auth.setPin() → store pinSet = true → dashboard
- *
- *   mode=verify (for returning users)
- *     Shows a single 4-digit input.
- *     Calls api.auth.verifyPin().
- *     On success → dashboard.
- *     On failure → increments pinAttempts, clears input.
- */
 function PinForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -43,12 +27,32 @@ function PinForm() {
   const setPinSet = useAuthStore((s) => s.setPinSet);
   const incrementPinAttempt = useAuthStore((s) => s.incrementPinAttempt);
   const resetPinAttempts = useAuthStore((s) => s.resetPinAttempts);
+  const clearAuth = useAuthStore((s) => s.clearAuth);
+  const pinAttempts = useAuthStore((s) => s.pinAttempts);
 
   const [pin, setPin] = useState("");
   const [confirmPin, setConfirmPin] = useState("");
   const [step, setStep] = useState<"enter" | "confirm">("enter");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (mode !== "verify") return;
+    if (pinAttempts >= 10) {
+      clearAuth();
+      router.push("/signin");
+    }
+  }, [pinAttempts, mode, clearAuth, router]);
+
+  const isLocked = mode === "verify" && pinAttempts >= 3;
+  const lockMessage =
+    pinAttempts >= 10
+      ? "Too many failed attempts. You've been logged out."
+      : pinAttempts >= 5
+        ? "Account locked. Try again later."
+        : pinAttempts >= 3
+          ? "Too many wrong attempts. Please sign in again."
+          : null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,6 +87,7 @@ function PinForm() {
       }
     } else {
       // --- VERIFY PIN ---
+      if (isLocked) return;
       setLoading(true);
       try {
         await api.auth.verifyPin(pin);
@@ -128,7 +133,6 @@ function PinForm() {
           <InputOTP
             maxLength={4}
             className="flex justify-center4"
-            // Show confirmPin on confirm step, pin otherwise.
             value={mode === "set" && step === "confirm" ? confirmPin : pin}
             onChange={(val) => {
               if (mode === "set" && step === "confirm") {
@@ -137,6 +141,7 @@ function PinForm() {
                 setPin(val);
               }
             }}
+            disabled={isLocked}
           >
             <InputOTPGroup className="*:data-[slot=input-otp-slot]:h-14 *:data-[slot=input-otp-slot]:w-21 *:data-[slot=input-otp-slot]:text-2xl">
               <InputOTPSlot index={0} />
@@ -147,6 +152,11 @@ function PinForm() {
           </InputOTP>
 
           {error && <p className="text-sm text-destructive">{error}</p>}
+          {lockMessage && (
+            <p className="text-sm text-destructive text-center font-medium">
+              {lockMessage}
+            </p>
+          )}
         </CardContent>
 
         <CardFooter className="flex-col mt-4 gap-2">
@@ -155,7 +165,9 @@ function PinForm() {
             className="w-full"
             size="lg"
             disabled={
-              loading || (mode === "set" && step === "enter" && pin.length < 4)
+              loading ||
+              isLocked ||
+              (mode === "set" && step === "enter" && pin.length < 4)
             }
           >
             {loading
@@ -166,6 +178,16 @@ function PinForm() {
                   ? "Set PIN"
                   : "Unlock"}
           </Button>
+          {mode === "verify" && pinAttempts >= 3 && pinAttempts < 10 && (
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={() => router.push("/signin")}
+            >
+              Sign in again
+            </Button>
+          )}
         </CardFooter>
       </form>
     </Card>

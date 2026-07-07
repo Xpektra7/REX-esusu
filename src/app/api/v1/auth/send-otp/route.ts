@@ -1,21 +1,17 @@
 import type { NextRequest } from "next/server";
 import { error, success } from "@/lib/api-response";
-import { findUserByPhone } from "@/lib/auth";
-import { generateOtp, getFixedOtp, storeOtp } from "@/lib/otp";
+import { findUserByEmail } from "@/lib/auth";
+import { generateOtp, sendOtpEmail, storeOtp } from "@/lib/otp";
 
 export async function POST(req: NextRequest) {
   try {
-    const { phone } = await req.json();
-    if (!phone) return error("Phone is required");
+    const { email } = await req.json();
+    if (!email) return error("Email is required");
 
-    const existing = await findUserByPhone(phone);
-    const otp = getFixedOtp(phone) || generateOtp();
-    await storeOtp(phone, otp);
-
-    if (!getFixedOtp(phone)) {
-      // In production, send OTP via email/Gmail SMTP here
-      // OTP intentionally not logged — only whitelisted dev phones get a fixed OTP
-    }
+    const existing = await findUserByEmail(email);
+    const otp = generateOtp();
+    await storeOtp(email, otp);
+    await sendOtpEmail(email, otp);
 
     return success({ expiresInSeconds: 300, isNewUser: !existing });
   } catch (e) {

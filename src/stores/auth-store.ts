@@ -8,7 +8,6 @@ import { createJSONStorage, persist } from "zustand/middleware";
 /** Shape of the authenticated user object stored in the store. */
 interface AuthUser {
   id: string;
-  phone: string;
   name: string;
   email: string;
 }
@@ -73,7 +72,7 @@ export const useAuthStore = create<AuthState>()(
       user: null,
       isAuthenticated: false,
       pinSet: false,
-      needsBvn: true,
+      needsBvn: false,
       pinAttempts: 0,
 
       // --- Actions ---
@@ -83,15 +82,20 @@ export const useAuthStore = create<AuthState>()(
        * Saves tokens + user and flips isAuthenticated to true.
        * needsBvn / pinSet tell the app which onboarding step is next.
        */
-      setAuth: (payload) =>
-        set({
+      setAuth: (payload) => {
+        if (typeof document !== "undefined") {
+          // biome-ignore lint/suspicious/noDocumentCookie: need cookie for middleware auth guard
+          document.cookie = "esusu-auth=true; path=/; max-age=604800; SameSite=Lax";
+        }
+        return set({
           accessToken: payload.access_token ?? payload.token ?? null,
           refreshToken: payload.refresh_token ?? payload.refreshToken ?? null,
           user: payload.user,
           isAuthenticated: true,
-          needsBvn: payload.needs_bvn ?? payload.needsBvn ?? true,
+          needsBvn: payload.needs_bvn ?? payload.needsBvn ?? false,
           pinSet: payload.pin_set ?? payload.pinSet ?? false,
-        }),
+        });
+      },
 
       /** Marks BVN verification as done so we skip the KYC step. */
       setBvnVerified: () => set({ needsBvn: false }),
@@ -107,16 +111,21 @@ export const useAuthStore = create<AuthState>()(
       resetPinAttempts: () => set({ pinAttempts: 0 }),
 
       /** Full logout — wipes everything back to defaults. */
-      clearAuth: () =>
-        set({
+      clearAuth: () => {
+        if (typeof document !== "undefined") {
+          // biome-ignore lint/suspicious/noDocumentCookie: need cookie for middleware auth guard
+          document.cookie = "esusu-auth=; path=/; max-age=0; SameSite=Lax";
+        }
+        return set({
           accessToken: null,
           refreshToken: null,
           user: null,
           isAuthenticated: false,
-          needsBvn: true,
+      needsBvn: false,
           pinSet: false,
           pinAttempts: 0,
-        }),
+        });
+      },
     }),
 
     // --- Persist config ---

@@ -1,10 +1,14 @@
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import Link from "next/link";
+
 export default function AuthLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-primary p-6">
+    <div className="flex min-h-screen flex-col items-center justify-center gap-2 bg-primary p-6">
       <div className="mb-2 text-2xl font-bold">
         {/* Brand logo box */}
         <img
@@ -16,6 +20,15 @@ export default function AuthLayout({
         />
       </div>
       <div className="w-fit max-w-sm">{children}</div>
+      <Link
+        href="/"
+        className={cn(
+          buttonVariants({ variant: "link" }),
+          "text-sm text-foreground",
+        )}
+      >
+        Back to Home
+      </Link>
     </div>
   );
 }
