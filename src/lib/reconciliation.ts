@@ -75,7 +75,7 @@ export async function reconcilePayment(payload: WebhookPayload) {
     _contribution = results[0] || null;
   }
 
-  const actual = txn.transactionAmount || 0;
+  const actual = Math.round((txn.transactionAmount || 0) * 100);
   const mcIds = await getMemberCircleIds(va[0].userId);
   const perCircleExpected = await getExpectedPerActiveCircle(mcIds);
   const baseExpectedTotal = Object.values(perCircleExpected).reduce(
