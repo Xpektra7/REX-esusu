@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,8 +21,12 @@ import { useAuthStore } from "@/stores/auth-store";
 
 function PinForm() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const mode = searchParams.get("mode") || "verify";
+  const [mode, setMode] = useState("verify");
+
+  useEffect(() => {
+    const stored = sessionStorage.getItem("pending_pin_mode");
+    if (stored) setMode(stored);
+  }, []);
 
   const setPinSet = useAuthStore((s) => s.setPinSet);
   const incrementPinAttempt = useAuthStore((s) => s.incrementPinAttempt);
@@ -79,6 +83,7 @@ function PinForm() {
       try {
         await api.auth.setPin(pin);
         setPinSet(true);
+        sessionStorage.removeItem("pending_pin_mode");
         router.push("/dashboard");
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to set PIN");
@@ -92,6 +97,7 @@ function PinForm() {
       try {
         await api.auth.verifyPin(pin);
         resetPinAttempts();
+        sessionStorage.removeItem("pending_pin_mode");
         router.push("/dashboard");
       } catch (err) {
         incrementPinAttempt();
@@ -195,7 +201,7 @@ function PinForm() {
 }
 
 /**
- * Wrapper required because `useSearchParams` must be inside `<Suspense>`.
+ * Wrapper for Suspense boundary.
  */
 export default function PinPage() {
   return (

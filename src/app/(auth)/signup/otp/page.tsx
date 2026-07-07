@@ -1,7 +1,7 @@
 "use client";
 
 import { Refresh01Icon } from "hugeicons-react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,10 +23,9 @@ import { useAuthStore } from "@/stores/auth-store";
 
 function OtpForm() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const setAuth = useAuthStore((s) => s.setAuth);
 
-  const email = searchParams.get("email") || "";
+  const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -41,10 +40,13 @@ function OtpForm() {
       : "";
 
   useEffect(() => {
-    if (!email) {
+    const storedEmail = sessionStorage.getItem("pending_email");
+    if (storedEmail) {
+      setEmail(storedEmail);
+    } else {
       router.replace("/signup");
     }
-  }, [email, router]);
+  }, [router]);
 
   if (!email) return null;
 
@@ -71,6 +73,7 @@ function OtpForm() {
 
       sessionStorage.removeItem("pending_password");
       sessionStorage.removeItem("pending_name");
+      sessionStorage.removeItem("pending_email");
 
       setAuth({
         access_token: data.token,

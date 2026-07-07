@@ -59,7 +59,10 @@ export function SecuritySection() {
     <div className="flex flex-col gap-3">
       <button
         type="button"
-        onClick={() => router.push("/auth/pin?mode=change")}
+        onClick={() => {
+          sessionStorage.setItem("pending_pin_mode", "change");
+          router.push("/auth/pin");
+        }}
         className={cn(
           "flex items-center justify-between rounded-xl card-interactive px-4 py-3 w-full text-left",
         )}
