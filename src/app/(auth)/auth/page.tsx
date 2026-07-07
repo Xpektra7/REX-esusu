@@ -56,7 +56,7 @@ export default function AuthPage() {
 
       setLoading(true);
       try {
-        await api.auth.sendOtp(value.email);
+        await api.auth.sendOtp(value.email, flow === "login" ? password : undefined);
 
         sessionStorage.setItem("pending_password", password);
 
