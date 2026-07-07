@@ -11,31 +11,31 @@ export default function PublicLayout({
     <div className="flex min-h-screen flex-col">
       <header className="sticky top-0 z-50 border-b border-border bg-background">
         <nav className="mx-auto flex h-14 max-w-5xl items-center justify-between px-6">
-<Link href="/" className={cn(buttonVariants({ size: "lg" }), "font-bold bg-foreground text-background hover:bg-background hover:text-foreground")}>
-  Esusu
-</Link>
+          <Link href="/" className="text-lg font-bold">
+            Esusu
+          </Link>
           <div className="flex items-center gap-6">
             <Link
               href="/about"
-              className="text-sm text-muted-foreground hover:text-foreground font-bold"
+              className="text-sm text-muted-foreground hover:text-foreground "
             >
               About
             </Link>
             <Link
               href="/faq"
-              className="text-sm text-muted-foreground hover:text-foreground font-bold"
+              className="text-sm text-muted-foreground hover:text-foreground "
             >
               FAQ
             </Link>
             <Link
               href="/contact"
-              className="text-sm text-muted-foreground hover:text-foreground font-bold"
+              className="text-sm text-muted-foreground hover:text-foreground "
             >
               Contact
             </Link>
             <Link
               href="/signin"
-              className={cn(buttonVariants({ size: "lg" }), "font-bold")}
+              className={cn(buttonVariants({ size: "sm" }), "")}
             >
               Sign In
             </Link>

@@ -1,7 +1,9 @@
 export default function AboutPage() {
   return (
     <div className="mx-auto max-w-3xl px-6 py-16">
-      <h1 className="text-3xl font-bold">About <span className="text-accent italic">Esusu</span></h1>
+      <h1 className="text-3xl font-bold">
+        About <span className="text-accent">Esusu</span>
+      </h1>
       <p className="mt-2 text-muted-foreground">
         Digital group savings, powered by Nomba.
       </p>
