@@ -1,23 +1,41 @@
 import { and, eq, gte, isNull } from "drizzle-orm";
-import { Resend } from "resend";
+import nodemailer from "nodemailer";
 import { db } from "@/db";
 import { otpCodes } from "@/db/schema";
 
-const resend = process.env.RESEND_API_KEY
-  ? new Resend(process.env.RESEND_API_KEY)
-  : null;
+let transporter: nodemailer.Transporter | null = null;
+
+function getTransporter(): nodemailer.Transporter | null {
+  const host = process.env.SMTP_HOST;
+  const user = process.env.SMTP_USER;
+  const pass = process.env.SMTP_PASS;
+  if (!host || !user || !pass) {
+    return null;
+  }
+  const port = Number(process.env.SMTP_PORT) || 465;
+  if (!transporter) {
+    transporter = nodemailer.createTransport({
+      host,
+      port,
+      secure: port === 465,
+      auth: { user, pass },
+    });
+  }
+  return transporter;
+}
 
 export function generateOtp(): string {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
 export async function sendOtpEmail(email: string, otp: string): Promise<void> {
-  if (!resend) {
+  const t = getTransporter();
+  if (!t) {
     console.log(`[DEV] OTP for ${email}: ${otp}`);
     return;
   }
-  await resend.emails.send({
-    from: "Esusu <onboarding@resend.dev>",
+  await t.sendMail({
+    from: `"Esusu" <${process.env.SMTP_USER}>`,
     to: email,
     subject: "Your Esusu verification code",
     html: `<p>Your verification code is: <strong>${otp}</strong></p><p>This code expires in 5 minutes.</p>`,

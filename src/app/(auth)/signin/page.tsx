@@ -45,7 +45,7 @@ export default function SignInPage() {
 
       setLoading(true);
       try {
-        const res = await api.auth.sendOtp(value.email);
+        const res = await api.auth.sendOtp(value.email, password);
         if (res.data.isNewUser) {
           router.push(`/signup?email=${encodeURIComponent(value.email)}`);
           return;
