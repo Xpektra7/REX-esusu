@@ -1,6 +1,9 @@
 import { useAuthStore } from "@/stores/auth-store";
 import type { ApiResponse, CircleListItem, CycleContribution } from "@/types";
 
+let mockPinAttempts = 0;
+const MOCK_CORRECT_PIN = "0000";
+
 const mockMembers = [
   {
     id: "cm_mock_001",
@@ -107,8 +110,7 @@ const mockMembers = [
 const BASE_URL = "/api/v1";
 
 // Mock mode — when true, returns fake data so the UI works without a backend.
-// Call setMockMode(false) once the real API is ready.
-let mockMode = true;
+let mockMode = false;
 
 export function setMockMode(enabled: boolean) {
   mockMode = enabled;
@@ -202,8 +204,14 @@ async function mockRequest<T>(
   }
 
   if (path === "/auth/verify-pin" && method === "POST") {
-    // Accept any 4-digit PIN in mock mode
-    return { code: "00", description: "PIN verified", data: {} as T };
+    if (body.pin !== MOCK_CORRECT_PIN) {
+      mockPinAttempts++;
+      if (mockPinAttempts >= 3) {
+        throw new Error("Too many failed attempts");
+      }
+      throw new Error("Wrong PIN");
+    }
+    return { code: "00", description: "PIN verified", data: { verified: true } as T };
   }
 
   if (path === "/auth/logout" && method === "POST") {
@@ -300,12 +308,14 @@ async function mockRequest<T>(
             amountKobo: 500000,
             cycle: 3,
             status: "active",
+            createdAt: "2025-02-10T00:00:00Z",
           },
           {
             memberName: "Tunde Balogun",
             amountKobo: 250000,
             cycle: 2,
             status: "cleared",
+            createdAt: "2025-01-20T00:00:00Z",
           },
         ],
       } as T,
@@ -343,6 +353,16 @@ async function mockRequest<T>(
     };
   }
 
+  // Circle settings — matches /circles/{id}/settings
+  const settingsMatch = path.match(/^\/circles\/([^/]+)\/settings$/);
+  if (settingsMatch && method === "PATCH") {
+    return {
+      code: "00",
+      description: "Settings updated",
+      data: {} as T,
+    };
+  }
+
   // Circle detail with members — matches /circles/{id} but NOT /circles/{id}/cycles/{num}
   const circlesDetailMatch = path.match(/^\/circles\/([^/]+)$/);
   if (circlesDetailMatch && method === "GET") {
@@ -361,6 +381,7 @@ async function mockRequest<T>(
         currentCycle: 4,
         defaultResolutionRule: "absorb",
         gracePeriodHours: 24,
+        allowMidCycleJoin: false,
         status: "active",
         createdAt: "2025-01-15T00:00:00Z",
         updatedAt: new Date().toISOString(),
@@ -622,6 +643,10 @@ async function mockRequest<T>(
     return { code: "00", description: "Marked as read", data: {} as T };
   }
 
+  if (path === "/notifications/send-remind" && method === "POST") {
+    return { code: "00", description: "Reminder sent", data: {} as T };
+  }
+
   // --- Users ---
   if (path === "/users/me" && method === "GET") {
     return {
@@ -642,6 +667,57 @@ async function mockRequest<T>(
 
   if (path === "/users/me" && method === "PATCH") {
     return { code: "00", description: "Updated", data: {} as T };
+  }
+
+  // --- User Settings ---
+  const defaultSettings = {
+    autoPay: false,
+    pushEnabled: true,
+    reminder24h: true,
+    reminder6h: true,
+    reminderDeadline: true,
+    reminderGraceExpiry: false,
+    notifyPaymentReceived: true,
+    notifyDebtCleared: true,
+    notifyCycleReminders: true,
+    notifyPayout: true,
+    notifyDefaultAlert: true,
+    notifyCircleInvite: true,
+    notifyTrustScore: true,
+    notifyWithdrawal: true,
+  };
+
+  if (path === "/users/settings" && method === "GET") {
+    return { code: "00", description: "OK", data: defaultSettings as T };
+  }
+
+  if (path === "/users/settings" && method === "PATCH") {
+    const merged = { ...defaultSettings, ...body };
+    return { code: "00", description: "Settings updated", data: merged as T };
+  }
+
+  if (path === "/users/me" && method === "DELETE") {
+    if (body.password !== "password123") {
+      throw new Error("Password is incorrect");
+    }
+    return { code: "00", description: "Account deleted", data: {} as T };
+  }
+
+  if (path === "/auth/change-password" && method === "POST") {
+    if (body.currentPassword === body.newPassword) {
+      throw new Error("New password must be different");
+    }
+    if (body.currentPassword !== "OldPass1") {
+      throw new Error("Current password is incorrect");
+    }
+    return { code: "00", description: "Password changed", data: {} as T };
+  }
+
+  if (path === "/auth/change-pin" && method === "POST") {
+    if (body.currentPin !== "0000") {
+      throw new Error("Current PIN is incorrect");
+    }
+    return { code: "00", description: "PIN changed", data: {} as T };
   }
 
   // --- Referrals ---
@@ -715,6 +791,91 @@ async function mockRequest<T>(
             createdAt: new Date(Date.now() - 1209600000).toISOString(),
           },
         ] as import("@/types").ActivityItem[],
+      } as T,
+    };
+  }
+
+  // --- Bank search ---
+  if (path === "/bank-search" && method === "POST") {
+    const MOCK_BANKS: { code: string; name: string; prefix: string; accountName: string }[] = [
+      { code: "058", name: "GTBank", prefix: "01", accountName: "CHIOMA OKAFOR" },
+      { code: "044", name: "Access Bank", prefix: "02", accountName: "CHIOMA OKAFOR" },
+      { code: "011", name: "First Bank", prefix: "03", accountName: "AMARA OBI" },
+      { code: "033", name: "UBA", prefix: "04", accountName: "EMEKA NWOSU" },
+      { code: "057", name: "Zenith Bank", prefix: "05", accountName: "TUNDE BALOGUN" },
+      { code: "035", name: "Wema Bank", prefix: "06", accountName: "FUNKE ADEYEMI" },
+      { code: "214", name: "FCMB", prefix: "07", accountName: "DAVID ADELEKE" },
+      { code: "232", name: "Sterling Bank", prefix: "08", accountName: "NGOZI EZE" },
+      { code: "032", name: "Union Bank", prefix: "09", accountName: "CHIOMA OKAFOR" },
+      { code: "070", name: "Fidelity Bank", prefix: "10", accountName: "CHIOMA OKAFOR" },
+      { code: "221", name: "Stanbic IBTC", prefix: "11", accountName: "AMARA OBI" },
+      { code: "502", name: "Kuda Bank", prefix: "12", accountName: "EMEKA NWOSU" },
+      { code: "999", name: "OPay", prefix: "13", accountName: "TUNDE BALOGUN" },
+      { code: "505", name: "Moniepoint", prefix: "14", accountName: "FUNKE ADEYEMI" },
+    ];
+
+    const { accountNumber } = body;
+    if (!accountNumber || accountNumber.length !== 10) {
+      return { code: "05", description: "Account number must be 10 digits", data: null as T };
+    }
+
+    const prefix = accountNumber.slice(0, 2);
+    const exactMatches = MOCK_BANKS.filter((b) => b.prefix === prefix).map((b) => ({
+      bankCode: b.code,
+      bankName: b.name,
+      accountName: b.accountName,
+    }));
+    const matches = exactMatches.length > 0
+      ? exactMatches
+      : MOCK_BANKS.slice(0, 2).map((b) => ({
+          bankCode: b.code,
+          bankName: b.name,
+          accountName: b.accountName,
+        }));
+
+    return { code: "00", description: "OK", data: { matches } as T };
+  }
+
+  // --- Bank lookup ---
+  if (path === "/bank-lookup" && method === "POST") {
+    const { accountNumber, bankCode } = body;
+    if (!accountNumber || !bankCode) {
+      return { code: "05", description: "accountNumber and bankCode are required", data: null as T };
+    }
+    return {
+      code: "00",
+      description: "OK",
+      data: { accountName: "CHIOMA OKAFOR" } as T,
+    };
+  }
+
+  // --- Bank codes ---
+  if (path === "/bank-codes" && method === "GET") {
+    return {
+      code: "00",
+      description: "OK",
+      data: {
+        banks: [
+          { code: "058", name: "GTBank" },
+          { code: "044", name: "Access Bank" },
+          { code: "011", name: "First Bank" },
+          { code: "033", name: "UBA" },
+          { code: "057", name: "Zenith Bank" },
+          { code: "035", name: "Wema Bank" },
+          { code: "214", name: "FCMB" },
+          { code: "232", name: "Sterling Bank" },
+          { code: "032", name: "Union Bank" },
+          { code: "070", name: "Fidelity Bank" },
+          { code: "221", name: "Stanbic IBTC" },
+          { code: "502", name: "Kuda Bank" },
+          { code: "999", name: "OPay" },
+          { code: "505", name: "Moniepoint" },
+          { code: "068", name: "Ecobank" },
+          { code: "082", name: "Keystone Bank" },
+          { code: "063", name: "Heritage Bank" },
+          { code: "076", name: "Polaris Bank" },
+          { code: "215", name: "Unity Bank" },
+        ],
       } as T,
     };
   }
@@ -810,23 +971,22 @@ async function request<T>(
 // ---------------------------------------------------------------------------
 export const api = {
   auth: {
-    /** Sends a 6-digit OTP to the given phone number. */
-    sendOtp: (phone: string) =>
+    /** Sends a 6-digit OTP to the given email address. */
+    sendOtp: (email: string) =>
       request<{ expires_in_seconds: number; isNewUser: boolean }>(
         "/auth/send-otp",
         {
           method: "POST",
-          body: JSON.stringify({ phone }),
+          body: JSON.stringify({ email }),
         },
       ),
 
     /** Verifies OTP + password, returns auth tokens + user data. */
     verify: (payload: {
-      phone: string;
+      email: string;
       otp: string;
       password: string;
       name?: string;
-      email?: string;
       bvn?: string;
     }) =>
       request<{ token: string; refresh_token: string; user: unknown }>(
@@ -865,6 +1025,20 @@ export const api = {
         "/auth/verify-bvn",
         { method: "POST", body: JSON.stringify({ bvn }) },
       ),
+
+    /** Changes password (requires current password). */
+    changePassword: (payload: { currentPassword: string; newPassword: string }) =>
+      request<Record<string, unknown>>("/auth/change-password", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      }),
+
+    /** Changes PIN (requires current PIN). */
+    changePin: (payload: { currentPin: string; newPin: string }) =>
+      request<Record<string, unknown>>("/auth/change-pin", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      }),
   },
 
   circles: {
@@ -877,7 +1051,7 @@ export const api = {
     /** Creates a new circle. Returns the circle ID + invite code. */
     create: (payload: {
       name: string;
-      contributionAmount: number;
+      contributionAmountKobo: number;
       frequency: string;
       cycleCount: number;
     }) =>
@@ -918,6 +1092,13 @@ export const api = {
     remind: (id: string) =>
       request<{ notified: number }>(`/circles/${id}/remind`, {
         method: "POST",
+      }),
+
+    /** Updates circle settings. */
+    updateSettings: (id: string, payload: { allowMidCycleJoin?: boolean }) =>
+      request<unknown>(`/circles/${id}/settings`, {
+        method: "PATCH",
+        body: JSON.stringify(payload),
       }),
   },
 
@@ -1028,6 +1209,13 @@ export const api = {
       request<Record<string, unknown>>("/notifications/read-all", {
         method: "POST",
       }),
+
+    /** Sends a debt reminder notification to a member. */
+    sendRemind: (memberName: string, amountKobo: number, cycle: number) =>
+      request<Record<string, unknown>>("/notifications/send-remind", {
+        method: "POST",
+        body: JSON.stringify({ memberName, amountKobo, cycle }),
+      }),
   },
 
   users: {
@@ -1039,6 +1227,23 @@ export const api = {
       request<Record<string, unknown>>("/users/me", {
         method: "PATCH",
         body: JSON.stringify(payload),
+      }),
+
+    /** User settings (notifications, auto-pay, etc.). */
+    settings: {
+      get: () => request<import("@/types").UserSettings>("/users/settings"),
+      update: (payload: Partial<import("@/types").UserSettings>) =>
+        request<import("@/types").UserSettings>("/users/settings", {
+          method: "PATCH",
+          body: JSON.stringify(payload),
+        }),
+    },
+
+    /** Deletes the user's account permanently. */
+    deleteAccount: (password: string) =>
+      request<Record<string, unknown>>("/users/me", {
+        method: "DELETE",
+        body: JSON.stringify({ password }),
       }),
   },
 
@@ -1070,6 +1275,13 @@ export const api = {
       method: "POST",
       body: JSON.stringify(payload),
     }),
+
+  /** Searches for banks matching an account number. */
+  bankSearch: (accountNumber: string) =>
+    request<{ matches: { bankCode: string; bankName: string; accountName: string }[] }>(
+      "/bank-search",
+      { method: "POST", body: JSON.stringify({ accountNumber }) },
+    ),
 
   referrals: {
     /** Gets the user's referral code and referred users. */

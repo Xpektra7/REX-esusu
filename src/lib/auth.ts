@@ -8,10 +8,10 @@ import { users } from "@/db/schema";
 const JWT_SECRET = process.env.JWT_SECRET || "";
 const JWT_EXPIRES_IN = (process.env.JWT_EXPIRES_IN || "30m") as StringValue;
 
-type TokenPayload = { userId: string; phone: string };
+type TokenPayload = { userId: string; email: string };
 
-export function signToken(userId: string, phone: string): string {
-  return jwt.sign({ userId, phone } satisfies TokenPayload, JWT_SECRET, {
+export function signToken(userId: string, email: string): string {
+  return jwt.sign({ userId, email } satisfies TokenPayload, JWT_SECRET, {
     expiresIn: JWT_EXPIRES_IN,
   });
 }
@@ -35,11 +35,11 @@ export async function verifyPassword(
   return bcrypt.compare(password, hash);
 }
 
-export async function findUserByPhone(phone: string) {
+export async function findUserByEmail(email: string) {
   const result = await db
     .select()
     .from(users)
-    .where(eq(users.phone, phone))
+    .where(eq(users.email, email))
     .limit(1);
   return result[0] ?? null;
 }

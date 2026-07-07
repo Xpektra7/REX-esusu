@@ -18,6 +18,7 @@ import {
   ItemDescription,
   ItemGroup,
   ItemMedia,
+  ItemSeparator,
   ItemTitle,
 } from "@/components/ui/item";
 import { Separator } from "@/components/ui/separator";
@@ -151,27 +152,29 @@ export default function DashboardPage() {
             <Skeleton className="h-16 rounded-xl" />
           </div>
         ) : activityItems.length > 0 ? (
-          <ItemGroup className="items-center gap-4 rounded-xl bg-card p-4 text-center">
-            {activityItems.map((item) => {
+          <ItemGroup className="bg-card gap-0! py-2">
+            {activityItems.map((item, i) => {
               const meta = iconMap[item.type];
               return (
-                <Item
-                  key={item.id}
-                  variant="muted"
-                  size="sm"
-                  className="hover:border-primary"
-                >
-                  <ItemMedia
-                    variant="icon"
-                    className={`rounded-full size-9 ${meta.bg}`}
-                  >
-                    {meta.icon}
-                  </ItemMedia>
-                  <ItemContent>
-                    <ItemTitle>{item.description}</ItemTitle>
-                    <ItemDescription>{timeAgo(item.createdAt)}</ItemDescription>
-                  </ItemContent>
-                </Item>
+                <div key={item.id}>
+                  <ItemSeparator className={i === 0 ? "hidden" : ""} />
+                  <Item variant="muted" size="xs">
+                    <ItemMedia
+                      variant="icon"
+                      className={`rounded-full size-6 ${meta.bg} p-0!`}
+                    >
+                      {meta.icon}
+                    </ItemMedia>
+                    <ItemContent>
+                      <ItemTitle className="line-clamp-1">
+                        {item.description}
+                      </ItemTitle>
+                      <ItemDescription className="line-clamp-1">
+                        {timeAgo(item.createdAt)}
+                      </ItemDescription>
+                    </ItemContent>
+                  </Item>
+                </div>
               );
             })}
           </ItemGroup>

@@ -3,7 +3,7 @@ import { verifyToken } from "./auth";
 
 export function getAuthUser(
   request: Request,
-): { userId: string; phone: string } | null {
+): { userId: string; email: string } | null {
   const auth = request.headers.get("Authorization");
   if (!auth?.startsWith("Bearer ")) return null;
   return verifyToken(auth.slice(7));

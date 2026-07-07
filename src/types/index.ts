@@ -1,7 +1,7 @@
 export interface User {
   id: string;
-  phone: string;
   email: string;
+  phone?: string;
   name: string;
   bvnLast4: string;
   trustScore: number;
@@ -197,6 +197,7 @@ export interface ReportData {
     amountKobo: number;
     cycle: number;
     status: string;
+    createdAt: string;
   }>;
 }
 
@@ -221,6 +222,8 @@ export interface CirclePageData {
   frequency: string;
   cycleCount: number;
   currentCycle: number;
+  gracePeriodHours: number;
+  allowMidCycleJoin: boolean;
   inviteCode?: string;
   cyclePeriodDays?: number;
   deadlineAt?: string;
@@ -245,4 +248,30 @@ export interface AuthTokens {
   accessToken: string;
   refreshToken: string;
   expiresIn: number;
+}
+
+export interface UserSettings {
+  autoPay: boolean;
+  pushEnabled: boolean;
+  reminder24h: boolean;
+  reminder6h: boolean;
+  reminderDeadline: boolean;
+  reminderGraceExpiry: boolean;
+  notifyPaymentReceived: boolean;
+  notifyDebtCleared: boolean;
+  notifyCycleReminders: boolean;
+  notifyPayout: boolean;
+  notifyDefaultAlert: boolean;
+  notifyCircleInvite: boolean;
+  notifyTrustScore: boolean;
+  notifyWithdrawal: boolean;
+}
+
+export interface UserProfile {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  bvnLast4: string;
+  trustScore: number;
 }

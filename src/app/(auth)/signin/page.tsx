@@ -12,8 +12,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { api } from "@/lib/api";
-import { passwordSchema, phoneSchema } from "@/lib/validations";
 import Link from "next/link";
+import { ViewIcon, ViewOffSlashIcon } from "hugeicons-react";
 
 const avatarInitials = [
   { initials: "CO", bg: "bg-blue-100", text: "text-blue-800" },
@@ -25,36 +25,37 @@ export default function SignInPage() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const form = useForm({
-    defaultValues: { phone: "" },
+    defaultValues: { email: "" },
     onSubmit: async ({ value }) => {
       setError(null);
 
-      const phoneResult = phoneSchema.safeParse({ phone: value.phone });
-      if (!phoneResult.success) {
-        setError("Enter a valid Nigerian phone number (+234...)");
+      if (!value.email.trim()) {
+        setError("Enter a valid email address");
         return;
       }
 
-      const passwordResult = passwordSchema.safeParse({ password });
-      if (!passwordResult.success) {
+      if (password.length < 8) {
         setError("Password must be at least 8 characters");
         return;
       }
 
-      const phone = phoneResult.data.phone;
-
+      setLoading(true);
       try {
-        const res = await api.auth.sendOtp(phone);
+        const res = await api.auth.sendOtp(value.email);
         if (res.data.isNewUser) {
-          router.push(`/signup?phone=${encodeURIComponent(phone)}`);
+          router.push(`/signup?email=${encodeURIComponent(value.email)}`);
           return;
         }
         sessionStorage.setItem("pending_password", password);
-        router.push(`/signin/otp?phone=${encodeURIComponent(phone)}`);
+        router.push(`/signin/otp?email=${encodeURIComponent(value.email)}`);
       } catch {
         setError("Failed to send OTP. Try again.");
+      } finally {
+        setLoading(false);
       }
     },
   });
@@ -63,7 +64,7 @@ export default function SignInPage() {
     <Card className="relative w-full max-w-md">
       <CardHeader className="text-center">
         <CardTitle className="text-2xl">Welcome back</CardTitle>
-        <CardDescription>Enter your phone number to continue.</CardDescription>
+        <CardDescription>Enter your email to continue.</CardDescription>
       </CardHeader>
 
       <CardContent>
@@ -76,38 +77,25 @@ export default function SignInPage() {
           className="flex flex-col gap-5"
         >
           <form.Field
-            name="phone"
+            name="email"
             children={(field) => (
               <div>
                 <label
                   htmlFor={field.name}
                   className="mb-1.5 block text-xs font-semibold uppercase tracking-widest text-muted-foreground"
                 >
-                  Phone Number
+                  Email
                 </label>
-
-                <div className="flex items-center rounded-xl bg-background px-4 py-3.5 focus-within:ring-2 focus-within:ring-ring transition-all">
-                  <div className="flex items-center gap-2 pr-4 border-r border-border">
-                    <div className="flex w-6 h-4 overflow-hidden rounded-sm shrink-0">
-                      <div className="w-1/3 bg-green-700" />
-                      <div className="w-1/3 bg-white" />
-                      <div className="w-1/3 bg-green-700" />
-                    </div>
-                    <span className="text-base font-semibold text-foreground">
-                      +234
-                    </span>
-                  </div>
-
-                  <input
-                    id={field.name}
-                    type="tel"
-                    placeholder="801 234 5678"
-                    value={field.state.value}
-                    onBlur={field.handleBlur}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    className="flex-1 bg-transparent border-none focus:ring-0 px-3 text-base tracking-widest placeholder:tracking-normal placeholder:text-muted-foreground/50 outline-none"
-                  />
-                </div>
+                <input
+                  id={field.name}
+                  type="email"
+                  placeholder="chioma@example.com"
+                  value={field.state.value}
+                  onBlur={field.handleBlur}
+                  onChange={(e) => field.handleChange(e.target.value)}
+                  className="w-full rounded-xl bg-background px-4 py-3.5 text-base outline-none focus:ring-2 focus:ring-ring transition-all"
+                  required
+                />
               </div>
             )}
           />
@@ -119,22 +107,33 @@ export default function SignInPage() {
             >
               Password
             </label>
-            <input
-              id="password"
-              type="password"
-              placeholder="Enter your password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-xl bg-background px-4 py-3.5 text-base outline-none focus:ring-2 focus:ring-ring transition-all"
-              required
-              minLength={8}
-            />
+            <div className="relative">
+              <input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                placeholder="Enter your password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full rounded-xl bg-background px-4 py-3.5 pr-11 text-base outline-none focus:ring-2 focus:ring-ring transition-all"
+                required
+                minLength={8}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((prev) => !prev)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                tabIndex={-1}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+               {showPassword ? <ViewOffSlashIcon className="h-4 w-4" /> : <ViewIcon className="h-4 w-4" />}
+              </button>
+            </div>
           </div>
 
           {error && <p className="text-sm text-destructive">{error}</p>}
 
-          <Button type="submit" size="lg" className="w-full py-4 text-base">
-            Continue
+          <Button type="submit" size="lg" className="w-full py-4 text-base" disabled={loading}>
+            {loading ? "Sending OTP..." : "Continue"}
           </Button>
         </form>
       </CardContent>

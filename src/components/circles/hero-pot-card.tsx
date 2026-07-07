@@ -1,6 +1,6 @@
 "use client";
 
-import { formatNaira } from "@/lib/utils";
+import { formatNaira, rotationLabel } from "@/lib/utils";
 
 interface HeroPotCardProps {
   totalPot: number;
@@ -9,6 +9,7 @@ interface HeroPotCardProps {
   cycleCount: number;
   contributionAmount: number;
   frequency: string;
+  memberCount: number;
 }
 
 export function HeroPotCard({
@@ -18,7 +19,9 @@ export function HeroPotCard({
   cycleCount,
   contributionAmount,
   frequency,
+  memberCount,
 }: HeroPotCardProps) {
+  const rl = rotationLabel(currentCycle, cycleCount, memberCount);
   return (
     <section className="relative overflow-clip rounded-xl bg-foreground">
       <div className="w-full bg-primary rounded-b-xl flex flex-col gap-3 p-5">
@@ -38,7 +41,7 @@ export function HeroPotCard({
           </div>
           <div className="flex items-center justify-between text-[10px] text-card-foreground/70">
             <span className="font-semibold tracking-wider uppercase">
-              Cycle {currentCycle} of {cycleCount}
+              Rotation {rl.rotation} of {rl.totalRotations} · Round {rl.round} of {memberCount}
             </span>
             <span>{Math.round(progress)}%</span>
           </div>

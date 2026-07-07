@@ -17,6 +17,7 @@ import {
   ItemDescription,
   ItemGroup,
   ItemMedia,
+  ItemSeparator,
   ItemTitle,
 } from "@/components/ui/item";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -128,25 +129,44 @@ export default function NotificationsPage() {
           </EmptyHeader>
         </Empty>
       ) : (
-        <ItemGroup>
-          {notifications.map((n) => {
+        <ItemGroup className="gap-0! py-2 bg-card">
+          {notifications.map((n, i) => {
             const meta = notifIcons[n.type] ?? {
               icon: <Notification01Icon className="size-4" />,
               bg: "bg-primary text-foreground",
             };
             return (
-              <Item key={n.id} variant="muted" size="sm">
-                <ItemMedia
-                  variant="icon"
-                  className={cn("rounded-full size-8", meta.bg)}
-                >
-                  {meta.icon}
-                </ItemMedia>
-                <ItemContent>
-                  <ItemTitle>{n.title}</ItemTitle>
-                  <ItemDescription>{n.body}</ItemDescription>
-                </ItemContent>
-              </Item>
+              <div key={n.id}>
+                <ItemSeparator className={i === 0 ? "hidden" : ""} />
+                <Item variant="muted" size="sm">
+                  <ItemMedia
+                    variant="icon"
+                    className={cn("rounded-full size-8 p-0!", meta.bg)}
+                  >
+                    {meta.icon}
+                  </ItemMedia>
+                  <ItemContent
+                    className={cn(n.read && "text-muted-foreground")}
+                  >
+                    <ItemTitle
+                      className={cn(
+                        "line-clamp-1",
+                        n.read && "text-muted-foreground",
+                      )}
+                    >
+                      {n.title}
+                    </ItemTitle>
+                    <ItemDescription
+                      className={cn(
+                        "line-clamp-1",
+                        n.read && "text-muted-foreground",
+                      )}
+                    >
+                      {n.body}
+                    </ItemDescription>
+                  </ItemContent>
+                </Item>
+              </div>
             );
           })}
         </ItemGroup>

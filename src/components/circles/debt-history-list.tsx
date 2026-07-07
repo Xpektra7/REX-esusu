@@ -1,8 +1,20 @@
 "use client";
 
-import { Coins02Icon } from "hugeicons-react";
+import { Coins02Icon, Notification01Icon } from "hugeicons-react";
+import { useState } from "react";
+import { toast } from "sonner";
 import { DebtBadge } from "@/components/circles/debt-badge";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia } from "@/components/ui/empty";
+import { Separator } from "@/components/ui/separator";
+import { api } from "@/lib/api";
 import { formatNaira } from "@/lib/utils";
 
 interface DebtItem {
@@ -10,13 +22,96 @@ interface DebtItem {
   amountKobo: number;
   cycle: number;
   status: string;
+  createdAt: string;
 }
 
 interface DebtHistoryListProps {
   debts: DebtItem[];
 }
 
+function DebtBreakdownDialog({
+  debt,
+  open,
+  onOpenChange,
+}: {
+  debt: DebtItem;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  const daysSince = Math.floor(
+    (Date.now() - new Date(debt.createdAt).getTime()) / 86400000,
+  );
+  const [reminding, setReminding] = useState(false);
+
+  const handleRemind = async () => {
+    setReminding(true);
+    try {
+      await api.notifications.sendRemind(debt.memberName, debt.amountKobo, debt.cycle);
+      toast.success(`Reminder sent to ${debt.memberName}`);
+    } catch {
+      toast.error("Failed to send reminder");
+    } finally {
+      setReminding(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent showCloseButton={false}>
+        <DialogHeader>
+          <DialogTitle>Debt Breakdown</DialogTitle>
+          <DialogDescription>
+            {debt.memberName} · Cycle #{debt.cycle}
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-muted-foreground">Amount</span>
+            <span className="font-heading text-lg font-bold">
+              {formatNaira(debt.amountKobo)}
+            </span>
+          </div>
+
+          <Separator />
+
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-muted-foreground">Status</span>
+            <DebtBadge status={debt.status} />
+          </div>
+
+          <Separator />
+
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-muted-foreground">Cycle</span>
+            <span className="text-sm font-medium">#{debt.cycle}</span>
+          </div>
+
+          <Separator />
+
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-muted-foreground">Incurred</span>
+            <span className="text-sm font-medium">{daysSince} days ago</span>
+          </div>
+
+          {debt.status === "active" && (
+            <>
+              <Separator />
+              <Button className="w-full" size="lg" onClick={handleRemind} disabled={reminding}>
+                <Notification01Icon className="size-4" />
+                {reminding ? "Sending..." : "Remind"}
+              </Button>
+            </>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export function DebtHistoryList({ debts }: DebtHistoryListProps) {
+  const [selectedDebt, setSelectedDebt] = useState<DebtItem | null>(null);
+
   if (debts.length === 0) {
     return (
       <Empty>
@@ -33,9 +128,11 @@ export function DebtHistoryList({ debts }: DebtHistoryListProps) {
   return (
     <div className="flex flex-col gap-2">
       {debts.map((debt) => (
-        <div
+        <button
+          type="button"
           key={`${debt.memberName}-${debt.cycle}`}
-          className="flex items-center justify-between rounded-xl bg-card px-4 py-3"
+          onClick={() => setSelectedDebt(debt)}
+          className="flex items-center justify-between rounded-xl bg-card px-4 py-3 text-left card-interactive w-full"
         >
           <div>
             <p className="text-sm font-medium">{debt.memberName}</p>
@@ -44,8 +141,16 @@ export function DebtHistoryList({ debts }: DebtHistoryListProps) {
             </p>
           </div>
           <DebtBadge status={debt.status} />
-        </div>
+        </button>
       ))}
+
+      {selectedDebt && (
+        <DebtBreakdownDialog
+          debt={selectedDebt}
+          open={selectedDebt !== null}
+          onOpenChange={(open) => { if (!open) setSelectedDebt(null); }}
+        />
+      )}
     </div>
   );
 }

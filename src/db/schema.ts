@@ -14,8 +14,8 @@ export const users = pgTable(
   "users",
   {
     id: uuid("id").defaultRandom().primaryKey(),
-    phone: varchar("phone", { length: 20 }).unique().notNull(),
-    email: varchar("email", { length: 255 }).unique(),
+    phone: varchar("phone", { length: 20 }),
+    email: varchar("email", { length: 255 }).notNull().unique(),
     name: varchar("name", { length: 255 }).notNull(),
     passwordHash: text("password_hash").notNull(),
     pinHash: text("pin_hash"),
@@ -50,6 +50,7 @@ export const circles = pgTable(
       .default("absorb")
       .notNull(),
     gracePeriodHours: integer("grace_period_hours").default(24).notNull(),
+    allowMidCycleJoin: boolean("allow_mid_cycle_join").default(false).notNull(),
     status: varchar("status", { length: 20 }).default("pending").notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -73,6 +74,7 @@ export const membersCircles = pgTable(
     role: varchar("role", { length: 20 }).default("member").notNull(),
     status: varchar("status", { length: 20 }).default("invited").notNull(),
     rotationOrder: integer("rotation_order"),
+    joinedAtCycle: integer("joined_at_cycle"),
     missedCycles: integer("missed_cycles").default(0).notNull(),
     joinedAt: timestamp("joined_at").defaultNow().notNull(),
     leftAt: timestamp("left_at"),
@@ -202,13 +204,13 @@ export const otpCodes = pgTable(
   "otp_codes",
   {
     id: uuid("id").defaultRandom().primaryKey(),
-    phone: varchar("phone", { length: 20 }).notNull(),
+    email: varchar("email", { length: 255 }).notNull(),
     otp: varchar("otp", { length: 6 }).notNull(),
     expiresAt: timestamp("expires_at").notNull(),
     verifiedAt: timestamp("verified_at"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
-  (table) => [index("idx_otp_phone_expires").on(table.phone, table.expiresAt)],
+  (table) => [index("idx_otp_email_expires").on(table.email, table.expiresAt)],
 );
 
 export const webhookEvents = pgTable(

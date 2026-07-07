@@ -25,7 +25,7 @@ export default function CirclesPage() {
   const circles = (data?.data?.circles ?? []) as CircleData[];
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="relative min-h-screen flex flex-col gap-6">
       <PageBreadcrumbs
         items={[{ label: "Home", href: "/dashboard" }, { label: "Circles" }]}
       />
@@ -79,7 +79,7 @@ export default function CirclesPage() {
       {circles.length > 0 && (
         <Link
           href="/circles/new"
-          className="fixed bottom-24 right-5 z-50 flex size-14 items-center justify-center rounded-full bg-primary text-card-foreground shadow-lg"
+          className="absolute bottom-24 right-5 z-50 flex size-14 items-center justify-center rounded-full bg-primary text-card-foreground shadow-lg"
           aria-label="Create circle"
         >
           <PlusSignIcon className="size-6" />

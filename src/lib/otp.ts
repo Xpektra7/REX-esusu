@@ -1,40 +1,44 @@
 import { and, eq, gte, isNull } from "drizzle-orm";
+import { Resend } from "resend";
 import { db } from "@/db";
 import { otpCodes } from "@/db/schema";
 
-const WHITELIST: Array<{ phone: string; otp: string }> = JSON.parse(
-  process.env.OTP_WHITELIST || "[]",
-);
+const resend = process.env.RESEND_API_KEY
+  ? new Resend(process.env.RESEND_API_KEY)
+  : null;
 
 export function generateOtp(): string {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
-export function getFixedOtp(phone: string): string | null {
-  const entry = WHITELIST.find((w) => w.phone === phone);
-  return entry ? entry.otp : null;
+export async function sendOtpEmail(email: string, otp: string): Promise<void> {
+  if (!resend) {
+    console.log(`[DEV] OTP for ${email}: ${otp}`);
+    return;
+  }
+  await resend.emails.send({
+    from: "Esusu <onboarding@resend.dev>",
+    to: email,
+    subject: "Your Esusu verification code",
+    html: `<p>Your verification code is: <strong>${otp}</strong></p><p>This code expires in 5 minutes.</p>`,
+  });
 }
 
-export async function storeOtp(phone: string, otp: string): Promise<void> {
+export async function storeOtp(email: string, otp: string): Promise<void> {
   await db.insert(otpCodes).values({
-    phone,
+    email,
     otp,
     expiresAt: new Date(Date.now() + 5 * 60 * 1000),
   });
 }
 
-export async function verifyOtp(phone: string, otp: string): Promise<boolean> {
-  const fixed = getFixedOtp(phone);
-  if (fixed) return fixed === otp;
-
-  if (process.env.NODE_ENV === "development" && otp === "9999") return true;
-
+export async function verifyOtp(email: string, otp: string): Promise<boolean> {
   const [entry] = await db
     .select()
     .from(otpCodes)
     .where(
       and(
-        eq(otpCodes.phone, phone),
+        eq(otpCodes.email, email),
         eq(otpCodes.otp, otp),
         gte(otpCodes.expiresAt, new Date()),
         isNull(otpCodes.verifiedAt),

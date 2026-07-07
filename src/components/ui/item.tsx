@@ -28,20 +28,20 @@ function ItemSeparator({
     <Separator
       data-slot="item-separator"
       orientation="horizontal"
-      className={cn("my-2", className)}
+      className={cn("", className)}
       {...props}
     />
   );
 }
 
 const itemVariants = cva(
-  "group/item flex w-full flex-wrap items-center rounded-md border text-sm transition-colors duration-100 outline-none hover:border-primary focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 [a]:transition-colors [a]:hover:bg-muted",
+  "group/item flex w-full flex-wrap items-center text-sm transition-colors duration-100 outline-none hover:border-primary focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 [a]:transition-colors [a]:hover:bg-muted",
   {
     variants: {
       variant: {
         default: "border-transparent",
         outline: "border-border",
-        muted: "border-transparent bg-muted/50",
+        muted: "!px-0 cursor-pointer hover:scale-101",
       },
       size: {
         default: "gap-3.5 px-4 py-3.5",
