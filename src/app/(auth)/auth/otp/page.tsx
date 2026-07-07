@@ -1,7 +1,7 @@
 "use client";
 
 import { Refresh01Icon } from "hugeicons-react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,11 +23,22 @@ import { useAuthStore } from "@/stores/auth-store";
 
 function OtpForm() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const setAuth = useAuthStore((s) => s.setAuth);
 
-  const email = searchParams.get("email") || "";
-  const flow = searchParams.get("flow") || "login";
+  const [email, setEmail] = useState("");
+  const [flow, setFlow] = useState("login");
+
+  useEffect(() => {
+    const storedEmail = sessionStorage.getItem("pending_email");
+    const storedFlow = sessionStorage.getItem("pending_flow");
+    if (storedEmail) {
+      setEmail(storedEmail);
+      if (storedFlow) setFlow(storedFlow);
+    } else {
+      router.replace("/auth");
+    }
+  }, [router]);
+
   const name =
     typeof window !== "undefined"
       ? sessionStorage.getItem("pending_name") || ""
@@ -74,6 +85,8 @@ function OtpForm() {
       };
 
       sessionStorage.removeItem("pending_password");
+      sessionStorage.removeItem("pending_email");
+      sessionStorage.removeItem("pending_flow");
 
       setAuth({
         access_token: data.token,
@@ -86,7 +99,8 @@ function OtpForm() {
       if (data.needsBvn) {
         router.push("/auth/kyc");
       } else if (!data.pinSet) {
-        router.push("/auth/pin?mode=set");
+        sessionStorage.setItem("pending_pin_mode", "set");
+        router.push("/auth/pin");
       } else {
         router.push("/dashboard");
       }
