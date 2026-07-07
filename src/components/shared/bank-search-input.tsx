@@ -46,7 +46,9 @@ export function BankSearchInput({
     queryKey: ["bank-codes"],
     queryFn: () => api.bankCodes(),
   });
-  const banks: Bank[] = banksRes?.data?.banks ?? [];
+  const banks: Bank[] = (banksRes?.data?.banks ?? []).map(
+    (b: { code: string; name: string }) => ({ code: b.code, name: b.name }),
+  );
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: onSelect is parent callback, stable
   useEffect(() => {
@@ -102,12 +104,7 @@ export function BankSearchInput({
           <ComboboxList>
             {(bank) => (
               <ComboboxItem key={bank.code} value={bank}>
-                <div className="flex items-center justify-between w-full">
-                  <span>{bank.name}</span>
-                  <span className="text-xs text-muted-foreground">
-                    {bank.code}
-                  </span>
-                </div>
+                {bank.name}
               </ComboboxItem>
             )}
           </ComboboxList>

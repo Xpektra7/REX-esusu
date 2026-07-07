@@ -116,9 +116,7 @@ const [scoreOpen, setScoreOpen] = useState(false);
       if (editField === "name") {
         const currentUser = useAuthStore.getState().user;
         if (currentUser) {
-          useAuthStore.getState().setAuth({
-            user: { ...currentUser, name: editValue.trim() },
-          });
+          useAuthStore.setState({ user: { ...currentUser, name: editValue.trim() } });
         }
       }
       setEditField(null);
@@ -146,7 +144,7 @@ const [scoreOpen, setScoreOpen] = useState(false);
           <DiceBearAvatar name={user?.name ?? "User"} className="size-16" />
           <div className="text-center">
             <h1 className="text-lg font-bold">{user?.name ?? "User"}</h1>
-            {user?.phone && <p className="text-xs text-muted-foreground">{user.phone}</p>}
+            {user?.email && <p className="text-xs text-muted-foreground">{user.email}</p>}
           </div>
         </div>
       )}
@@ -162,7 +160,9 @@ const [scoreOpen, setScoreOpen] = useState(false);
                 <p className="text-[10px] font-semibold tracking-[0.05em] text-muted-foreground uppercase">
                   KYC Status
                 </p>
-                <p className="text-sm font-medium">Verified</p>
+                <p className="text-sm font-medium">
+                  {user.bvnLast4 ? "Verified" : "Not Verified"}
+                </p>
               </div>
             </div>
             <button type="button" onClick={() => setScoreOpen(true)} className="text-right cursor-pointer">
@@ -180,9 +180,11 @@ const [scoreOpen, setScoreOpen] = useState(false);
               style={{ width: `${user.trustScore}%` }}
             />
           </div>
-          <p className="mt-2 text-[10px] text-muted-foreground">
-            BVN verified · Last 4 digits: {user.bvnLast4}
-          </p>
+          {user.bvnLast4 && (
+            <p className="mt-2 text-[10px] text-muted-foreground">
+              BVN verified · Last 4 digits: {user.bvnLast4}
+            </p>
+          )}
         </Card>
       )}
 
