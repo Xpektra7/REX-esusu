@@ -79,8 +79,16 @@ export function ActionPinDialog({
     router.push("/signin");
   };
 
+  const handleOpenChange = (open: boolean) => {
+    if (!open && locked) {
+      handleLockedSignOut();
+      return;
+    }
+    onOpenChange(open);
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-sm w-fit">
         {locked ? (
           <div className="flex flex-col items-center gap-4 py-6 text-center">

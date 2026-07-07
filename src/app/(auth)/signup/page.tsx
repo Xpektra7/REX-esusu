@@ -1,7 +1,7 @@
 "use client";
 
 import { useForm } from "@tanstack/react-form";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { Suspense, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,14 +16,20 @@ import Link from "next/link";
 
 function SignUpForm() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [error, setError] = useState<string | null>(null);
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const [initialEmail] = useState(() => {
+    if (typeof window !== "undefined") {
+      return sessionStorage.getItem("pending_email") || "";
+    }
+    return "";
+  });
+
   const form = useForm({
     defaultValues: {
-      email: searchParams.get("email") || "",
+      email: initialEmail,
       firstName: "",
       lastName: "",
     },
@@ -52,7 +58,8 @@ function SignUpForm() {
         await api.auth.sendOtp(value.email);
         sessionStorage.setItem("pending_password", password);
         sessionStorage.setItem("pending_name", name);
-        router.push(`/signup/otp?email=${encodeURIComponent(value.email)}`);
+        sessionStorage.setItem("pending_email", value.email);
+        router.push("/signup/otp");
       } catch {
         setError("Failed to send OTP. Try again.");
       } finally {

@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
     const tsMs = /^\d+$/.test(timestamp)
       ? parseInt(timestamp, 10)
       : new Date(timestamp).getTime();
-    if (Number.isNaN(tsMs) || Math.abs(Date.now() - tsMs) > 300_000) {
+    if (Number.isNaN(tsMs) || Math.abs(Date.now() - tsMs) > 3_600_000) {
       return new Response(
         JSON.stringify({ code: "01", description: "expired" }),
         { status: 401 },

@@ -45,13 +45,15 @@ export default function SignInPage() {
 
       setLoading(true);
       try {
-        const res = await api.auth.sendOtp(value.email);
+        const res = await api.auth.sendOtp(value.email, password);
         if (res.data.isNewUser) {
-          router.push(`/signup?email=${encodeURIComponent(value.email)}`);
+          sessionStorage.setItem("pending_email", value.email);
+          router.push("/signup");
           return;
         }
         sessionStorage.setItem("pending_password", password);
-        router.push(`/signin/otp?email=${encodeURIComponent(value.email)}`);
+        sessionStorage.setItem("pending_email", value.email);
+        router.push("/signin/otp");
       } catch {
         setError("Failed to send OTP. Try again.");
       } finally {

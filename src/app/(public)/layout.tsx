@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { cn } from "@/lib/utils";
+import { buttonVariants } from "@/components/ui/button";
 
 export default function PublicLayout({
   children,
@@ -15,25 +17,25 @@ export default function PublicLayout({
           <div className="flex items-center gap-6">
             <Link
               href="/about"
-              className="text-sm text-muted-foreground hover:text-foreground"
+              className="text-sm text-muted-foreground hover:text-foreground "
             >
               About
             </Link>
             <Link
               href="/faq"
-              className="text-sm text-muted-foreground hover:text-foreground"
+              className="text-sm text-muted-foreground hover:text-foreground "
             >
               FAQ
             </Link>
             <Link
               href="/contact"
-              className="text-sm text-muted-foreground hover:text-foreground"
+              className="text-sm text-muted-foreground hover:text-foreground "
             >
               Contact
             </Link>
             <Link
               href="/signin"
-              className="text-sm font-medium text-foreground hover:text-primary"
+              className={cn(buttonVariants({ size: "sm" }), "")}
             >
               Sign In
             </Link>

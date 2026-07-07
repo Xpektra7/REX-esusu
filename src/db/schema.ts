@@ -333,3 +333,46 @@ export const walletTransactions = pgTable(
     index("idx_wallet_tx_reference").on(table.reference),
   ],
 );
+
+export const userSettings = pgTable(
+  "user_settings",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id)
+      .unique(),
+    autoPay: boolean("auto_pay").default(false).notNull(),
+    pushEnabled: boolean("push_enabled").default(true).notNull(),
+    reminderDueDate: boolean("reminder_due_date").default(true).notNull(),
+    reminderCycleStart: boolean("reminder_cycle_start").default(true).notNull(),
+    reminderPaymentConfirm: boolean("reminder_payment_confirm")
+      .default(true)
+      .notNull(),
+    reminderDebt: boolean("reminder_debt").default(true).notNull(),
+    notifContribution: boolean("notif_contribution").default(true).notNull(),
+    notifPayout: boolean("notif_payout").default(true).notNull(),
+    notifDebt: boolean("notif_debt").default(true).notNull(),
+    notifCycle: boolean("notif_cycle").default(true).notNull(),
+    notifMember: boolean("notif_member").default(true).notNull(),
+    notifReferral: boolean("notif_referral").default(true).notNull(),
+    notifSystem: boolean("notif_system").default(true).notNull(),
+    notifPromo: boolean("notif_promo").default(true).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => [index("idx_user_settings_user").on(table.userId)],
+);
+
+export const contactMessages = pgTable(
+  "contact_messages",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    name: varchar("name", { length: 255 }).notNull(),
+    email: varchar("email", { length: 255 }).notNull(),
+    subject: varchar("subject", { length: 255 }).notNull(),
+    message: text("message").notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [index("idx_contact_messages_created").on(table.createdAt)],
+);
