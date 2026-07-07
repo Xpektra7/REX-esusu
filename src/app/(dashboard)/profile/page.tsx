@@ -93,15 +93,15 @@ export default function ProfilePage() {
 
   const user = res?.data as UserProfile | undefined;
 
-const [editField, setEditField] = useState<"name" | "email" | null>(null);
-const [editValue, setEditValue] = useState("");
-const [saving, setSaving] = useState(false);
-const [editError, setEditError] = useState<string | null>(null);
-const [scoreOpen, setScoreOpen] = useState(false);
+  const [editField, setEditField] = useState<"name" | "email" | null>(null);
+  const [editValue, setEditValue] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [editError, setEditError] = useState<string | null>(null);
+  const [scoreOpen, setScoreOpen] = useState(false);
 
   const openEdit = (field: "name" | "email") => {
     setEditField(field);
-    setEditValue(field === "name" ? user?.name ?? "" : user?.email ?? "");
+    setEditValue(field === "name" ? (user?.name ?? "") : (user?.email ?? ""));
     setEditError(null);
   };
 
@@ -111,12 +111,16 @@ const [scoreOpen, setScoreOpen] = useState(false);
     setEditError(null);
     try {
       await api.users.update(
-        editField === "name" ? { name: editValue.trim() } : { email: editValue.trim() },
+        editField === "name"
+          ? { name: editValue.trim() }
+          : { email: editValue.trim() },
       );
       if (editField === "name") {
         const currentUser = useAuthStore.getState().user;
         if (currentUser) {
-          useAuthStore.setState({ user: { ...currentUser, name: editValue.trim() } });
+          useAuthStore.setState({
+            user: { ...currentUser, name: editValue.trim() },
+          });
         }
       }
       setEditField(null);
@@ -144,7 +148,9 @@ const [scoreOpen, setScoreOpen] = useState(false);
           <DiceBearAvatar name={user?.name ?? "User"} className="size-16" />
           <div className="text-center">
             <h1 className="text-lg font-bold">{user?.name ?? "User"}</h1>
-            {user?.email && <p className="text-xs text-muted-foreground">{user.email}</p>}
+            {user?.email && (
+              <p className="text-xs text-muted-foreground">{user.email}</p>
+            )}
           </div>
         </div>
       )}
@@ -157,7 +163,7 @@ const [scoreOpen, setScoreOpen] = useState(false);
                 <IdVerifiedIcon className="size-5" />
               </div>
               <div>
-                <p className="text-[10px] font-semibold tracking-[0.05em] text-muted-foreground uppercase">
+                <p className="text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
                   KYC Status
                 </p>
                 <p className="text-sm font-medium">
@@ -165,8 +171,12 @@ const [scoreOpen, setScoreOpen] = useState(false);
                 </p>
               </div>
             </div>
-            <button type="button" onClick={() => setScoreOpen(true)} className="text-right cursor-pointer">
-              <p className="text-[10px] font-semibold tracking-[0.05em] text-muted-foreground uppercase">
+            <button
+              type="button"
+              onClick={() => setScoreOpen(true)}
+              className="text-right cursor-pointer"
+            >
+              <p className="text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
                 Trust Score
               </p>
               <p className="font-heading text-lg font-bold text-primary">
@@ -234,7 +244,12 @@ const [scoreOpen, setScoreOpen] = useState(false);
         </button>
       </div>
 
-      <Dialog open={editField !== null} onOpenChange={(open) => { if (!open) setEditField(null); }}>
+      <Dialog
+        open={editField !== null}
+        onOpenChange={(open) => {
+          if (!open) setEditField(null);
+        }}
+      >
         <DialogContent showCloseButton={false}>
           <DialogHeader>
             <DialogTitle>
@@ -251,7 +266,9 @@ const [scoreOpen, setScoreOpen] = useState(false);
             type={editField === "email" ? "email" : "text"}
             value={editValue}
             onChange={(e) => setEditValue(e.target.value)}
-            placeholder={editField === "name" ? "Chioma Okafor" : "chioma@example.com"}
+            placeholder={
+              editField === "name" ? "Chioma Okafor" : "chioma@example.com"
+            }
             className="w-full rounded-lg bg-background px-4 py-3 text-base outline-none focus:ring-2 focus:ring-ring transition-all"
             autoFocus
           />
@@ -280,11 +297,36 @@ const [scoreOpen, setScoreOpen] = useState(false);
 
           <div className="flex flex-col gap-4">
             {[
-              { label: "BVN Verification", score: 20, max: 20, desc: "Verified identity" },
-              { label: "Payment History", score: Math.min(user?.trustScore ?? 0, 25), max: 25, desc: "On-time contributions" },
-              { label: "Active Memberships", score: Math.min(Math.max((user?.trustScore ?? 0) - 20, 0), 20), max: 20, desc: "Active circles" },
-              { label: "Referral Quality", score: Math.min(Math.max((user?.trustScore ?? 0) - 45, 0), 20), max: 20, desc: "Referred members" },
-              { label: "Account Age", score: Math.min(Math.max((user?.trustScore ?? 0) - 65, 0), 15), max: 15, desc: "Longevity bonus" },
+              {
+                label: "BVN Verification",
+                score: 20,
+                max: 20,
+                desc: "Verified identity",
+              },
+              {
+                label: "Payment History",
+                score: Math.min(user?.trustScore ?? 0, 25),
+                max: 25,
+                desc: "On-time contributions",
+              },
+              {
+                label: "Active Memberships",
+                score: Math.min(Math.max((user?.trustScore ?? 0) - 20, 0), 20),
+                max: 20,
+                desc: "Active circles",
+              },
+              {
+                label: "Referral Quality",
+                score: Math.min(Math.max((user?.trustScore ?? 0) - 45, 0), 20),
+                max: 20,
+                desc: "Referred members",
+              },
+              {
+                label: "Account Age",
+                score: Math.min(Math.max((user?.trustScore ?? 0) - 65, 0), 15),
+                max: 15,
+                desc: "Longevity bonus",
+              },
             ].map((f) => (
               <div key={f.label}>
                 <div className="flex items-center justify-between mb-1">
@@ -299,7 +341,9 @@ const [scoreOpen, setScoreOpen] = useState(false);
                     style={{ width: `${(f.score / f.max) * 100}%` }}
                   />
                 </div>
-                <p className="mt-0.5 text-[10px] text-muted-foreground">{f.desc}</p>
+                <p className="mt-0.5 text-[10px] text-muted-foreground">
+                  {f.desc}
+                </p>
               </div>
             ))}
           </div>
