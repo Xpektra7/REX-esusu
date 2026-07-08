@@ -9,6 +9,7 @@ import {
   notifications,
   users,
   virtualAccounts,
+  walletTransactions,
 } from "@/db/schema";
 
 type WebhookPayload = {
@@ -72,6 +73,18 @@ export async function reconcilePayment(payload: WebhookPayload) {
     .update(virtualAccounts)
     .set({ balanceKobo: sql`balance_kobo + ${actual}` })
     .where(eq(virtualAccounts.id, va[0].id));
+
+  await db
+    .insert(walletTransactions)
+    .values({
+      userId: va[0].userId,
+      type: "topup",
+      amountKobo: actual,
+      reference: `nomba_txn_${txn.transactionId}`,
+      status: "success",
+      metadata: { nombaRequestId: payload.requestId },
+    })
+    .onConflictDoNothing();
 
   const ourRef = extractReference(txn.narration || "");
 
