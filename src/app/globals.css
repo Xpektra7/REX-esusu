@@ -153,4 +153,21 @@
     .card-interactive {
         @apply bg-card border border-transparent hover:border-primary transition-colors;
     }
+    .landing-container {
+        @apply mx-auto w-full max-w-5xl px-6;
+    }
+    .landing-section {
+        @apply border-b border-border py-16 md:py-20;
+    }
+    .eyebrow {
+        @apply text-[10px] font-semibold uppercase tracking-[0.15em];
+    }
+    .bg-grid-dots {
+        background-image: radial-gradient(
+            circle,
+            var(--border) 1px,
+            transparent 1px
+        );
+        background-size: 20px 20px;
+    }
 }
