@@ -90,8 +90,10 @@ export async function POST(request: NextRequest) {
     );
   } catch (e) {
     console.error("Webhook error:", e);
+    // "09" = temporary failure — Nomba will retry with backoff instead of
+    // treating the payment as successfully processed.
     return new Response(
-      JSON.stringify({ code: "00", description: "Received" }),
+      JSON.stringify({ code: "09", description: "Processing failed" }),
     );
   }
 }

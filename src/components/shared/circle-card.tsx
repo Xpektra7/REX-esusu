@@ -51,6 +51,11 @@ export function CircleCard({ circle }: { circle: CircleData }) {
             <Badge variant={circle.status === "active" ? "default" : "outline"}>
               {circle.status === "active" ? "Active" : "Inactive"}
             </Badge>
+            {circle.debtAmountKobo ? (
+              <Badge variant="destructive">
+                {formatNaira(circle.debtAmountKobo)} debt
+              </Badge>
+            ) : null}
           </div>
         </CardHeader>
 

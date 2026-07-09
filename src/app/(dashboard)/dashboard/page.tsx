@@ -9,9 +9,17 @@ import {
   UserGroupIcon,
 } from "hugeicons-react";
 import Link from "next/link";
+import { AppBar } from "@/components/layout/app-bar";
 import { CircleCard, type CircleData } from "@/components/shared/circle-card";
 import { WalletCard } from "@/components/shared/wallet-card";
 import { Button } from "@/components/ui/button";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+} from "@/components/ui/empty";
 import {
   Item,
   ItemContent,
@@ -23,16 +31,8 @@ import {
 } from "@/components/ui/item";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Empty,
-  EmptyContent,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-} from "@/components/ui/empty";
 import { api } from "@/lib/api";
-import { timeAgo } from "@/lib/utils";
-import { AppBar } from "@/components/layout/app-bar";
+import { formatNaira, timeAgo } from "@/lib/utils";
 import type { ActivityItem } from "@/types";
 
 const iconMap: Record<
@@ -81,6 +81,12 @@ export default function DashboardPage() {
   const circleList = (circlesRes?.data?.circles ?? []) as CircleData[];
   const activityItems = activityRes?.data?.items ?? [];
 
+  // T120: accumulated outstanding debt across all the user's circles.
+  const totalDebt = circleList.reduce(
+    (sum, c) => sum + (c.debtAmountKobo ?? 0),
+    0,
+  );
+
   return (
     <div className="relative flex flex-col gap-6">
       <AppBar />
@@ -88,6 +94,17 @@ export default function DashboardPage() {
         <Skeleton className="h-44 rounded-xl" />
       ) : (
         <WalletCard balance={balance} />
+      )}
+
+      {totalDebt > 0 && (
+        <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-4">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.05em] text-destructive/80">
+            Outstanding debt
+          </p>
+          <p className="font-heading text-lg font-bold text-destructive">
+            {formatNaira(totalDebt)}
+          </p>
+        </div>
       )}
 
       <section>

@@ -1,4 +1,16 @@
 import { type NextRequest, NextResponse } from "next/server";
+import { rateLimit } from "@/lib/rate-limit";
+
+const apiLimiter = rateLimit({ windowMs: 60_000, maxRequests: 30 });
+const authLimiter = rateLimit({ windowMs: 60_000, maxRequests: 5 });
+
+function clientIp(request: NextRequest): string {
+  return (
+    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    request.headers.get("x-real-ip") ||
+    "unknown"
+  );
+}
 
 const PROTECTED_ROUTES = [
   "/dashboard",
@@ -21,9 +33,35 @@ const PUBLIC_ROUTES = [
   "/legal",
 ];
 
-export function proxy(request: NextRequest) {
+export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const isAuthenticated = request.cookies.has("esusu-auth");
+
+  // Rate limiting for API routes (M-01). Auth routes get a tighter limit to
+  // blunt brute-force / OTP abuse.
+  if (pathname.startsWith("/api/v1/auth/")) {
+    const result = authLimiter.check(`auth:${clientIp(request)}`);
+    if (!result.allowed) {
+      return NextResponse.json(
+        { code: "29", description: "Too many requests. Try again later." },
+        {
+          status: 429,
+          headers: { "Retry-After": String(Math.ceil(result.resetIn / 1000)) },
+        },
+      );
+    }
+  } else if (pathname.startsWith("/api/")) {
+    const result = apiLimiter.check(`api:${clientIp(request)}`);
+    if (!result.allowed) {
+      return NextResponse.json(
+        { code: "29", description: "Too many requests. Try again later." },
+        {
+          status: 429,
+          headers: { "Retry-After": String(Math.ceil(result.resetIn / 1000)) },
+        },
+      );
+    }
+  }
 
   const isProtected = PROTECTED_ROUTES.some(
     (route) => pathname === route || pathname.startsWith(`${route}/`),

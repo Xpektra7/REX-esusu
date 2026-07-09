@@ -66,25 +66,10 @@ export async function reconcilePayment(payload: WebhookPayload) {
 
   const actual = Math.round((txn.transactionAmount || 0) * 100);
 
-  // Always credit the matched VA first. Circle membership must not block
-  // receipt of funds — the reconciliation engine processes the payment
-  // afterwards for contribution/debt allocation.
-  await db
-    .update(virtualAccounts)
-    .set({ balanceKobo: sql`balance_kobo + ${actual}` })
-    .where(eq(virtualAccounts.id, va[0].id));
-
-  await db
-    .insert(walletTransactions)
-    .values({
-      userId: va[0].userId,
-      type: "topup",
-      amountKobo: actual,
-      reference: `nomba_txn_${txn.transactionId}`,
-      status: "success",
-      metadata: { nombaRequestId: payload.requestId },
-    })
-    .onConflictDoNothing();
+  // Funds are NOT credited up front. Debt clearing (FIFO) and cycle allocation
+  // run below; only the unallocated remainder is credited to the wallet balance
+  // as a top-up at the end. This prevents the double-credit bug where the full
+  // amount was added to the balance AND allocated to contributions/debts.
 
   const ourRef = extractReference(txn.narration || "");
 
@@ -110,8 +95,9 @@ export async function reconcilePayment(payload: WebhookPayload) {
   const classification = classifyPayment(actual, totalExpected);
 
   if (classification === "misdirected") {
-    await flagForReview(payload, va[0]);
-    return { status: "flagged", classification };
+    // Non-blocking: flag for review but still credit/allocate the funds below
+    // so legitimate top-ups (no active dues) are not rejected.
+    await flagForReview(va[0], actual);
   }
 
   let remaining = await applyFifoDebtClearing(va[0].userId, actual, va[0].id);
@@ -124,6 +110,32 @@ export async function reconcilePayment(payload: WebhookPayload) {
       classification,
       perCircleExpected,
     );
+  }
+
+  // Credit any unallocated remainder to the wallet balance as a top-up.
+  // Covers pure top-ups (no dues), overpayment excess, and any amount not
+  // consumed by debts + cycle contributions.
+  if (remaining > 0) {
+    await db
+      .update(virtualAccounts)
+      .set({ balanceKobo: sql`balance_kobo + ${remaining}` })
+      .where(eq(virtualAccounts.id, va[0].id));
+
+    await db
+      .insert(walletTransactions)
+      .values({
+        userId: va[0].userId,
+        type: "topup",
+        amountKobo: remaining,
+        reference: `topup_${txn.transactionId}`,
+        status: "success",
+        metadata: {
+          nombaRequestId: payload.requestId,
+          originalAmount: actual,
+          classification,
+        },
+      })
+      .onConflictDoNothing();
   }
 
   if (classification === "underpayment") {
@@ -602,14 +614,13 @@ async function handleOrphan(payload: WebhookPayload) {
 }
 
 async function flagForReview(
-  payload: WebhookPayload,
   va: typeof virtualAccounts.$inferSelect,
+  actual: number,
 ) {
-  const txn = payload.data.transaction;
   await db.insert(notifications).values({
     userId: va.userId,
     title: "Misdirected payment flagged",
-    body: `₦${((txn.transactionAmount || 0) / 100).toLocaleString()} received — doesn't match expected amounts.`,
+    body: `₦${(actual / 100).toLocaleString()} received — doesn't match expected amounts.`,
     type: "payment",
   });
 }

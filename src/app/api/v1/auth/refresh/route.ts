@@ -12,6 +12,7 @@ export async function POST(req: NextRequest) {
     const accessToken = signToken(payload.userId, payload.email);
     return success({ accessToken, token: accessToken });
   } catch (e) {
-    return error((e as Error).message);
+    console.error(e);
+    return error("An unexpected error occurred", "01", 500);
   }
 }

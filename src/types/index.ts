@@ -152,6 +152,7 @@ export interface CircleListItem {
   cycleCount: number;
   memberPosition?: number;
   totalMembers?: number;
+  debtAmountKobo?: number;
 }
 
 export interface CircleDetail extends Circle {

@@ -244,6 +244,7 @@ async function mockRequest<T>(
             cycleCount: 12,
             memberPosition: 3,
             totalMembers: 10,
+            debtAmountKobo: 150000,
           },
           {
             id: "circle_mock_002",
@@ -256,6 +257,7 @@ async function mockRequest<T>(
             cycleCount: 10,
             memberPosition: 1,
             totalMembers: 5,
+            debtAmountKobo: 0,
           },
         ],
       } as T,

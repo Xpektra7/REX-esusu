@@ -30,13 +30,38 @@ export async function GET(req: NextRequest) {
       .from(walletTransactions)
       .where(eq(walletTransactions.userId, auth.user?.userId));
 
+    const CREDIT_TYPES = new Set([
+      "topup",
+      "debt_payment",
+      "cycle_payment",
+      "refund",
+    ]);
+
+    const deriveDescription = (type: string): string => {
+      switch (type) {
+        case "topup":
+          return "Wallet Top-Up";
+        case "withdrawal":
+          return "Withdrawal";
+        case "debt_payment":
+          return "Debt Payment";
+        case "cycle_payment":
+          return "Cycle Payout";
+        case "refund":
+          return "Refund";
+        default:
+          return "Transaction";
+      }
+    };
+
     return success({
       transactions: rows.map((t) => ({
         id: t.id,
-        type: t.type,
+        type: CREDIT_TYPES.has(t.type) ? "credit" : "debit",
         amountKobo: t.amountKobo,
         reference: t.reference,
         status: t.status,
+        description: deriveDescription(t.type),
         metadata: t.metadata,
         createdAt: t.createdAt,
       })),

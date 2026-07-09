@@ -42,12 +42,16 @@ async function provisionVirtualAccount(
     const vaPath = subAccountId
       ? `/v1/accounts/virtual/${subAccountId}`
       : "/v1/accounts/virtual";
-    const result = await nombaPost(vaPath, {
-      accountRef: userId,
-      accountName,
-      bvn: bvn || "",
-      expiryDate: "2027-12-31",
-    }, url);
+    const result = await nombaPost(
+      vaPath,
+      {
+        accountRef: userId,
+        accountName,
+        bvn: bvn || "",
+        expiryDate: "2027-12-31",
+      },
+      url,
+    );
     const vaBody = result?.data || result;
     if (vaBody) {
       await db.insert(virtualAccounts).values({
@@ -166,6 +170,7 @@ export async function POST(req: NextRequest) {
       "Account created",
     );
   } catch (e) {
-    return error((e as Error).message);
+    console.error(e);
+    return error("An unexpected error occurred", "01", 500);
   }
 }

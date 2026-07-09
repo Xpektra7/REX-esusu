@@ -48,7 +48,22 @@ export function Hero() {
   }, []);
 
   return (
-    <section className="relative overflow-hidden border-b border-border bg-grid-dots">
+    <section className="relative overflow-hidden border-b border-border bg-foreground text-background">
+      <svg
+        aria-hidden="true"
+        className="pointer-events-none absolute -right-16 -bottom-10 w-[120%] max-w-3xl text-primary opacity-20"
+        viewBox="0 0 300 100"
+        preserveAspectRatio="none"
+        fill="none"
+      >
+        <path
+          d="M0 80 Q 75 20, 150 60 T 300 40"
+          stroke="currentColor"
+          strokeWidth="2"
+          vectorEffect="non-scaling-stroke"
+        />
+      </svg>
+
       <div className="landing-container grid gap-10 py-14 md:gap-12 md:py-28 lg:grid-cols-[1.1fr_1fr] lg:items-center lg:gap-8">
         <div className="flex flex-col items-start gap-6 text-left">
           <div className="eyebrow inline-flex items-center rounded-full bg-primary/10 px-4 py-1.5 text-primary">
@@ -60,13 +75,13 @@ export function Hero() {
             <span className="text-primary italic">transparently</span>
           </h1>
 
-          <p className="max-w-md text-base text-muted-foreground md:text-lg">
+          <p className="max-w-md text-base text-background/70 md:text-lg">
             Digital group savings powered by Nomba. Create circles, invite
             members, contribute automatically, and get paid — no paper, no trust
             issues.
           </p>
 
-          <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
+          <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center">
             {isAuthenticated ? (
               <Link
                 href="/dashboard"
@@ -92,10 +107,7 @@ export function Hero() {
             )}
             <Link
               href="/about"
-              className={cn(
-                buttonVariants({ variant: "outline", size: "lg" }),
-                "w-full sm:w-auto",
-              )}
+              className="text-sm text-background/60 underline-offset-4 hover:text-background hover:underline"
             >
               About Esusu
             </Link>
