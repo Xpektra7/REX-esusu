@@ -34,9 +34,9 @@ const rows = [
 
 function Mark({ value }: { value: boolean }) {
   return value ? (
-    <CheckmarkCircle01Icon className="mx-auto size-4 text-primary" />
+    <CheckmarkCircle01Icon className="mx-auto size-6 text-primary" />
   ) : (
-    <Cancel01Icon className="mx-auto size-4 text-muted-foreground/40" />
+    <Cancel01Icon className="mx-auto size-6 text-muted-foreground/40" />
   );
 }
 
@@ -52,10 +52,10 @@ export function Compare() {
         </div>
 
         <div className="rounded-xl border border-border">
-          <Table className="min-w-140">
+          <Table className="max-w-full md:min-w-140 wrap-anywhere">
             <TableHeader>
               <TableRow>
-                <TableHead className="p-4">&nbsp;</TableHead>
+                <TableHead className="p-4 w-2">&nbsp;</TableHead>
                 <TableHead className="p-4 text-center">Cash Ajo</TableHead>
                 <TableHead className="p-4 text-center">Bank Savings</TableHead>
                 <TableHead className="bg-foreground p-4 text-center font-semibold text-background">
@@ -63,17 +63,19 @@ export function Compare() {
                 </TableHead>
               </TableRow>
             </TableHeader>
-            <TableBody>
+            <TableBody className="">
               {rows.map((row) => (
-                <TableRow key={row.label} className="hover:bg-transparent">
-                  <TableCell className="p-4 font-medium">{row.label}</TableCell>
+                <TableRow key={row.label} className="">
+                  <TableCell className="p-4 pr-0 w-2 text-xs md:text-base font-medium">
+                    {row.label}
+                  </TableCell>
                   <TableCell className="p-4 text-center">
                     <Mark value={row.cashAjo} />
                   </TableCell>
                   <TableCell className="p-4 text-center">
                     <Mark value={row.bank} />
                   </TableCell>
-                  <TableCell className="bg-foreground/3 p-4 text-center">
+                  <TableCell className="bg-card p-4 text-center">
                     <Mark value={row.esusu} />
                   </TableCell>
                 </TableRow>

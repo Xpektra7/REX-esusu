@@ -30,7 +30,7 @@ export function CircleDiagram({ activeIndex }: { activeIndex: number }) {
           fill="none"
           stroke="var(--border)"
           strokeWidth="1"
-          strokeDasharray="3 5"
+          strokeDasharray="8 5"
         />
         <circle
           cx={coin.x}
@@ -44,9 +44,13 @@ export function CircleDiagram({ activeIndex }: { activeIndex: number }) {
       </svg>
 
       <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-        <span className="eyebrow text-background/70">Total Pot</span>
-        <span className="mt-1 text-3xl font-bold text-primary">₦450,000</span>
-        <span className="mt-1 text-xs text-background/70">
+        <span className="eyebrow font-heading text-foreground/70">
+          Total Pot
+        </span>
+        <span className="mt-1 text-3xl font-heading font-bold text-primary">
+          ₦450,000
+        </span>
+        <span className="mt-1 text-xs text-foreground/70">
           Cycle {activeIndex + 1} of {members.length}
         </span>
       </div>

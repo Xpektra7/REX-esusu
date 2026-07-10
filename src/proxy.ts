@@ -33,7 +33,7 @@ const PUBLIC_ROUTES = [
   "/legal",
 ];
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const isAuthenticated = request.cookies.has("esusu-auth");
 

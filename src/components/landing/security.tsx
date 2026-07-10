@@ -39,8 +39,8 @@ export function Security() {
                 key={point.label}
                 className="flex flex-col gap-3 rounded-xl border border-background/15 p-5"
               >
-                <div className="flex size-9 items-center justify-center rounded-lg bg-background/10">
-                  <Icon className="size-4 text-primary" />
+                <div className="flex size-10 items-center justify-center rounded-lg bg-primary">
+                  <Icon className="size-6 text-foreground" />
                 </div>
                 <p className="text-sm text-background/80">{point.label}</p>
               </div>

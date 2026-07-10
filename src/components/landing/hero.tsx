@@ -48,7 +48,7 @@ export function Hero() {
   }, []);
 
   return (
-    <section className="relative overflow-hidden border-b border-border bg-foreground text-background">
+    <section className="relative overflow-hidden border-b border-border">
       <svg
         aria-hidden="true"
         className="pointer-events-none absolute -right-16 -bottom-10 w-[120%] max-w-3xl text-primary opacity-20"
@@ -75,7 +75,7 @@ export function Hero() {
             <span className="text-primary italic">transparently</span>
           </h1>
 
-          <p className="max-w-md text-base text-background/70 md:text-lg">
+          <p className="max-w-md text-base text-foreground/70 md:text-lg">
             Digital group savings powered by Nomba. Create circles, invite
             members, contribute automatically, and get paid — no paper, no trust
             issues.
@@ -114,9 +114,9 @@ export function Hero() {
           </div>
         </div>
 
-        <div className="mx-auto w-full max-w-sm">
+        <div className="mx-auto w-full max-w-sm flex flex-col items-center justify-center">
           <CircleDiagram activeIndex={activeIndex} />
-          <p className="mt-4 text-center text-sm text-muted-foreground">
+          <p className="mt-4 text-center text-xs md:text-sm text-muted-foreground">
             <span className="font-semibold text-foreground">
               {members[activeIndex]}
             </span>{" "}

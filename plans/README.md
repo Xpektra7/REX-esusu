@@ -11,7 +11,7 @@ STOP conditions, and update your row when done.
 | Plan | Title | Priority | Effort | Depends on | Status |
 |------|-------|----------|--------|------------|--------|
 | 001 | Fix top-up reconciliation — remove misdirected gate, eliminate double-credit | P1 | M | — | DONE |
-| 002 | Secure auth — page guard middleware, BVN `code:05`, JWT hardening (+ N149, drop proxy.ts) | P1 | M | — | DONE |
+| 002 | Secure auth — page guard proxy, BVN `code:05`, JWT hardening (+ N149, repurpose src/proxy.ts) | P1 | M | — | DONE |
 | 008 | Debt visibility — payout redirection, accumulated debt, dashboard badge (+ T125/T126) | P1 | M | — | IN PROGRESS |
 | 003 | Harden — rate limiting, webhook `"00"`→`"09"`, OTP log cleanup | P2 | S | — | DONE |
 | 004 | Fix wallet history — type mapping, withdrawal recording (+ refetch, pagination, filter) | P2 | S | — | DONE |
@@ -27,7 +27,7 @@ Status values: TODO | IN PROGRESS | DONE | BLOCKED (with one-line reason) | REJE
 ## Dependency notes
 
 - All plans are independent — no strict execution order required. 001 is recommended first because the top-up bug blocks the core product demo.
-- 002 and 003 both touch `src/middleware.ts` (002 creates it, 003 adds rate limiting inside it). If 002 is skipped, 003's middleware step must create the file instead. If both run, run 002 first.
+- 002 and 003 both touch `src/proxy.ts` (002 creates it, 003 adds rate limiting inside it). If 002 is skipped, 003's proxy step must create the file instead. If both run, run 002 first.
 
 ## GAPS.md reconciliation (2026-07-09)
 
@@ -38,7 +38,7 @@ bankCodes/Lookup mock handlers, C57 markAllRead, D8 retry, D25 topup error,
 C43 remind error, E82b bank-codes handler.
 
 Genuinely missing → mapped as add-ons or new plans:
-- **Add-ons**: 002 ← N149 + D16 BVN `code:05` + delete dead `src/proxy.ts`; 004 ← D30/F104 wallet `refetchInterval(10s)` + F91 pagination + F92 filter; 006 ← D12 password blacklist + D20/pin `0000`/sequential (QF#11/12).
+- **Add-ons**: 002 ← N149 + D16 BVN `code:05` + repurpose dead `src/proxy.ts` as Next proxy; 004 ← D30/F104 wallet `refetchInterval(10s)` + F91 pagination + F92 filter; 006 ← D12 password blacklist + D20/pin `0000`/sequential (QF#11/12).
 - **New plans**: 007 notification types + mock data (C38, QF#6 `reminder`/`default_alert`, QF#7 `trust_score_changed`/`withdrawal_status`, C59b, T111, F104, D27, C59, C58); 008 debt visibility (T121, T120, T113, T125, T126); 009 notification deep-linking (T112/N142); 010 mock handler completeness (QF#1 `isNewUser`, QF#2 `wallet.topup`, D8b OTP rate-limit, C45 initiate balance, E77/E78 leave, E80 invite, E82 expired, F105 failed withdrawal); 011 PWA offline + push (D1, N148, N141).
 
 ## Findings considered and rejected
