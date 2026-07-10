@@ -9,7 +9,7 @@ import {
   users,
   virtualAccounts,
 } from "@/db/schema";
-import { error, success } from "@/lib/api-response";
+import { error, handleApiError, success } from "@/lib/api-response";
 import { hashPassword, verifyPassword } from "@/lib/auth";
 import { requireAuth } from "@/lib/middleware";
 
@@ -98,7 +98,7 @@ export async function PATCH(req: NextRequest) {
     await db.update(users).set(updates).where(eq(users.id, userId));
     return success({ message: "Profile updated" });
   } catch (e) {
-    return error((e as Error).message);
+    return handleApiError(e);
   }
 }
 
@@ -166,6 +166,6 @@ export async function DELETE(req: NextRequest) {
 
     return success({}, "Account deleted");
   } catch (e) {
-    return error((e as Error).message);
+    return handleApiError(e);
   }
 }

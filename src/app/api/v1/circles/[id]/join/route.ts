@@ -2,9 +2,13 @@ import { eq } from "drizzle-orm";
 import type { NextRequest } from "next/server";
 import { db } from "@/db";
 import { circles } from "@/db/schema";
-import { error, success } from "@/lib/api-response";
+import { error, handleApiError, success } from "@/lib/api-response";
+import {
+  JoinError,
+  performJoin,
+  resolveCircleFromCode,
+} from "@/lib/join-circle";
 import { requireAuth } from "@/lib/middleware";
-import { JoinError, performJoin, resolveCircleFromCode } from "@/lib/join-circle";
 
 export async function POST(
   req: NextRequest,
@@ -38,6 +42,6 @@ export async function POST(
     return success(result, "Joined circle");
   } catch (e) {
     if (e instanceof JoinError) return error(e.message, e.code, e.status);
-    return error((e as Error).message);
+    return handleApiError(e);
   }
 }

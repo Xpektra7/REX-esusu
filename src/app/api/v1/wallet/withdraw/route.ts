@@ -2,7 +2,7 @@ import { and, eq, gte, sql } from "drizzle-orm";
 import type { NextRequest } from "next/server";
 import { db } from "@/db";
 import { users, virtualAccounts, walletTransactions } from "@/db/schema";
-import { error, success } from "@/lib/api-response";
+import { error, handleApiError, success } from "@/lib/api-response";
 import { requireAuth } from "@/lib/middleware";
 import { nombaPost } from "@/lib/nomba";
 import { withdrawSchema } from "@/lib/validations";
@@ -128,6 +128,6 @@ export async function POST(req: NextRequest) {
       "Withdrawal initiated",
     );
   } catch (e) {
-    return error((e as Error).message);
+    return handleApiError(e);
   }
 }

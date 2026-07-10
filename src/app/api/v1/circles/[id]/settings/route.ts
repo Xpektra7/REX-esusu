@@ -2,7 +2,7 @@ import { and, eq, sql } from "drizzle-orm";
 import type { NextRequest } from "next/server";
 import { db } from "@/db";
 import { circles, membersCircles } from "@/db/schema";
-import { error, success } from "@/lib/api-response";
+import { error, handleApiError, success } from "@/lib/api-response";
 import { requireAuth } from "@/lib/middleware";
 
 export async function PATCH(
@@ -66,7 +66,7 @@ export async function PATCH(
           .set({
             capacityEnabled: body.capacityEnabled,
             maxMembers:
-              body.capacityEnabled === false ? null : body.maxMembers ?? null,
+              body.capacityEnabled === false ? null : (body.maxMembers ?? null),
           })
           .where(eq(circles.id, id));
       }
@@ -80,6 +80,6 @@ export async function PATCH(
 
     return success(updated);
   } catch (e) {
-    return error((e as Error).message);
+    return handleApiError(e);
   }
 }

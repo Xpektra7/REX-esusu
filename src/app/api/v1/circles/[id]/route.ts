@@ -8,7 +8,7 @@ import {
   membersCircles,
   users,
 } from "@/db/schema";
-import { error, notFound, success } from "@/lib/api-response";
+import { error, handleApiError, notFound, success } from "@/lib/api-response";
 import { requireAuth } from "@/lib/middleware";
 
 export async function GET(
@@ -82,7 +82,7 @@ export async function GET(
       members,
     });
   } catch (e) {
-    return error((e as Error).message);
+    return handleApiError(e);
   }
 }
 
@@ -131,6 +131,6 @@ export async function PATCH(
 
     return success({ message: "Circle updated" });
   } catch (e) {
-    return error((e as Error).message);
+    return handleApiError(e);
   }
 }

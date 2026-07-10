@@ -28,6 +28,11 @@ export function conflict(description = "Conflict") {
     { status: 409 },
   );
 }
+
+export function handleApiError(e: unknown) {
+  console.error("[API Error]", e);
+  return error("An unexpected error occurred", "01", 500);
+}
 export function paginated<T>(
   items: T[],
   page: number,

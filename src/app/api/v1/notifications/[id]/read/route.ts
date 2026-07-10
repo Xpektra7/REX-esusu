@@ -2,7 +2,7 @@ import { and, eq } from "drizzle-orm";
 import type { NextRequest } from "next/server";
 import { db } from "@/db";
 import { notifications } from "@/db/schema";
-import { error, notFound, success } from "@/lib/api-response";
+import { error, handleApiError, notFound, success } from "@/lib/api-response";
 import { requireAuth } from "@/lib/middleware";
 
 const UUID_RE =
@@ -30,6 +30,6 @@ export async function PATCH(
 
     return success({ message: "Marked as read" });
   } catch (e) {
-    return error((e as Error).message);
+    return handleApiError(e);
   }
 }

@@ -49,11 +49,14 @@ export function ActionPinDialog({
       if (res.data?.verified) {
         useAuthStore.getState().resetPinAttempts();
         setPin("");
+        onOpenChange(false);
         onSuccess();
         return;
       }
     } catch {
-      // fall through
+      // fall through to failure handling
+    } finally {
+      setLoading(false);
     }
 
     const attempts = useAuthStore.getState().pinAttempts + 1;
@@ -66,7 +69,6 @@ export function ActionPinDialog({
 
     setError(`Incorrect PIN. ${3 - attempts} attempt(s) remaining.`);
     setPin("");
-    setLoading(false);
   };
 
   const handleLockedSignOut = async () => {

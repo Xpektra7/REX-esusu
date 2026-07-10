@@ -2,7 +2,7 @@ import { desc, eq } from "drizzle-orm";
 import type { NextRequest } from "next/server";
 import { db } from "@/db";
 import { notifications } from "@/db/schema";
-import { error, paginated } from "@/lib/api-response";
+import { error, handleApiError, paginated } from "@/lib/api-response";
 import { requireAuth } from "@/lib/middleware";
 import { paginationSchema } from "@/lib/validations/pagination";
 
@@ -26,10 +26,13 @@ export async function GET(req: NextRequest) {
       .limit(limit)
       .offset(offset);
 
-    const total = await db.$count(notifications, eq(notifications.userId, userId));
+    const total = await db.$count(
+      notifications,
+      eq(notifications.userId, userId),
+    );
 
     return paginated(rows, page, limit, total);
   } catch (e) {
-    return error((e as Error).message);
+    return handleApiError(e);
   }
 }

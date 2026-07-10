@@ -1,5 +1,5 @@
 import type { NextRequest } from "next/server";
-import { error, success } from "@/lib/api-response";
+import { handleApiError, success } from "@/lib/api-response";
 import { requireAuth } from "@/lib/middleware";
 import { nombaGet } from "@/lib/nomba";
 
@@ -11,6 +11,6 @@ export async function GET(req: NextRequest) {
     const banks = await nombaGet("/v1/transfers/banks");
     return success(banks);
   } catch (e) {
-    return error((e as Error).message);
+    return handleApiError(e);
   }
 }

@@ -2,8 +2,19 @@ import { and, eq } from "drizzle-orm";
 import type { NextRequest } from "next/server";
 import { z } from "zod";
 import { db } from "@/db";
-import { debts, membersCircles, virtualAccounts, walletTransactions } from "@/db/schema";
-import { conflict, error, notFound, success } from "@/lib/api-response";
+import {
+  debts,
+  membersCircles,
+  virtualAccounts,
+  walletTransactions,
+} from "@/db/schema";
+import {
+  conflict,
+  error,
+  handleApiError,
+  notFound,
+  success,
+} from "@/lib/api-response";
 import { requireAuth } from "@/lib/middleware";
 import { payDebtSchema } from "@/lib/validations/debts";
 
@@ -55,34 +66,52 @@ export async function POST(
       if (!membership) return { kind: "notFound" as const };
 
       if (debt.status !== "active") {
-        return { kind: "conflict" as const, message: "Debt is already cleared" };
+        return {
+          kind: "conflict" as const,
+          message: "Debt is already cleared",
+        };
       }
 
       const remaining = debt.amountKobo - debt.paidKobo;
       if (remaining <= 0) {
-        return { kind: "conflict" as const, message: "Debt is already cleared" };
+        return {
+          kind: "conflict" as const,
+          message: "Debt is already cleared",
+        };
       }
 
       const payAmount = requestedAmount ?? remaining;
 
       if (payAmount <= 0) {
-        return { kind: "error" as const, message: "Amount must be greater than zero" };
+        return {
+          kind: "error" as const,
+          message: "Amount must be greater than zero",
+        };
       }
 
       if (payAmount > remaining) {
-        return { kind: "error" as const, message: "Amount exceeds remaining debt" };
+        return {
+          kind: "error" as const,
+          message: "Amount exceeds remaining debt",
+        };
       }
 
       const [wallet] = await tx
         .select()
         .from(virtualAccounts)
         .where(
-          and(eq(virtualAccounts.userId, userId), eq(virtualAccounts.type, "personal")),
+          and(
+            eq(virtualAccounts.userId, userId),
+            eq(virtualAccounts.type, "personal"),
+          ),
         )
         .for("update");
 
       if (!wallet || wallet.balanceKobo < payAmount) {
-        return { kind: "error" as const, message: "Insufficient wallet balance" };
+        return {
+          kind: "error" as const,
+          message: "Insufficient wallet balance",
+        };
       }
 
       await tx
@@ -121,6 +150,6 @@ export async function POST(
 
     return success({ debt: result.debt });
   } catch (e) {
-    return error((e as Error).message);
+    return handleApiError(e);
   }
 }
