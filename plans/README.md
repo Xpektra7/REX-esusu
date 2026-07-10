@@ -12,15 +12,15 @@ STOP conditions, and update your row when done.
 |------|-------|----------|--------|------------|--------|
 | 001 | Fix top-up reconciliation — remove misdirected gate, eliminate double-credit | P1 | M | — | DONE |
 | 002 | Secure auth — page guard proxy, BVN `code:05`, JWT hardening (+ N149, repurpose src/proxy.ts) | P1 | M | — | DONE |
-| 008 | Debt visibility — payout redirection, accumulated debt, dashboard badge (+ T125/T126) | P1 | M | — | IN PROGRESS |
+| 008 | Debt visibility — payout redirection, accumulated debt, dashboard badge (+ T125/T126) | P1 | M | — | DONE |
 | 003 | Harden — rate limiting, webhook `"00"`→`"09"`, OTP log cleanup | P2 | S | — | DONE |
 | 004 | Fix wallet history — type mapping, withdrawal recording (+ refetch, pagination, filter) | P2 | S | — | DONE |
-| 007 | Notification types + mock data completeness | P2 | M | — | TODO |
-| 009 | Notification deep-linking | P2 | S | — | TODO |
+| 007 | Notification types + mock data completeness | P2 | M | — | DONE |
+| 009 | Notification deep-linking | P2 | S | — | DONE |
 | 005 | Finish Renata landing refactor — dark hero, gold curve, CTA mock | P2 | M | — | DONE |
-| 010 | Mock handler completeness (non-notification) | P3 | M | — | TODO |
-| 011 | PWA offline + push | P3 | M | — | TODO |
-| 006 | Small hygiene — OTP schema, dead deps, dup routes, Biome (+ password/pin blacklist) | P3 | S | — | TODO |
+| 010 | Mock handler completeness (non-notification) | P3 | M | — | DONE |
+| 011 | PWA offline + push | P3 | M | — | DONE |
+| 006 | Small hygiene — OTP schema, dead deps, dup routes, Biome (+ password/pin blacklist) | P3 | S | — | DONE |
 
 Status values: TODO | IN PROGRESS | DONE | BLOCKED (with one-line reason) | REJECTED (with one-line rationale)
 

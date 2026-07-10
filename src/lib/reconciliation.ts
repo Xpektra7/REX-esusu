@@ -40,7 +40,12 @@ type WebhookPayload = {
   };
 };
 
-type Classification = "exact" | "underpayment" | "overpayment" | "misdirected";
+type Classification =
+  | "exact"
+  | "underpayment"
+  | "overpayment"
+  | "misdirected"
+  | "topup";
 
 export function classifyPayment(
   actual: number,
@@ -92,11 +97,20 @@ export async function reconcilePayment(payload: WebhookPayload) {
   // Case 4: include outstanding debts so classification reflects true obligation
   const outstandingDebts = await getOutstandingDebtsForMemberCircles(mcIds);
   const totalExpected = baseExpectedTotal + outstandingDebts;
-  const classification = classifyPayment(actual, totalExpected);
+
+  // A payment with no contribution reference AND no outstanding dues is a plain
+  // wallet top-up. Credit it without flagging for review — "misdirected" is now
+  // reserved for when dues exist but the amount doesn't match (ratio out of range).
+  let classification: Classification;
+  if (totalExpected <= 0 && !ourRef) {
+    classification = "topup";
+  } else {
+    classification = classifyPayment(actual, totalExpected);
+  }
 
   if (classification === "misdirected") {
     // Non-blocking: flag for review but still credit/allocate the funds below
-    // so legitimate top-ups (no active dues) are not rejected.
+    // so legitimate payments are not rejected.
     await flagForReview(va[0], actual);
   }
 
@@ -136,6 +150,15 @@ export async function reconcilePayment(payload: WebhookPayload) {
         },
       })
       .onConflictDoNothing();
+
+    if (classification === "topup") {
+      await db.insert(notifications).values({
+        userId: va[0].userId,
+        title: "Top-up received",
+        body: `₦${(remaining / 100).toLocaleString()} has been added to your wallet.`,
+        type: "payment",
+      });
+    }
   }
 
   if (classification === "underpayment") {

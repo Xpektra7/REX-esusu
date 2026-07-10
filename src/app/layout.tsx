@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter, Manrope } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
+import { PwaRegister } from "@/components/pwa-register";
 import { cn } from "@/lib/utils";
 
 const inter = Inter({
@@ -54,6 +55,7 @@ export default function RootLayout({
       <body className="min-h-full relative flex flex-col">
         {children}
         <Toaster />
+        <PwaRegister />
       </body>
     </html>
   );

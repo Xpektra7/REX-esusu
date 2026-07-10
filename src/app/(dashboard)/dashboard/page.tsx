@@ -4,9 +4,11 @@ import { useQuery } from "@tanstack/react-query";
 import {
   Coins02Icon,
   MoneyAdd01Icon,
+  Notification01Icon,
   PlusSignIcon,
   UserAdd01Icon,
   UserGroupIcon,
+  Wallet01Icon,
 } from "hugeicons-react";
 import Link from "next/link";
 import { AppBar } from "@/components/layout/app-bar";
@@ -35,10 +37,7 @@ import { api } from "@/lib/api";
 import { formatNaira, timeAgo } from "@/lib/utils";
 import type { ActivityItem } from "@/types";
 
-const iconMap: Record<
-  ActivityItem["type"],
-  { icon: React.ReactNode; bg: string }
-> = {
+const iconMap: Record<string, { icon: React.ReactNode; bg: string }> = {
   contribution: {
     icon: <Coins02Icon className="size-4" />,
     bg: "bg-primary text-foreground",
@@ -59,7 +58,23 @@ const iconMap: Record<
     icon: <Coins02Icon className="size-4" />,
     bg: "bg-primary text-foreground",
   },
+  withdrawal: {
+    icon: <Wallet01Icon className="size-4" />,
+    bg: "bg-foreground text-primary",
+  },
 };
+
+// Live activity types are prefixed with `wallet_` (e.g. `wallet_topup`); the
+// mock returns the bare type. Normalize so both resolve, and fall back to a
+// default icon for any unknown type instead of crashing on `meta.bg`.
+const activityIconFallback = {
+  icon: <Notification01Icon className="size-4" />,
+  bg: "bg-primary text-foreground",
+};
+function activityMeta(type: string) {
+  const key = type.startsWith("wallet_") ? type.slice("wallet_".length) : type;
+  return iconMap[key as ActivityItem["type"]] ?? activityIconFallback;
+}
 
 export default function DashboardPage() {
   const { data: walletRes, isLoading: walletLoading } = useQuery({
@@ -171,7 +186,7 @@ export default function DashboardPage() {
         ) : activityItems.length > 0 ? (
           <ItemGroup className="bg-card gap-0! py-2">
             {activityItems.map((item, i) => {
-              const meta = iconMap[item.type];
+              const meta = activityMeta(item.type);
               return (
                 <div key={item.id}>
                   <ItemSeparator className={i === 0 ? "hidden" : ""} />

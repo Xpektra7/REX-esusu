@@ -17,6 +17,7 @@ import {
   InputOTPSlot,
 } from "@/components/ui/input-otp";
 import { api } from "@/lib/api";
+import { validatePin } from "@/lib/validations/auth";
 import { useAuthStore } from "@/stores/auth-store";
 
 export default function SetPinPage() {
@@ -34,7 +35,12 @@ export default function SetPinPage() {
     setError(null);
 
     if (step === "enter") {
+      const pinError = validatePin(pin);
       if (pin.length < 4) return;
+      if (pinError) {
+        setError(pinError);
+        return;
+      }
       setStep("confirm");
       return;
     }
