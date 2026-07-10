@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
       status: "received",
     });
 
-    processWebhook(payload).catch(console.error);
+    await processWebhook(payload).catch(console.error);
 
     return new Response(
       JSON.stringify({ code: "00", description: "Received" }),
