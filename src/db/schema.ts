@@ -51,6 +51,8 @@ export const circles = pgTable(
       .notNull(),
     gracePeriodHours: integer("grace_period_hours").default(24).notNull(),
     allowMidCycleJoin: boolean("allow_mid_cycle_join").default(false).notNull(),
+    capacityEnabled: boolean("capacity_enabled").default(false).notNull(),
+    maxMembers: integer("max_members"),
     status: varchar("status", { length: 20 }).default("pending").notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),

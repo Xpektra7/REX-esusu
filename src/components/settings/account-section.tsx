@@ -17,8 +17,8 @@ export function AccountSection({ user }: AccountSectionProps) {
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-3 rounded-xl bg-card px-4 py-3">
-        <div className="flex size-9 items-center justify-center rounded-full bg-primary/10 text-primary">
-          <Mail01Icon className="size-4" />
+        <div className="symbol-container bg-primary/10 text-primary">
+          <Mail01Icon className="symbol-width" />
         </div>
         <div>
           <p className="text-xs text-muted-foreground">Email</p>
@@ -36,8 +36,8 @@ export function AccountSection({ user }: AccountSectionProps) {
         )}
       >
         <div className="flex items-center gap-3">
-          <div className="flex size-9 items-center justify-center rounded-full bg-destructive/10 text-destructive">
-            <AlertCircleIcon className="size-4" />
+          <div className="symbol-container bg-destructive/10 text-destructive">
+            <AlertCircleIcon className="symbol-width" />
           </div>
           <span className="text-sm font-medium text-destructive">
             Delete Account

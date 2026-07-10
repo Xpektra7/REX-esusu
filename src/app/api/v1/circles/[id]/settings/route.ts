@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import type { NextRequest } from "next/server";
 import { db } from "@/db";
 import { circles, membersCircles } from "@/db/schema";
@@ -41,6 +41,35 @@ export async function PATCH(
         .update(circles)
         .set({ allowMidCycleJoin: body.allowMidCycleJoin })
         .where(eq(circles.id, id));
+    }
+
+    // Capacity: turning joining OFF caps the circle at its current member
+    // count (best-UX interpretation). Turning it ON reopens without a cap.
+    if (body.capacityEnabled !== undefined) {
+      if (body.capacityEnabled === true && body.maxMembers === undefined) {
+        const [{ count }] = await db
+          .select({ count: sql<number>`count(*)::int` })
+          .from(membersCircles)
+          .where(
+            and(
+              eq(membersCircles.circleId, id),
+              eq(membersCircles.status, "active"),
+            ),
+          );
+        await db
+          .update(circles)
+          .set({ capacityEnabled: true, maxMembers: count })
+          .where(eq(circles.id, id));
+      } else {
+        await db
+          .update(circles)
+          .set({
+            capacityEnabled: body.capacityEnabled,
+            maxMembers:
+              body.capacityEnabled === false ? null : body.maxMembers ?? null,
+          })
+          .where(eq(circles.id, id));
+      }
     }
 
     const [updated] = await db

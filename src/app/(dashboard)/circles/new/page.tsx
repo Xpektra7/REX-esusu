@@ -186,7 +186,9 @@ export default function CreateCirclePage() {
               max={100}
               placeholder="12"
               value={form.cycleCount || ""}
-              onChange={(e) => handleChange("cycleCount", Number(e.target.value))}
+              onChange={(e) =>
+                handleChange("cycleCount", Number(e.target.value))
+              }
               aria-invalid={!!errors.cycleCount}
             />
             {errors.cycleCount && (
@@ -197,8 +199,8 @@ export default function CreateCirclePage() {
 
         {/* Tip Card */}
         <Card className="flex gap-3 bg-card p-4">
-          <div className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary">
-            <InformationCircleIcon className="size-4" />
+          <div className="mt-0.5 symbol-container shrink-0 bg-primary/15 text-primary">
+            <InformationCircleIcon className="symbol-width" />
           </div>
           <div>
             <span className="text-[10px] font-semibold tracking-[0.05em] text-muted-foreground uppercase">

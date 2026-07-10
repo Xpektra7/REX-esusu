@@ -3,6 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import {
   Coins02Icon,
+  Key01Icon,
   MoneyAdd01Icon,
   Notification01Icon,
   PlusSignIcon,
@@ -11,7 +12,9 @@ import {
   Wallet01Icon,
 } from "hugeicons-react";
 import Link from "next/link";
+import { useState } from "react";
 import { AppBar } from "@/components/layout/app-bar";
+import { JoinByCodeDialog } from "@/components/circles/join-by-code-dialog";
 import { CircleCard, type CircleData } from "@/components/shared/circle-card";
 import { WalletCard } from "@/components/shared/wallet-card";
 import { Button } from "@/components/ui/button";
@@ -37,29 +40,32 @@ import { api } from "@/lib/api";
 import { formatNaira, timeAgo } from "@/lib/utils";
 import type { ActivityItem } from "@/types";
 
+export default function DashboardPage() {
+  const [joinDialogOpen, setJoinDialogOpen] = useState(false);
+
 const iconMap: Record<string, { icon: React.ReactNode; bg: string }> = {
   contribution: {
-    icon: <Coins02Icon className="size-4" />,
+    icon: <Coins02Icon className="size-6" />,
     bg: "bg-primary text-foreground",
   },
   payout: {
-    icon: <MoneyAdd01Icon className="size-4" />,
+    icon: <MoneyAdd01Icon className="size-6" />,
     bg: "bg-foreground text-primary",
   },
   circle_join: {
-    icon: <UserAdd01Icon className="size-4" />,
+    icon: <UserAdd01Icon className="size-6" />,
     bg: "bg-foreground text-primary",
   },
   circle_create: {
-    icon: <UserGroupIcon className="size-4" />,
+    icon: <UserGroupIcon className="size-6" />,
     bg: "bg-foreground text-primary",
   },
   topup: {
-    icon: <Coins02Icon className="size-4" />,
+    icon: <Coins02Icon className="size-6" />,
     bg: "bg-primary text-foreground",
   },
   withdrawal: {
-    icon: <Wallet01Icon className="size-4" />,
+    icon: <Wallet01Icon className="symbol-width" />,
     bg: "bg-foreground text-primary",
   },
 };
@@ -68,7 +74,7 @@ const iconMap: Record<string, { icon: React.ReactNode; bg: string }> = {
 // mock returns the bare type. Normalize so both resolve, and fall back to a
 // default icon for any unknown type instead of crashing on `meta.bg`.
 const activityIconFallback = {
-  icon: <Notification01Icon className="size-4" />,
+  icon: <Notification01Icon className="symbol-width" />,
   bg: "bg-primary text-foreground",
 };
 function activityMeta(type: string) {
@@ -76,7 +82,6 @@ function activityMeta(type: string) {
   return iconMap[key as ActivityItem["type"]] ?? activityIconFallback;
 }
 
-export default function DashboardPage() {
   const { data: walletRes, isLoading: walletLoading } = useQuery({
     queryKey: ["wallet"],
     queryFn: () => api.wallet.get(),
@@ -113,7 +118,7 @@ export default function DashboardPage() {
 
       {totalDebt > 0 && (
         <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-4">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.05em] text-destructive/80">
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-destructive/80">
             Outstanding debt
           </p>
           <p className="font-heading text-lg font-bold text-destructive">
@@ -161,12 +166,18 @@ export default function DashboardPage() {
               </EmptyDescription>
             </EmptyHeader>
             <EmptyContent>
-              <Link href="/circles/new">
-                <Button size="sm">
-                  <PlusSignIcon data-icon="inline-start" />
-                  Create Circle
+              <div className="flex flex-col gap-2">
+                <Button size="sm" variant="outline" onClick={() => setJoinDialogOpen(true)}>
+                  <Key01Icon data-icon="inline-start" />
+                  Join with code
                 </Button>
-              </Link>
+                <Link href="/circles/new">
+                  <Button size="sm">
+                    <PlusSignIcon data-icon="inline-start" />
+                    Create Circle
+                  </Button>
+                </Link>
+              </div>
             </EmptyContent>
           </Empty>
         )}
@@ -193,7 +204,7 @@ export default function DashboardPage() {
                   <Item variant="muted" size="xs">
                     <ItemMedia
                       variant="icon"
-                      className={`rounded-full size-6 ${meta.bg} p-0!`}
+                      className={`symbol-container ${meta.bg} p-0!`}
                     >
                       {meta.icon}
                     </ItemMedia>
@@ -228,7 +239,9 @@ export default function DashboardPage() {
             </EmptyHeader>
           </Empty>
         )}
-      </section>
+        </section>
+
+      <JoinByCodeDialog open={joinDialogOpen} onOpenChange={setJoinDialogOpen} />
     </div>
   );
 }

@@ -48,43 +48,43 @@ interface NotificationItem {
 
 const notifIcons: Record<string, { icon: React.ReactNode; bg: string }> = {
   payout: {
-    icon: <MoneyAdd01Icon className="size-4" />,
+    icon: <MoneyAdd01Icon className="symbol-width" />,
     bg: "bg-foreground text-primary",
   },
   contribution_due: {
-    icon: <Coins02Icon className="size-4" />,
+    icon: <Coins02Icon className="symbol-width" />,
     bg: "bg-primary text-foreground",
   },
   reminder: {
-    icon: <Notification01Icon className="size-4" />,
+    icon: <Notification01Icon className="symbol-width" />,
     bg: "bg-primary text-foreground",
   },
   member_join: {
-    icon: <UserAdd01Icon className="size-4" />,
+    icon: <UserAdd01Icon className="symbol-width" />,
     bg: "bg-foreground text-primary",
   },
   circle_completed: {
-    icon: <UserGroupIcon className="size-4" />,
+    icon: <UserGroupIcon className="symbol-width" />,
     bg: "bg-primary text-foreground",
   },
   circle_invite: {
-    icon: <UserCircleIcon className="size-4" />,
+    icon: <UserCircleIcon className="symbol-width" />,
     bg: "bg-foreground text-primary",
   },
   default_alert: {
-    icon: <Alert02Icon className="size-4" />,
+    icon: <Alert02Icon className="symbol-width" />,
     bg: "bg-destructive/10 text-destructive",
   },
   trust_score_changed: {
-    icon: <Shield02Icon className="size-4" />,
+    icon: <Shield02Icon className="symbol-width" />,
     bg: "bg-primary text-foreground",
   },
   withdrawal_status: {
-    icon: <Wallet01Icon className="size-4" />,
+    icon: <Wallet01Icon className="symbol-width" />,
     bg: "bg-foreground text-primary",
   },
   debt_cleared: {
-    icon: <Tick02Icon className="size-4" />,
+    icon: <Tick02Icon className="symbol-width" />,
     bg: "bg-primary text-foreground",
   },
 };
@@ -176,7 +176,7 @@ export default function NotificationsPage() {
         <ItemGroup className="gap-0! py-2 bg-card">
           {notifications.map((n, i) => {
             const meta = notifIcons[n.type] ?? {
-              icon: <Notification01Icon className="size-4" />,
+              icon: <Notification01Icon className="symbol-width" />,
               bg: "bg-primary text-foreground",
             };
             return (
@@ -189,16 +189,13 @@ export default function NotificationsPage() {
                     <button
                       type="button"
                       onClick={() => handleOpen(n)}
-                      className={cn(
-                        "w-full text-left transition-colors hover:bg-muted",
-                        !n.read && "bg-primary/5",
-                      )}
+                      className={cn("w-full text-left transition-colors", "")}
                     />
                   }
                 >
                   <ItemMedia
                     variant="icon"
-                    className={cn("rounded-full size-8 p-0!", meta.bg)}
+                    className={cn("symbol-container p-0!", meta.bg)}
                   >
                     {meta.icon}
                   </ItemMedia>

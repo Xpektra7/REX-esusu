@@ -1,10 +1,12 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { PlusSignIcon } from "hugeicons-react";
+import { Key01Icon, PlusSignIcon } from "hugeicons-react";
 import Link from "next/link";
-import { CircleCard, type CircleData } from "@/components/shared/circle-card";
+import { useState } from "react";
 import { PageBreadcrumbs } from "@/components/shared/page-breadcrumbs";
+import { JoinByCodeDialog } from "@/components/circles/join-by-code-dialog";
+import { CircleCard, type CircleData } from "@/components/shared/circle-card";
 import { Button } from "@/components/ui/button";
 import {
   Empty,
@@ -17,6 +19,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/lib/api";
 
 export default function CirclesPage() {
+  const [dialogOpen, setDialogOpen] = useState(false);
+
   const { data, isLoading } = useQuery({
     queryKey: ["circles"],
     queryFn: () => api.circles.list(),
@@ -61,30 +65,50 @@ export default function CirclesPage() {
               />
             </EmptyMedia>
             <EmptyDescription>
-              No circles yet. Create one to start saving with your group.
+              No circles yet. Create one or join with a code to start saving
+              with your group.
             </EmptyDescription>
           </EmptyHeader>
           <EmptyContent>
-            <Link href="/circles/new">
-              <Button size="sm">
-                <PlusSignIcon data-icon="inline-start" />
-                Create Circle
+            <div className="flex flex-col gap-2">
+              <Button size="sm" variant="outline" onClick={() => setDialogOpen(true)}>
+                <Key01Icon data-icon="inline-start" />
+                Join with code
               </Button>
-            </Link>
+              <Link href="/circles/new">
+                <Button size="sm">
+                  <PlusSignIcon data-icon="inline-start" />
+                  Create Circle
+                </Button>
+              </Link>
+            </div>
           </EmptyContent>
         </Empty>
       )}
 
       {/* FAB */}
       {circles.length > 0 && (
-        <Link
-          href="/circles/new"
-          className="absolute bottom-24 right-5 z-50 flex size-14 items-center justify-center rounded-full bg-primary text-card-foreground shadow-lg"
-          aria-label="Create circle"
-        >
-          <PlusSignIcon className="size-6" />
-        </Link>
+        <div className="absolute bottom-24 right-5 z-50 flex flex-col items-end gap-3">
+          <Button
+            size="icon"
+            variant="outline"
+            className="size-14 rounded-full shadow-lg"
+            aria-label="Join with code"
+            onClick={() => setDialogOpen(true)}
+          >
+            <Key01Icon className="size-6" />
+          </Button>
+          <Link
+            href="/circles/new"
+            className="flex size-14 items-center justify-center rounded-full bg-primary text-card-foreground shadow-lg"
+            aria-label="Create circle"
+          >
+            <PlusSignIcon className="size-6" />
+          </Link>
+        </div>
       )}
+
+      <JoinByCodeDialog open={dialogOpen} onOpenChange={setDialogOpen} />
     </div>
   );
 }

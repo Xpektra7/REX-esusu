@@ -11,9 +11,9 @@ import {
 } from "hugeicons-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { ActionPinDialog } from "@/components/shared/action-pin-dialog";
 import { DiceBearAvatar } from "@/components/shared/dicebear-avatar";
 import { PageBreadcrumbs } from "@/components/shared/page-breadcrumbs";
-import { ActionPinDialog } from "@/components/shared/action-pin-dialog";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
@@ -60,7 +60,7 @@ function SettingsRow({
     >
       <div
         className={cn(
-          "flex size-9 items-center justify-center rounded-full",
+          "symbol-container",
           variant === "danger"
             ? "bg-destructive/10 text-destructive"
             : "bg-primary/10 text-primary",
@@ -159,8 +159,8 @@ export default function ProfilePage() {
         <Card className="p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="flex size-10 items-center justify-center rounded-full bg-primary/10 text-primary">
-                <IdVerifiedIcon className="size-5" />
+              <div className="symbol-container bg-primary/10 text-primary">
+                <IdVerifiedIcon className="symbol-width" />
               </div>
               <div>
                 <p className="text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
@@ -205,17 +205,17 @@ export default function ProfilePage() {
           Account Settings
         </h2>
         <SettingsRow
-          icon={<UserIcon className="size-4" />}
+          icon={<UserIcon className="symbol-width" />}
           label="Edit Name"
           onClick={() => openEdit("name")}
         />
         <SettingsRow
-          icon={<Mail01Icon className="size-4" />}
+          icon={<Mail01Icon className="symbol-width" />}
           label="Edit Email"
           onClick={() => openEdit("email")}
         />
         <SettingsRow
-          icon={<Shield01Icon className="size-4" />}
+          icon={<Shield01Icon className="symbol-width" />}
           label="Change PIN"
           onClick={() => router.push("/signup/pin")}
         />
@@ -226,7 +226,7 @@ export default function ProfilePage() {
       <div className="flex flex-col gap-2">
         <h2 className="text-sm font-bold uppercase tracking-wider">More</h2>
         <SettingsRow
-          icon={<Share08Icon className="size-4" />}
+          icon={<Share08Icon className="symbol-width" />}
           label="Refer & Earn"
           onClick={() => router.push("/referrals")}
         />
@@ -237,8 +237,8 @@ export default function ProfilePage() {
             "flex items-center gap-3 rounded-xl border border-destructive/30 px-4 py-3 transition-colors hover:bg-muted/50 w-full text-left",
           )}
         >
-          <div className="flex size-9 items-center justify-center rounded-full bg-destructive/10 text-destructive">
-            <Logout01Icon className="size-4" />
+          <div className="symbol-container bg-destructive/10 text-destructive">
+            <Logout01Icon className="symbol-width" />
           </div>
           <span className="text-sm font-medium text-destructive">Log Out</span>
         </button>

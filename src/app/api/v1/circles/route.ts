@@ -96,6 +96,8 @@ export async function POST(req: NextRequest) {
       cycleCount,
       defaultResolutionRule,
       gracePeriodHours,
+      capacityEnabled,
+      maxMembers,
     } = await req.json();
     if (!name || !contributionAmountKobo || !frequency || !cycleCount) {
       return error(
@@ -118,6 +120,11 @@ export async function POST(req: NextRequest) {
         cycleCount,
         defaultResolutionRule: defaultResolutionRule || "absorb",
         gracePeriodHours: grace,
+        capacityEnabled: capacityEnabled === true,
+        maxMembers:
+          capacityEnabled === true && typeof maxMembers === "number"
+            ? maxMembers
+            : null,
       })
       .returning();
 

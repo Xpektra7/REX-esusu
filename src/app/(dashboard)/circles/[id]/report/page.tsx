@@ -49,7 +49,7 @@ export default function ReportPage(props: { params: Promise<{ id: string }> }) {
   if (!report) {
     return (
       <div className="flex flex-col items-center gap-4 py-16 text-center">
-        <AlertCircleIcon className="size-10 text-muted-foreground" />
+        <AlertCircleIcon className="symbol-width text-muted-foreground" />
         <p className="text-sm text-muted-foreground">Report not available.</p>
         <Link href={`/circles/${id}`}>
           <button

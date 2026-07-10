@@ -355,6 +355,18 @@ async function mockRequest<T>(
     return { code: "00", description: "Joined circle", data: {} as T };
   }
 
+  if (path === "/circles/join-by-code" && method === "POST") {
+    return {
+      code: "00",
+      description: "Joined circle",
+      data: {
+        circleId: "circle_mock_001",
+        circleName: "Weekend Travelers",
+        rotationOrder: 11,
+      } as T,
+    };
+  }
+
   if (path.endsWith("/leave") && method === "POST") {
     return { code: "00", description: "Left circle", data: {} as T };
   }
@@ -407,6 +419,8 @@ async function mockRequest<T>(
         defaultResolutionRule: "absorb",
         gracePeriodHours: 24,
         allowMidCycleJoin: false,
+        capacityEnabled: false,
+        maxMembers: null,
         status: "active",
         createdAt: "2025-01-15T00:00:00Z",
         updatedAt: new Date().toISOString(),
@@ -1249,7 +1263,17 @@ export const api = {
         method: "POST",
       }),
 
-    /** Joins a circle using an invite code. */
+    /** Joins a circle using only an invite code (code-only entry point). */
+    joinByCode: (inviteCode: string) =>
+      request<{ circleId: string; circleName: string; rotationOrder: number }>(
+        "/circles/join-by-code",
+        {
+          method: "POST",
+          body: JSON.stringify({ inviteCode }),
+        },
+      ),
+
+    /** Joins a circle using an invite code (circle-scoped route). */
     join: (id: string, inviteCode: string) =>
       request<Record<string, unknown>>(`/circles/${id}/join`, {
         method: "POST",
@@ -1278,7 +1302,10 @@ export const api = {
       }),
 
     /** Updates circle settings. */
-    updateSettings: (id: string, payload: { allowMidCycleJoin?: boolean }) =>
+    updateSettings: (
+      id: string,
+      payload: { allowMidCycleJoin?: boolean; capacityEnabled?: boolean },
+    ) =>
       request<unknown>(`/circles/${id}/settings`, {
         method: "PATCH",
         body: JSON.stringify(payload),

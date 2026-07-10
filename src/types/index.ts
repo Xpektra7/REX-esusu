@@ -20,6 +20,9 @@ export interface Circle {
   currentCycle: number;
   defaultResolutionRule: "absorb" | "shrink" | "end_early";
   gracePeriodHours: number;
+  allowMidCycleJoin: boolean;
+  capacityEnabled: boolean;
+  maxMembers: number | null;
   status: "pending" | "active" | "completed" | "dissolved";
   createdAt: string;
   updatedAt: string;
@@ -225,6 +228,8 @@ export interface CirclePageData {
   currentCycle: number;
   gracePeriodHours: number;
   allowMidCycleJoin: boolean;
+  capacityEnabled: boolean;
+  maxMembers: number | null;
   inviteCode?: string;
   cyclePeriodDays?: number;
   deadlineAt?: string;

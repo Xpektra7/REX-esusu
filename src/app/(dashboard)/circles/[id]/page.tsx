@@ -55,7 +55,7 @@ export default function CircleDetailPage(props: {
   if (!circle) {
     return (
       <div className="flex flex-col items-center gap-4 py-16 text-center">
-        <AlertCircleIcon className="size-10 text-muted-foreground" />
+        <AlertCircleIcon className="symbol-width text-muted-foreground" />
         <p className="text-sm text-muted-foreground">Circle not found.</p>
         <Link href="/circles">
           <button
@@ -89,9 +89,9 @@ export default function CircleDetailPage(props: {
         <div className="flex items-center gap-2">
           <Link
             href={`/circles/${id}/settings`}
-            className="flex size-8 items-center justify-center rounded-full bg-muted text-muted-foreground hover:bg-muted/80 transition-colors"
+            className="symbol-container bg-muted text-muted-foreground hover:bg-muted/80 transition-colors"
           >
-            <Settings01Icon className="size-4" />
+            <Settings01Icon className="symbol-width" />
           </Link>
           <Badge variant={circle.status === "active" ? "default" : "outline"}>
             {circle.status.charAt(0).toUpperCase() + circle.status.slice(1)}

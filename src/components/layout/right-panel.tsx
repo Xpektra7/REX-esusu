@@ -12,8 +12,12 @@ import {
   Wallet01Icon,
 } from "hugeicons-react";
 import Link from "next/link";
-import { api } from "@/lib/api";
-import { cn, formatNaira, timeAgo } from "@/lib/utils";
+import {
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  Empty as EmptyState,
+} from "@/components/ui/empty";
 import {
   Item,
   ItemActions,
@@ -25,12 +29,8 @@ import {
   ItemTitle,
 } from "@/components/ui/item";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Empty as EmptyState,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-} from "@/components/ui/empty";
+import { api } from "@/lib/api";
+import { cn, formatNaira, timeAgo } from "@/lib/utils";
 
 interface NotificationItem {
   id: string;
@@ -51,19 +51,19 @@ interface TransactionItem {
 
 const notifIcons: Record<string, { icon: React.ReactNode; bg: string }> = {
   payout: {
-    icon: <MoneyAdd01Icon className="size-3" />,
+    icon: <MoneyAdd01Icon className="symbol-width" />,
     bg: "bg-foreground text-primary",
   },
   contribution_due: {
-    icon: <Coins02Icon className="size-3" />,
+    icon: <Coins02Icon className="symbol-width" />,
     bg: "bg-primary text-foreground",
   },
   member_join: {
-    icon: <UserAdd01Icon className="size-3" />,
+    icon: <UserAdd01Icon className="symbol-width" />,
     bg: "bg-foreground text-primary",
   },
   circle_completed: {
-    icon: <UserGroupIcon className="size-3" />,
+    icon: <UserGroupIcon className="symbol-width" />,
     bg: "bg-primary text-foreground",
   },
 };
@@ -83,7 +83,8 @@ export function RightPanel() {
     (Array.isArray(notifRes?.data) ? notifRes.data : []) as NotificationItem[]
   ).slice(0, 5);
   const transactions = (
-    (Array.isArray(txRes?.data) ? txRes.data : []) as TransactionItem[]
+    (txRes?.data as { transactions?: TransactionItem[] } | undefined)
+      ?.transactions ?? []
   ).slice(0, 5);
 
   return (
@@ -130,7 +131,7 @@ export function RightPanel() {
                     <Item variant="muted" size="xs">
                       <ItemMedia
                         variant="icon"
-                        className={`rounded-full size-8 ${meta.bg} p-0!`}
+                        className={`symbol-container ${meta.bg} p-0!`}
                       >
                         {meta.icon}
                       </ItemMedia>
@@ -211,16 +212,16 @@ export function RightPanel() {
                       <ItemMedia
                         variant="icon"
                         className={cn(
-                          "rounded-full size-6 p-0!",
+                          "symbol-container p-0!",
                           isCredit
                             ? "bg-muted text-foreground"
                             : "bg-primary text-foreground",
                         )}
                       >
                         {isCredit ? (
-                          <ArrowDown01Icon className="size-3" />
+                          <ArrowDown01Icon className="symbol-width" />
                         ) : (
-                          <ArrowUp01Icon className="size-3" />
+                          <ArrowUp01Icon className="symbol-width" />
                         )}
                       </ItemMedia>
                       <ItemContent>

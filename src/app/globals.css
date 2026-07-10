@@ -126,6 +126,14 @@
     --sidebar-ring: oklch(0.556 0 0);
 }
 
+@utility symbol-container {
+    @apply flex size-8 items-center justify-center rounded-full;
+}
+
+@utility symbol-width {
+    @apply size-6;
+}
+
 @layer base {
     * {
         @apply border-border outline-ring/50;

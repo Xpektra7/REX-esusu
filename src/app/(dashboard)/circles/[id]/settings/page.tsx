@@ -18,6 +18,7 @@ export default function CircleSettingsPage(props: {
   const { id } = use(props.params);
   const queryClient = useQueryClient();
   const [pinDialogOpen, setPinDialogOpen] = useState(false);
+  const [capacityPinOpen, setCapacityPinOpen] = useState(false);
 
   const { data: res, isLoading } = useQuery({
     queryKey: ["circle", id],
@@ -27,8 +28,10 @@ export default function CircleSettingsPage(props: {
   const circle = res?.data as CirclePageData | undefined;
 
   const updateMutation = useMutation({
-    mutationFn: (payload: { allowMidCycleJoin?: boolean }) =>
-      api.circles.updateSettings(id, payload),
+    mutationFn: (payload: {
+      allowMidCycleJoin?: boolean;
+      capacityEnabled?: boolean;
+    }) => api.circles.updateSettings(id, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["circle", id] });
       toast.success("Settings saved");
@@ -46,6 +49,18 @@ export default function CircleSettingsPage(props: {
     updateMutation.mutate({ allowMidCycleJoin: !circle.allowMidCycleJoin });
   };
 
+  const toggleCapacity = () => {
+    if (!circle) return;
+    setCapacityPinOpen(true);
+  };
+
+  const doSaveCapacity = () => {
+    if (!circle) return;
+    // Toggling joining OFF caps the circle at its current member count
+    // (handled server-side). Toggling ON reopens it without a cap.
+    updateMutation.mutate({ capacityEnabled: !circle.capacityEnabled });
+  };
+
   if (isLoading) {
     return (
       <div className="flex flex-col gap-4">
@@ -60,7 +75,10 @@ export default function CircleSettingsPage(props: {
       <div className="flex flex-col items-center gap-4 py-16 text-center">
         <p className="text-sm text-muted-foreground">Circle not found.</p>
         <Link href="/circles">
-          <button type="button" className="rounded-lg card-interactive px-4 py-2 text-sm">
+          <button
+            type="button"
+            className="rounded-lg card-interactive px-4 py-2 text-sm"
+          >
             Back to Circles
           </button>
         </Link>
@@ -82,9 +100,9 @@ export default function CircleSettingsPage(props: {
       <div className="flex items-center gap-3">
         <Link
           href={`/circles/${id}`}
-          className="flex size-9 items-center justify-center rounded-full bg-muted text-muted-foreground hover:bg-muted/80 transition-colors"
+          className="symbol-container bg-muted text-muted-foreground hover:bg-muted/80 transition-colors"
         >
-          <ArrowLeft01Icon className="size-5" />
+          <ArrowLeft01Icon className="symbol-width" />
         </Link>
         <h1 className="text-xl font-bold">Circle Settings</h1>
       </div>
@@ -97,9 +115,9 @@ export default function CircleSettingsPage(props: {
           <div>
             <p className="text-sm font-medium">Allow joining mid-cycle</p>
             <p className="text-xs text-muted-foreground">
-              When on, new members can join after the circle has started.
-              Late joiners are placed last in rotation and receive a prorated
-              payout for their first turn.
+              When on, new members can join after the circle has started. Late
+              joiners are placed last in rotation and receive a prorated payout
+              for their first turn.
             </p>
           </div>
           <button
@@ -121,10 +139,47 @@ export default function CircleSettingsPage(props: {
         </div>
       </Card>
 
+      <Card className="p-4">
+        <h2 className="mb-3 text-sm font-bold uppercase tracking-wider">
+          Capacity
+        </h2>
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm font-medium">Allow new members to join</p>
+            <p className="text-xs text-muted-foreground">
+              When on, anyone with the invite code can join. Turn off to lock
+              the circle at its current member count.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={toggleCapacity}
+            disabled={updateMutation.isPending}
+            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors ${
+              circle.capacityEnabled ? "bg-muted" : "bg-primary"
+            }`}
+            role="switch"
+            aria-checked={!circle.capacityEnabled}
+          >
+            <span
+              className={`inline-block size-5 rounded-full bg-white shadow-sm transition-transform ${
+                circle.capacityEnabled ? "translate-x-0" : "translate-x-5"
+              }`}
+            />
+          </button>
+        </div>
+      </Card>
+
       <ActionPinDialog
         open={pinDialogOpen}
         onOpenChange={setPinDialogOpen}
         onSuccess={doSaveMidCycle}
+      />
+
+      <ActionPinDialog
+        open={capacityPinOpen}
+        onOpenChange={setCapacityPinOpen}
+        onSuccess={doSaveCapacity}
       />
     </div>
   );
