@@ -56,12 +56,6 @@ export default function CircleDetailPage(props: {
   const [contribution, setContribution] = useState<{
     ourReference: string;
     amountKobo: number;
-    virtualAccount: {
-      accountNumber: string;
-      accountName: string;
-      bankCode: string;
-    };
-    instructions: string;
   } | null>(null);
 
   const contributeMutation = useMutation({
@@ -75,8 +69,10 @@ export default function CircleDetailPage(props: {
     },
     onSuccess: (res) => {
       queryClient.invalidateQueries({ queryKey: ["circle", id] });
+      queryClient.invalidateQueries({ queryKey: ["wallet"] });
       setContribution(res.data);
       setContributePinOpen(false);
+      toast.success("Contribution recorded");
     },
     onError: (err: Error) => toast.error(err.message),
   });
@@ -157,17 +153,30 @@ export default function CircleDetailPage(props: {
             Your Contribution
           </span>
           <div className="mt-1 flex items-center justify-between">
-            <p className="text-sm font-medium">
-              {formatNaira(circle.contributionAmount)} this cycle
-            </p>
-            <Button
-              onClick={() => setContributePinOpen(true)}
-              disabled={contributeMutation.isPending}
-            >
-              {contributeMutation.isPending
-                ? "Processing..."
-                : "Contribute Now"}
-            </Button>
+            <div>
+              <p className="text-sm font-medium">
+                {formatNaira(circle.contributionAmount)} this cycle
+              </p>
+              {circle.totalContributedKobo ? (
+                <p className="text-xs text-muted-foreground">
+                  {formatNaira(circle.totalContributedKobo)} contributed so far
+                </p>
+              ) : null}
+            </div>
+            {circle.userContributedThisCycle ? (
+              <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+                Contributed ✓
+              </span>
+            ) : (
+              <Button
+                onClick={() => setContributePinOpen(true)}
+                disabled={contributeMutation.isPending}
+              >
+                {contributeMutation.isPending
+                  ? "Processing..."
+                  : "Contribute Now"}
+              </Button>
+            )}
           </div>
         </div>
       )}
@@ -208,10 +217,10 @@ export default function CircleDetailPage(props: {
         >
           <DialogContent className="sm:max-w-sm w-fit">
             <DialogHeader>
-              <DialogTitle>Contribution initiated</DialogTitle>
+              <DialogTitle>Contribution recorded</DialogTitle>
               <DialogDescription>
-                Transfer the amount to your virtual account using the reference
-                below so we can match it.
+                {formatNaira(contribution.amountKobo)} has been deducted from
+                your wallet. Keep your reference below for your records.
               </DialogDescription>
             </DialogHeader>
             <div className="flex flex-col gap-3 py-2 text-sm">
@@ -231,21 +240,6 @@ export default function CircleDetailPage(props: {
                   {contribution.ourReference}
                 </p>
               </div>
-              <div>
-                <p className="text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
-                  Bank details
-                </p>
-                <p className="font-medium">
-                  {contribution.virtualAccount.accountName}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {contribution.virtualAccount.bankCode} ·{" "}
-                  {contribution.virtualAccount.accountNumber}
-                </p>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                {contribution.instructions}
-              </p>
             </div>
             <DialogFooter>
               <Button

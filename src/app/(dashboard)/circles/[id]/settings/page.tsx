@@ -277,14 +277,14 @@ export default function CircleSettingsPage(props: {
             onClick={toggleCapacity}
             disabled={updateMutation.isPending}
             className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors ${
-              circle.capacityEnabled ? "bg-muted" : "bg-primary"
+              circle.capacityEnabled ? "bg-primary" : "bg-muted"
             }`}
             role="switch"
-            aria-checked={!circle.capacityEnabled}
+            aria-checked={circle.capacityEnabled}
           >
             <span
               className={`inline-block size-5 rounded-full bg-white shadow-sm transition-transform ${
-                circle.capacityEnabled ? "translate-x-0" : "translate-x-5"
+                circle.capacityEnabled ? "translate-x-5" : "translate-x-0"
               }`}
             />
           </button>

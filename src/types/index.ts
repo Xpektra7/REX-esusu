@@ -228,13 +228,15 @@ export interface CirclePageData {
   cycleCount: number;
   currentCycle: number;
   currentCycleId?: string | null;
-  gracePeriodHours: number;
   allowMidCycleJoin: boolean;
   capacityEnabled: boolean;
   maxMembers: number | null;
   inviteCode?: string;
   cyclePeriodDays?: number;
   deadlineAt?: string;
+  gracePeriodHours: number;
+  userContributedThisCycle?: boolean;
+  totalContributedKobo?: number;
   members?: MemberItem[];
 }
 

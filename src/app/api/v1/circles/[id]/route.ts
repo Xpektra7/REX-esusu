@@ -1,8 +1,9 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import type { NextRequest } from "next/server";
 import { db } from "@/db";
 import {
   circles,
+  contributions,
   cycles,
   inviteCodes,
   membersCircles,
@@ -50,6 +51,43 @@ export async function GET(
       .where(and(eq(cycles.circleId, id), eq(cycles.status, "active")))
       .limit(1);
 
+    // Has the current user already contributed to the active cycle?
+    let userContributedThisCycle = false;
+    if (currentCycle) {
+      const existing = await db
+        .select({ id: contributions.id })
+        .from(contributions)
+        .innerJoin(
+          membersCircles,
+          eq(contributions.memberCircleId, membersCircles.id),
+        )
+        .where(
+          and(
+            eq(membersCircles.userId, auth.user?.userId),
+            eq(contributions.cycleId, currentCycle.id),
+          ),
+        )
+        .limit(1);
+      userContributedThisCycle = existing.length > 0;
+    }
+
+    // Total the user has contributed across all cycles in this circle.
+    const [totalContributedRow] = await db
+      .select({
+        sum: sql<number>`coalesce(sum(${contributions.amountKobo}), 0)`,
+      })
+      .from(contributions)
+      .innerJoin(
+        membersCircles,
+        eq(contributions.memberCircleId, membersCircles.id),
+      )
+      .where(
+        and(
+          eq(membersCircles.userId, auth.user?.userId),
+          eq(membersCircles.circleId, id),
+        ),
+      );
+
     const rows = await db
       .select({
         id: membersCircles.id,
@@ -92,6 +130,9 @@ export async function GET(
       inviteCode: inviteRecord?.code,
       cyclePeriodDays: circle.cyclePeriodDays,
       deadlineAt: currentCycle?.deadlineAt?.toISOString(),
+      userContributedThisCycle,
+      totalContributedKobo: Number(totalContributedRow?.sum) || 0,
+      gracePeriodHours: circle.gracePeriodHours,
       members,
     });
   } catch (e) {
@@ -128,12 +169,22 @@ export async function PATCH(
     if (!membership || membership.role !== "admin")
       return error("Only admin can update circle", "03", 403);
 
-    const { name, defaultResolutionRule, gracePeriodHours } = await req.json();
+    const {
+      name,
+      defaultResolutionRule,
+      gracePeriodHours,
+      allowMidCycleJoin,
+      capacityEnabled,
+    } = await req.json();
     const updates: Record<string, unknown> = {};
     if (name) updates.name = name;
     if (defaultResolutionRule)
       updates.defaultResolutionRule = defaultResolutionRule;
     if (gracePeriodHours) updates.gracePeriodHours = gracePeriodHours;
+    if (typeof allowMidCycleJoin === "boolean")
+      updates.allowMidCycleJoin = allowMidCycleJoin;
+    if (typeof capacityEnabled === "boolean")
+      updates.capacityEnabled = capacityEnabled;
 
     if (circle.currentCycle > 0) {
       if (name) delete updates.name;

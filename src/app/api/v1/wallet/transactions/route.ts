@@ -47,6 +47,8 @@ export async function GET(req: NextRequest) {
           return "Debt Payment";
         case "cycle_payment":
           return "Cycle Payout";
+        case "contribution":
+          return "Contribution";
         case "refund":
           return "Refund";
         default:

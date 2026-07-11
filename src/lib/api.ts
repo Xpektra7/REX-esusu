@@ -544,8 +544,11 @@ async function mockRequest<T>(
   if (path === "/contributions/initiate" && method === "POST") {
     return {
       code: "00",
-      description: "Initiated",
-      data: { ref: `TXN${Date.now()}` } as T,
+      description: "Contribution recorded",
+      data: {
+        ourReference: `CONTRIB_mock_${Date.now()}`,
+        amountKobo: 500000,
+      } as T,
     };
   }
 
@@ -1353,12 +1356,6 @@ export const api = {
       request<{
         ourReference: string;
         amountKobo: number;
-        virtualAccount: {
-          accountNumber: string;
-          accountName: string;
-          bankCode: string;
-        };
-        instructions: string;
       }>("/contributions/initiate", {
         method: "POST",
         body: JSON.stringify(payload),
