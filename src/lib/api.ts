@@ -1304,7 +1304,11 @@ export const api = {
     /** Updates circle settings. */
     updateSettings: (
       id: string,
-      payload: { allowMidCycleJoin?: boolean; capacityEnabled?: boolean },
+      payload: {
+        name?: string;
+        allowMidCycleJoin?: boolean;
+        capacityEnabled?: boolean;
+      },
     ) =>
       request<unknown>(`/circles/${id}/settings`, {
         method: "PATCH",

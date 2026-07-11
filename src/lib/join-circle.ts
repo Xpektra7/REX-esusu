@@ -1,6 +1,12 @@
 import { and, eq, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { circles, inviteCodes, membersCircles } from "@/db/schema";
+import {
+  circles,
+  inviteCodes,
+  membersCircles,
+  notifications,
+  users,
+} from "@/db/schema";
 
 export class JoinError extends Error {
   constructor(
@@ -138,6 +144,50 @@ export async function performJoin(
     .update(inviteCodes)
     .set({ useCount: invite.useCount + 1 })
     .where(eq(inviteCodes.id, invite.id));
+
+  // Notify the joiner and the circle's admins (non-fatal — a notification
+  // failure must not roll back the join itself).
+  try {
+    const [joiner] = await db
+      .select({ name: users.name })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+    const joinerName = joiner?.name ?? "A member";
+
+    const admins = await db
+      .select({ userId: membersCircles.userId })
+      .from(membersCircles)
+      .where(
+        and(
+          eq(membersCircles.circleId, circle.id),
+          eq(membersCircles.role, "admin"),
+        ),
+      );
+
+    const notifs: (typeof notifications.$inferInsert)[] = [
+      {
+        userId,
+        title: "You joined a circle",
+        body: `You're now a member of ${circle.name}.`,
+        type: "circle_joined",
+        data: { circleId: circle.id },
+      },
+    ];
+    for (const admin of admins) {
+      if (admin.userId === userId) continue;
+      notifs.push({
+        userId: admin.userId,
+        title: "New member joined",
+        body: `${joinerName} joined ${circle.name}.`,
+        type: "circle_joined",
+        data: { circleId: circle.id },
+      });
+    }
+    if (notifs.length) await db.insert(notifications).values(notifs);
+  } catch (nErr) {
+    console.error("[performJoin] failed to send join notifications:", nErr);
+  }
 
   return {
     circleId: circle.id,

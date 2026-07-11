@@ -36,6 +36,13 @@ export async function PATCH(
 
     const body = await req.json();
 
+    if (typeof body.name === "string") {
+      const trimmed = body.name.trim();
+      if (trimmed.length === 0) return error("Circle name cannot be empty");
+      if (trimmed.length > 255) return error("Circle name is too long");
+      await db.update(circles).set({ name: trimmed }).where(eq(circles.id, id));
+    }
+
     if (body.allowMidCycleJoin !== undefined) {
       await db
         .update(circles)

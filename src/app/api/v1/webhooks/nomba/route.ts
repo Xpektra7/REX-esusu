@@ -70,20 +70,40 @@ export async function POST(request: NextRequest) {
       .from(webhookEvents)
       .where(eq(webhookEvents.nombaRequestId, payload.requestId))
       .limit(1);
-    if (existing.length > 0) {
+
+    // Terminal states: already successfully processed, or intentionally
+    // unhandled (no action needed). Nothing to do — ack Nomba.
+    if (
+      existing.length > 0 &&
+      (existing[0].status === "processed" || existing[0].status === "unhandled")
+    ) {
       return new Response(
         JSON.stringify({ code: "00", description: "duplicate" }),
       );
     }
 
-    await db.insert(webhookEvents).values({
-      nombaRequestId: payload.requestId,
-      eventType: payload.event_type,
-      rawPayload: payload,
-      status: "received",
-    });
+    // No record yet, or a previous attempt failed ("received"/"failed") →
+    // (re)process. Anchor with a dedup row (insert on first try, update on
+    // retry) so concurrent deliveries can't double-process and failures can
+    // be retried.
+    if (existing.length > 0) {
+      await db
+        .update(webhookEvents)
+        .set({ status: "received" })
+        .where(eq(webhookEvents.nombaRequestId, payload.requestId));
+    } else {
+      await db.insert(webhookEvents).values({
+        nombaRequestId: payload.requestId,
+        eventType: payload.event_type,
+        rawPayload: payload,
+        status: "received",
+      });
+    }
 
-    await processWebhook(payload).catch(console.error);
+    // Reconcile now. On failure processWebhook records "failed" and re-throws,
+    // so we fall through to the catch and return "09" — Nomba retries the
+    // delivery instead of treating the payment as successfully processed.
+    await processWebhook(payload);
 
     return new Response(
       JSON.stringify({ code: "00", description: "Received" }),
@@ -157,5 +177,7 @@ async function processWebhook(payload: any) {
       .update(webhookEvents)
       .set({ status: "failed" })
       .where(eq(webhookEvents.nombaRequestId, requestId));
+    // Re-throw so the route returns "09" and Nomba retries the delivery.
+    throw e;
   }
 }

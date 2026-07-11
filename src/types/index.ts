@@ -222,6 +222,7 @@ export interface CirclePageData {
   id: string;
   name: string;
   status: string;
+  role?: "admin" | "member" | null;
   contributionAmount: number;
   frequency: string;
   cycleCount: number;

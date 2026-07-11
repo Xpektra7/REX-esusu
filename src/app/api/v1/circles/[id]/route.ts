@@ -27,6 +27,17 @@ export async function GET(
       .limit(1);
     if (!circle) return notFound("Circle not found");
 
+    const [myMembership] = await db
+      .select({ role: membersCircles.role })
+      .from(membersCircles)
+      .where(
+        and(
+          eq(membersCircles.circleId, id),
+          eq(membersCircles.userId, auth.user?.userId),
+        ),
+      )
+      .limit(1);
+
     const [inviteRecord] = await db
       .select()
       .from(inviteCodes)
@@ -72,6 +83,7 @@ export async function GET(
       id: circle.id,
       name: circle.name,
       status: circle.status,
+      role: myMembership?.role ?? null,
       contributionAmount: circle.contributionAmountKobo,
       frequency: circle.frequency,
       cycleCount: circle.cycleCount,

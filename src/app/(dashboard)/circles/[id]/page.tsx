@@ -74,6 +74,7 @@ export default function CircleDetailPage(props: {
   const progress =
     circle.cycleCount > 0 ? (circle.currentCycle / circle.cycleCount) * 100 : 0;
   const daysLeft = circle.deadlineAt ? daysUntil(circle.deadlineAt) : null;
+  const isAdmin = circle.role === "admin";
 
   return (
     <div className="flex flex-col gap-6">
@@ -87,12 +88,14 @@ export default function CircleDetailPage(props: {
       <div className="flex items-center gap-2 justify-between">
         <h1 className="text-2xl font-bold">{circle.name}</h1>
         <div className="flex items-center gap-2">
-          <Link
-            href={`/circles/${id}/settings`}
-            className="symbol-container bg-muted text-muted-foreground hover:bg-muted/80 transition-colors"
-          >
-            <Settings01Icon className="symbol-width" />
-          </Link>
+          {isAdmin && (
+            <Link
+              href={`/circles/${id}/settings`}
+              className="symbol-container bg-muted text-muted-foreground hover:bg-muted/80 transition-colors"
+            >
+              <Settings01Icon className="symbol-width" />
+            </Link>
+          )}
           <Badge variant={circle.status === "active" ? "default" : "outline"}>
             {circle.status.charAt(0).toUpperCase() + circle.status.slice(1)}
           </Badge>
