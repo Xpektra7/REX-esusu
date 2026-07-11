@@ -88,6 +88,7 @@ export async function GET(
       frequency: circle.frequency,
       cycleCount: circle.cycleCount,
       currentCycle: circle.currentCycle,
+      currentCycleId: currentCycle?.id ?? null,
       inviteCode: inviteRecord?.code,
       cyclePeriodDays: circle.cyclePeriodDays,
       deadlineAt: currentCycle?.deadlineAt?.toISOString(),

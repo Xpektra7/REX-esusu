@@ -1345,8 +1345,21 @@ export const api = {
 
   contributions: {
     /** Initiates a contribution (generates a payment reference). */
-    initiate: (payload: { cycleId: string; amountKobo: number }) =>
-      request<{ ref: string }>("/contributions/initiate", {
+    initiate: (payload: {
+      circleId: string;
+      cycleNumber: number;
+      amountKobo: number;
+    }) =>
+      request<{
+        ourReference: string;
+        amountKobo: number;
+        virtualAccount: {
+          accountNumber: string;
+          accountName: string;
+          bankCode: string;
+        };
+        instructions: string;
+      }>("/contributions/initiate", {
         method: "POST",
         body: JSON.stringify(payload),
       }),

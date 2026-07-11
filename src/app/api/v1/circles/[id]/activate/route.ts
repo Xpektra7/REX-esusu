@@ -87,7 +87,7 @@ export async function POST(
         status: "active",
         startsAt: new Date(),
         deadlineAt: new Date(
-          Date.now() + circle.gracePeriodHours * 60 * 60 * 1000,
+          Date.now() + circle.cyclePeriodDays * 24 * 60 * 60 * 1000,
         ),
       })
       .returning();

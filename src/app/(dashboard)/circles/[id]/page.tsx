@@ -1,20 +1,30 @@
 "use client";
 
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AlertCircleIcon, Settings01Icon } from "hugeicons-react";
 import Link from "next/link";
-import { use } from "react";
+import { use, useState } from "react";
 import { toast } from "sonner";
 import { CircleActions } from "@/components/circles/circle-actions";
 import { HeroPotCard } from "@/components/circles/hero-pot-card";
 import { MemberList } from "@/components/circles/member-list";
 import { NextPayoutCard } from "@/components/circles/next-payout-card";
+import { ActionPinDialog } from "@/components/shared/action-pin-dialog";
 import { PageBreadcrumbs } from "@/components/shared/page-breadcrumbs";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/lib/api";
-import { daysUntil } from "@/lib/utils";
+import { daysUntil, formatNaira } from "@/lib/utils";
 import type { CirclePageData } from "@/types";
 
 export default function CircleDetailPage(props: {
@@ -26,6 +36,9 @@ export default function CircleDetailPage(props: {
     queryKey: ["circle", id],
     queryFn: () => api.circles.get(id),
   });
+  const queryClient = useQueryClient();
+
+  const circle = res?.data as CirclePageData | undefined;
 
   const inviteMutation = useMutation({
     mutationFn: () => api.circles.invite(id),
@@ -39,7 +52,34 @@ export default function CircleDetailPage(props: {
     onError: (err: Error) => toast.error(err.message),
   });
 
-  const circle = res?.data as CirclePageData | undefined;
+  const [contributePinOpen, setContributePinOpen] = useState(false);
+  const [contribution, setContribution] = useState<{
+    ourReference: string;
+    amountKobo: number;
+    virtualAccount: {
+      accountNumber: string;
+      accountName: string;
+      bankCode: string;
+    };
+    instructions: string;
+  } | null>(null);
+
+  const contributeMutation = useMutation({
+    mutationFn: () => {
+      if (!circle) throw new Error("Circle not loaded");
+      return api.contributions.initiate({
+        circleId: circle.id,
+        cycleNumber: circle.currentCycle,
+        amountKobo: circle.contributionAmount,
+      });
+    },
+    onSuccess: (res) => {
+      queryClient.invalidateQueries({ queryKey: ["circle", id] });
+      setContribution(res.data);
+      setContributePinOpen(false);
+    },
+    onError: (err: Error) => toast.error(err.message),
+  });
 
   if (isLoading) {
     return (
@@ -111,10 +151,28 @@ export default function CircleDetailPage(props: {
         memberCount={members.length}
       />
 
-      <NextPayoutCard
-        daysLeft={daysLeft}
-        payoutAmount={totalPot / circle.cycleCount}
-      />
+      {circle.status === "active" && circle.currentCycleId && (
+        <div className="rounded-xl bg-card px-4 py-3">
+          <span className="text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
+            Your Contribution
+          </span>
+          <div className="mt-1 flex items-center justify-between">
+            <p className="text-sm font-medium">
+              {formatNaira(circle.contributionAmount)} this cycle
+            </p>
+            <Button
+              onClick={() => setContributePinOpen(true)}
+              disabled={contributeMutation.isPending}
+            >
+              {contributeMutation.isPending
+                ? "Processing..."
+                : "Contribute Now"}
+            </Button>
+          </div>
+        </div>
+      )}
+
+      <NextPayoutCard daysLeft={daysLeft} payoutAmount={totalPot} />
 
       <Separator />
       <section>
@@ -134,6 +192,73 @@ export default function CircleDetailPage(props: {
         onInvite={() => inviteMutation.mutate()}
         isPending={inviteMutation.isPending}
       />
+
+      <ActionPinDialog
+        open={contributePinOpen}
+        onOpenChange={setContributePinOpen}
+        onSuccess={() => contributeMutation.mutate()}
+      />
+
+      {contribution && (
+        <Dialog
+          open
+          onOpenChange={(o) => {
+            if (!o) setContribution(null);
+          }}
+        >
+          <DialogContent className="sm:max-w-sm w-fit">
+            <DialogHeader>
+              <DialogTitle>Contribution initiated</DialogTitle>
+              <DialogDescription>
+                Transfer the amount to your virtual account using the reference
+                below so we can match it.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex flex-col gap-3 py-2 text-sm">
+              <div>
+                <p className="text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
+                  Amount
+                </p>
+                <p className="font-medium">
+                  {formatNaira(contribution.amountKobo)}
+                </p>
+              </div>
+              <div>
+                <p className="text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
+                  Reference
+                </p>
+                <p className="break-all font-mono text-xs">
+                  {contribution.ourReference}
+                </p>
+              </div>
+              <div>
+                <p className="text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
+                  Bank details
+                </p>
+                <p className="font-medium">
+                  {contribution.virtualAccount.accountName}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {contribution.virtualAccount.bankCode} ·{" "}
+                  {contribution.virtualAccount.accountNumber}
+                </p>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {contribution.instructions}
+              </p>
+            </div>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => setContribution(null)}
+              >
+                Done
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }

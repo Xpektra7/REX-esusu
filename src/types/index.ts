@@ -227,6 +227,7 @@ export interface CirclePageData {
   frequency: string;
   cycleCount: number;
   currentCycle: number;
+  currentCycleId?: string | null;
   gracePeriodHours: number;
   allowMidCycleJoin: boolean;
   capacityEnabled: boolean;
