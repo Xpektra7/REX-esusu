@@ -88,7 +88,6 @@ export async function reconcilePayment(payload: WebhookPayload) {
     _contribution = results[0] || null;
   }
 
-<<<<<<< HEAD
   // FIX: Nomba sends transactionAmount as decimal naira (e.g. 40 for ₦40),
   // not kobo. Convert at the boundary, per the team's own confirmed Nomba
   // integration notes ("transactionAmount in webhooks: decimal naira →
@@ -97,8 +96,6 @@ export async function reconcilePayment(payload: WebhookPayload) {
   // this hits an `integer` column in Postgres.
   const actual = Math.round((txn.transactionAmount || 0) * 100);
 
-=======
->>>>>>> main
   const mcIds = await getMemberCircleIds(va[0].userId);
   const perCircleExpected = await getExpectedPerActiveCircle(mcIds);
   const baseExpectedTotal = Object.values(perCircleExpected).reduce(
