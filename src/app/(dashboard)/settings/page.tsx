@@ -3,10 +3,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft01Icon } from "hugeicons-react";
 import Link from "next/link";
+import { AccountSection } from "@/components/settings/account-section";
 import { AutoPayToggle } from "@/components/settings/auto-pay-toggle";
 import { NotificationPreferences } from "@/components/settings/notification-preferences";
 import { SecuritySection } from "@/components/settings/security-section";
-import { AccountSection } from "@/components/settings/account-section";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -32,9 +32,9 @@ export default function SettingsPage() {
       <div className="flex items-center gap-3">
         <Link
           href="/dashboard"
-          className="flex size-9 items-center justify-center rounded-full bg-muted text-muted-foreground hover:bg-muted/80 transition-colors"
+          className="symbol-container bg-muted text-muted-foreground hover:bg-muted/80 transition-colors"
         >
-          <ArrowLeft01Icon className="size-5" />
+          <ArrowLeft01Icon className="symbol-width" />
         </Link>
         <h1 className="text-xl font-bold">Settings</h1>
       </div>
@@ -52,7 +52,11 @@ export default function SettingsPage() {
             <h2 className="mb-3 text-sm font-bold uppercase tracking-wider">
               Payment Preferences
             </h2>
-            {settings ? <AutoPayToggle enabled={settings.autoPay} /> : <p className="text-sm text-muted-foreground">Coming soon</p>}
+            {settings ? (
+              <AutoPayToggle enabled={settings.autoPay} />
+            ) : (
+              <p className="text-sm text-muted-foreground">Coming soon</p>
+            )}
           </Card>
 
           <Separator />
@@ -61,7 +65,11 @@ export default function SettingsPage() {
             <h2 className="mb-3 text-sm font-bold uppercase tracking-wider">
               Notifications
             </h2>
-            {settings ? <NotificationPreferences settings={settings} /> : <p className="text-sm text-muted-foreground">Coming soon</p>}
+            {settings ? (
+              <NotificationPreferences settings={settings} />
+            ) : (
+              <p className="text-sm text-muted-foreground">Coming soon</p>
+            )}
           </Card>
 
           <Separator />

@@ -51,6 +51,7 @@ export async function POST(req: NextRequest) {
 
     return success({ verified: true });
   } catch (e) {
-    return error((e as Error).message);
+    console.error(e);
+    return error("An unexpected error occurred", "01", 500);
   }
 }

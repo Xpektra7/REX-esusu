@@ -38,7 +38,7 @@ export function BankSearchInput({
   onSelect,
   error,
 }: BankSearchInputProps) {
-  const [selectedBank, setSelectedBank] = useState<Bank | null>(null);
+  const [selectedBank, setSelectedBank] = useState<string | null>(null);
   const [lookupResult, setLookupResult] = useState<string | null>(null);
   const [lookupLoading, setLookupLoading] = useState(false);
 
@@ -46,7 +46,13 @@ export function BankSearchInput({
     queryKey: ["bank-codes"],
     queryFn: () => api.bankCodes(),
   });
-  const banks: Bank[] = banksRes?.data?.banks ?? [];
+  const bankCodeMap: Record<string, string> = {};
+  const bankNames: string[] = (banksRes?.data?.banks ?? []).map(
+    (b: { code: string; name: string }) => {
+      bankCodeMap[b.name] = b.code;
+      return b.name;
+    },
+  );
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: onSelect is parent callback, stable
   useEffect(() => {
@@ -58,13 +64,13 @@ export function BankSearchInput({
     let cancelled = false;
     setLookupLoading(true);
     api
-      .bankLookup({ accountNumber: value, bankCode: selectedBank.code })
+      .bankLookup({ accountNumber: value, bankCode: bankCodeMap[selectedBank] })
       .then((res) => {
         if (cancelled) return;
         const name = res?.data?.accountName ?? null;
         setLookupResult(name);
         if (name) {
-          onSelect({ bankCode: selectedBank.code, bankName: selectedBank.name, accountName: name });
+          onSelect({ bankCode: bankCodeMap[selectedBank], bankName: selectedBank, accountName: name });
         }
       })
       .catch(() => { if (!cancelled) setLookupResult(null); })
@@ -85,11 +91,11 @@ export function BankSearchInput({
         Bank
       </span>
       <Combobox
-        items={banks}
-        itemToStringValue={(bank) => bank.name}
+        items={bankNames}
+        itemToStringValue={(name) => name}
         value={selectedBank}
-        onValueChange={(bank) => {
-          setSelectedBank(bank);
+        onValueChange={(name) => {
+          setSelectedBank(name);
           setLookupResult(null);
         }}
       >
@@ -100,14 +106,9 @@ export function BankSearchInput({
         <ComboboxContent>
           <ComboboxEmpty>No banks found</ComboboxEmpty>
           <ComboboxList>
-            {(bank) => (
-              <ComboboxItem key={bank.code} value={bank}>
-                <div className="flex items-center justify-between w-full">
-                  <span>{bank.name}</span>
-                  <span className="text-xs text-muted-foreground">
-                    {bank.code}
-                  </span>
-                </div>
+            {(name) => (
+              <ComboboxItem key={bankCodeMap[name]} value={name}>
+                {name}
               </ComboboxItem>
             )}
           </ComboboxList>
@@ -138,7 +139,7 @@ export function BankSearchInput({
         <div className="flex items-center justify-between rounded-lg border border-primary/30 bg-primary/5 px-3 py-2">
           <div className="flex flex-col">
             <span className="text-sm font-semibold">
-              {selectedBank.name}
+              {selectedBank}
             </span>
             <span className="text-xs text-muted-foreground">
               {lookupResult}

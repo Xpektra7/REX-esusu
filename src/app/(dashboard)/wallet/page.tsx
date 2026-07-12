@@ -12,14 +12,14 @@ import { useState } from "react";
 import { DiceBearAvatar } from "@/components/shared/dicebear-avatar";
 import { PageBreadcrumbs } from "@/components/shared/page-breadcrumbs";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
   Empty,
   EmptyDescription,
   EmptyHeader,
   EmptyMedia,
 } from "@/components/ui/empty";
+import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/lib/api";
 import { cn, formatNaira } from "@/lib/utils";
 
@@ -55,6 +55,7 @@ export default function WalletPage() {
   const { data: txRes, isLoading: txLoading } = useQuery({
     queryKey: ["wallet-transactions"],
     queryFn: () => api.wallet.transactions(),
+    refetchInterval: 10_000,
   });
 
   const wallet = res?.data as WalletData | undefined;

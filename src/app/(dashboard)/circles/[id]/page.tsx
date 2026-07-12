@@ -1,20 +1,30 @@
 "use client";
 
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AlertCircleIcon, Settings01Icon } from "hugeicons-react";
 import Link from "next/link";
-import { use } from "react";
+import { use, useState } from "react";
 import { toast } from "sonner";
 import { CircleActions } from "@/components/circles/circle-actions";
 import { HeroPotCard } from "@/components/circles/hero-pot-card";
 import { MemberList } from "@/components/circles/member-list";
 import { NextPayoutCard } from "@/components/circles/next-payout-card";
+import { ActionPinDialog } from "@/components/shared/action-pin-dialog";
 import { PageBreadcrumbs } from "@/components/shared/page-breadcrumbs";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/lib/api";
-import { daysUntil } from "@/lib/utils";
+import { daysUntil, formatNaira } from "@/lib/utils";
 import type { CirclePageData } from "@/types";
 
 export default function CircleDetailPage(props: {
@@ -26,6 +36,9 @@ export default function CircleDetailPage(props: {
     queryKey: ["circle", id],
     queryFn: () => api.circles.get(id),
   });
+  const queryClient = useQueryClient();
+
+  const circle = res?.data as CirclePageData | undefined;
 
   const inviteMutation = useMutation({
     mutationFn: () => api.circles.invite(id),
@@ -39,7 +52,30 @@ export default function CircleDetailPage(props: {
     onError: (err: Error) => toast.error(err.message),
   });
 
-  const circle = res?.data as CirclePageData | undefined;
+  const [contributePinOpen, setContributePinOpen] = useState(false);
+  const [contribution, setContribution] = useState<{
+    ourReference: string;
+    amountKobo: number;
+  } | null>(null);
+
+  const contributeMutation = useMutation({
+    mutationFn: () => {
+      if (!circle) throw new Error("Circle not loaded");
+      return api.contributions.initiate({
+        circleId: circle.id,
+        cycleNumber: circle.currentCycle,
+        amountKobo: circle.contributionAmount,
+      });
+    },
+    onSuccess: (res) => {
+      queryClient.invalidateQueries({ queryKey: ["circle", id] });
+      queryClient.invalidateQueries({ queryKey: ["wallet"] });
+      setContribution(res.data);
+      setContributePinOpen(false);
+      toast.success("Contribution recorded");
+    },
+    onError: (err: Error) => toast.error(err.message),
+  });
 
   if (isLoading) {
     return (
@@ -55,7 +91,7 @@ export default function CircleDetailPage(props: {
   if (!circle) {
     return (
       <div className="flex flex-col items-center gap-4 py-16 text-center">
-        <AlertCircleIcon className="size-10 text-muted-foreground" />
+        <AlertCircleIcon className="symbol-width text-muted-foreground" />
         <p className="text-sm text-muted-foreground">Circle not found.</p>
         <Link href="/circles">
           <button
@@ -74,6 +110,7 @@ export default function CircleDetailPage(props: {
   const progress =
     circle.cycleCount > 0 ? (circle.currentCycle / circle.cycleCount) * 100 : 0;
   const daysLeft = circle.deadlineAt ? daysUntil(circle.deadlineAt) : null;
+  const isAdmin = circle.role === "admin";
 
   return (
     <div className="flex flex-col gap-6">
@@ -87,12 +124,14 @@ export default function CircleDetailPage(props: {
       <div className="flex items-center gap-2 justify-between">
         <h1 className="text-2xl font-bold">{circle.name}</h1>
         <div className="flex items-center gap-2">
-          <Link
-            href={`/circles/${id}/settings`}
-            className="flex size-8 items-center justify-center rounded-full bg-muted text-muted-foreground hover:bg-muted/80 transition-colors"
-          >
-            <Settings01Icon className="size-4" />
-          </Link>
+          {isAdmin && (
+            <Link
+              href={`/circles/${id}/settings`}
+              className="symbol-container bg-muted text-muted-foreground hover:bg-muted/80 transition-colors"
+            >
+              <Settings01Icon className="symbol-width" />
+            </Link>
+          )}
           <Badge variant={circle.status === "active" ? "default" : "outline"}>
             {circle.status.charAt(0).toUpperCase() + circle.status.slice(1)}
           </Badge>
@@ -108,10 +147,41 @@ export default function CircleDetailPage(props: {
         memberCount={members.length}
       />
 
-      <NextPayoutCard
-        daysLeft={daysLeft}
-        payoutAmount={totalPot / circle.cycleCount}
-      />
+      {circle.status === "active" && circle.currentCycleId && (
+        <div className="rounded-xl bg-card px-4 py-3">
+          <span className="text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
+            Your Contribution
+          </span>
+          <div className="mt-1 flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium">
+                {formatNaira(circle.contributionAmount)} this cycle
+              </p>
+              {circle.totalContributedKobo ? (
+                <p className="text-xs text-muted-foreground">
+                  {formatNaira(circle.totalContributedKobo)} contributed so far
+                </p>
+              ) : null}
+            </div>
+            {circle.userContributedThisCycle ? (
+              <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+                Contributed ✓
+              </span>
+            ) : (
+              <Button
+                onClick={() => setContributePinOpen(true)}
+                disabled={contributeMutation.isPending}
+              >
+                {contributeMutation.isPending
+                  ? "Processing..."
+                  : "Contribute Now"}
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
+
+      <NextPayoutCard daysLeft={daysLeft} payoutAmount={totalPot} />
 
       <Separator />
       <section>
@@ -131,6 +201,58 @@ export default function CircleDetailPage(props: {
         onInvite={() => inviteMutation.mutate()}
         isPending={inviteMutation.isPending}
       />
+
+      <ActionPinDialog
+        open={contributePinOpen}
+        onOpenChange={setContributePinOpen}
+        onSuccess={() => contributeMutation.mutate()}
+      />
+
+      {contribution && (
+        <Dialog
+          open
+          onOpenChange={(o) => {
+            if (!o) setContribution(null);
+          }}
+        >
+          <DialogContent className="sm:max-w-sm w-fit">
+            <DialogHeader>
+              <DialogTitle>Contribution recorded</DialogTitle>
+              <DialogDescription>
+                {formatNaira(contribution.amountKobo)} has been deducted from
+                your wallet. Keep your reference below for your records.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex flex-col gap-3 py-2 text-sm">
+              <div>
+                <p className="text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
+                  Amount
+                </p>
+                <p className="font-medium">
+                  {formatNaira(contribution.amountKobo)}
+                </p>
+              </div>
+              <div>
+                <p className="text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
+                  Reference
+                </p>
+                <p className="break-all font-mono text-xs">
+                  {contribution.ourReference}
+                </p>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => setContribution(null)}
+              >
+                Done
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }

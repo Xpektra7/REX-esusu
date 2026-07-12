@@ -40,7 +40,8 @@ export default function KycPage() {
     if (!accessToken) {
       router.replace("/auth");
     } else if (!needsBvn) {
-      router.replace("/auth/pin?mode=set");
+      sessionStorage.setItem("pending_pin_mode", "set");
+      router.replace("/auth/pin");
     }
   }, [accessToken, needsBvn, router]);
 
@@ -73,7 +74,8 @@ export default function KycPage() {
 
   const handleConfirm = () => {
     setBvnVerified();
-    router.push("/auth/pin?mode=set");
+    sessionStorage.setItem("pending_pin_mode", "set");
+    router.push("/auth/pin");
   };
 
   // ------------------------------------------------------------------

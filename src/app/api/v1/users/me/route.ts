@@ -1,8 +1,16 @@
+import crypto from "node:crypto";
 import { and, count, eq, ne } from "drizzle-orm";
 import type { NextRequest } from "next/server";
 import { db } from "@/db";
-import { membersCircles, referrals, users, virtualAccounts } from "@/db/schema";
-import { error, success } from "@/lib/api-response";
+import {
+  debts,
+  membersCircles,
+  referrals,
+  users,
+  virtualAccounts,
+} from "@/db/schema";
+import { error, handleApiError, success } from "@/lib/api-response";
+import { hashPassword, verifyPassword } from "@/lib/auth";
 import { requireAuth } from "@/lib/middleware";
 
 export async function GET(req: NextRequest) {
@@ -90,6 +98,74 @@ export async function PATCH(req: NextRequest) {
     await db.update(users).set(updates).where(eq(users.id, userId));
     return success({ message: "Profile updated" });
   } catch (e) {
-    return error((e as Error).message);
+    return handleApiError(e);
+  }
+}
+
+export async function DELETE(req: NextRequest) {
+  const auth = requireAuth(req);
+  if (auth.error) return auth.error;
+
+  try {
+    const { password } = await req.json();
+    if (!password) return error("Password is required");
+
+    const userId = auth.user.userId;
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+    if (!user) return error("User not found", "04", 404);
+
+    const valid = await verifyPassword(password, user.passwordHash);
+    if (!valid) return error("Password is incorrect");
+
+    const activeDebts = await db
+      .select({ count: count() })
+      .from(debts)
+      .innerJoin(
+        membersCircles,
+        and(
+          eq(debts.debtorMemberId, membersCircles.id),
+          eq(membersCircles.userId, userId),
+        ),
+      )
+      .where(eq(debts.status, "active"));
+
+    if (activeDebts[0]?.count > 0) {
+      return error("Cannot delete account with active debts", "01", 400);
+    }
+
+    const activeCircles = await db
+      .select({ count: count() })
+      .from(membersCircles)
+      .where(
+        and(
+          eq(membersCircles.userId, userId),
+          eq(membersCircles.status, "active"),
+        ),
+      );
+
+    if (activeCircles[0]?.count > 0) {
+      return error("Cannot delete account while active in circles", "01", 400);
+    }
+
+    await db
+      .update(users)
+      .set({
+        name: "Deleted User",
+        email: `deleted_${userId}@deleted.esusu.app`,
+        passwordHash: await hashPassword(crypto.randomUUID()),
+        phone: null,
+        pinHash: null,
+        bvnEncrypted: null,
+        bvnLast4: null,
+      })
+      .where(eq(users.id, userId));
+
+    return success({}, "Account deleted");
+  } catch (e) {
+    return handleApiError(e);
   }
 }

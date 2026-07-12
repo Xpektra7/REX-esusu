@@ -11,9 +11,9 @@ import {
 } from "hugeicons-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { ActionPinDialog } from "@/components/shared/action-pin-dialog";
 import { DiceBearAvatar } from "@/components/shared/dicebear-avatar";
 import { PageBreadcrumbs } from "@/components/shared/page-breadcrumbs";
-import { ActionPinDialog } from "@/components/shared/action-pin-dialog";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
@@ -60,7 +60,7 @@ function SettingsRow({
     >
       <div
         className={cn(
-          "flex size-9 items-center justify-center rounded-full",
+          "symbol-container",
           variant === "danger"
             ? "bg-destructive/10 text-destructive"
             : "bg-primary/10 text-primary",
@@ -93,15 +93,15 @@ export default function ProfilePage() {
 
   const user = res?.data as UserProfile | undefined;
 
-const [editField, setEditField] = useState<"name" | "email" | null>(null);
-const [editValue, setEditValue] = useState("");
-const [saving, setSaving] = useState(false);
-const [editError, setEditError] = useState<string | null>(null);
-const [scoreOpen, setScoreOpen] = useState(false);
+  const [editField, setEditField] = useState<"name" | "email" | null>(null);
+  const [editValue, setEditValue] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [editError, setEditError] = useState<string | null>(null);
+  const [scoreOpen, setScoreOpen] = useState(false);
 
   const openEdit = (field: "name" | "email") => {
     setEditField(field);
-    setEditValue(field === "name" ? user?.name ?? "" : user?.email ?? "");
+    setEditValue(field === "name" ? (user?.name ?? "") : (user?.email ?? ""));
     setEditError(null);
   };
 
@@ -111,12 +111,14 @@ const [scoreOpen, setScoreOpen] = useState(false);
     setEditError(null);
     try {
       await api.users.update(
-        editField === "name" ? { name: editValue.trim() } : { email: editValue.trim() },
+        editField === "name"
+          ? { name: editValue.trim() }
+          : { email: editValue.trim() },
       );
       if (editField === "name") {
         const currentUser = useAuthStore.getState().user;
         if (currentUser) {
-          useAuthStore.getState().setAuth({
+          useAuthStore.setState({
             user: { ...currentUser, name: editValue.trim() },
           });
         }
@@ -146,7 +148,9 @@ const [scoreOpen, setScoreOpen] = useState(false);
           <DiceBearAvatar name={user?.name ?? "User"} className="size-16" />
           <div className="text-center">
             <h1 className="text-lg font-bold">{user?.name ?? "User"}</h1>
-            {user?.phone && <p className="text-xs text-muted-foreground">{user.phone}</p>}
+            {user?.email && (
+              <p className="text-xs text-muted-foreground">{user.email}</p>
+            )}
           </div>
         </div>
       )}
@@ -155,18 +159,24 @@ const [scoreOpen, setScoreOpen] = useState(false);
         <Card className="p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="flex size-10 items-center justify-center rounded-full bg-primary/10 text-primary">
-                <IdVerifiedIcon className="size-5" />
+              <div className="symbol-container bg-primary/10 text-primary">
+                <IdVerifiedIcon className="symbol-width" />
               </div>
               <div>
-                <p className="text-[10px] font-semibold tracking-[0.05em] text-muted-foreground uppercase">
+                <p className="text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
                   KYC Status
                 </p>
-                <p className="text-sm font-medium">Verified</p>
+                <p className="text-sm font-medium">
+                  {user.bvnLast4 ? "Verified" : "Not Verified"}
+                </p>
               </div>
             </div>
-            <button type="button" onClick={() => setScoreOpen(true)} className="text-right cursor-pointer">
-              <p className="text-[10px] font-semibold tracking-[0.05em] text-muted-foreground uppercase">
+            <button
+              type="button"
+              onClick={() => setScoreOpen(true)}
+              className="text-right cursor-pointer"
+            >
+              <p className="text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
                 Trust Score
               </p>
               <p className="font-heading text-lg font-bold text-primary">
@@ -180,9 +190,11 @@ const [scoreOpen, setScoreOpen] = useState(false);
               style={{ width: `${user.trustScore}%` }}
             />
           </div>
-          <p className="mt-2 text-[10px] text-muted-foreground">
-            BVN verified · Last 4 digits: {user.bvnLast4}
-          </p>
+          {user.bvnLast4 && (
+            <p className="mt-2 text-[10px] text-muted-foreground">
+              BVN verified · Last 4 digits: {user.bvnLast4}
+            </p>
+          )}
         </Card>
       )}
 
@@ -193,17 +205,17 @@ const [scoreOpen, setScoreOpen] = useState(false);
           Account Settings
         </h2>
         <SettingsRow
-          icon={<UserIcon className="size-4" />}
+          icon={<UserIcon className="symbol-width" />}
           label="Edit Name"
           onClick={() => openEdit("name")}
         />
         <SettingsRow
-          icon={<Mail01Icon className="size-4" />}
+          icon={<Mail01Icon className="symbol-width" />}
           label="Edit Email"
           onClick={() => openEdit("email")}
         />
         <SettingsRow
-          icon={<Shield01Icon className="size-4" />}
+          icon={<Shield01Icon className="symbol-width" />}
           label="Change PIN"
           onClick={() => router.push("/signup/pin")}
         />
@@ -214,7 +226,7 @@ const [scoreOpen, setScoreOpen] = useState(false);
       <div className="flex flex-col gap-2">
         <h2 className="text-sm font-bold uppercase tracking-wider">More</h2>
         <SettingsRow
-          icon={<Share08Icon className="size-4" />}
+          icon={<Share08Icon className="symbol-width" />}
           label="Refer & Earn"
           onClick={() => router.push("/referrals")}
         />
@@ -225,14 +237,19 @@ const [scoreOpen, setScoreOpen] = useState(false);
             "flex items-center gap-3 rounded-xl border border-destructive/30 px-4 py-3 transition-colors hover:bg-muted/50 w-full text-left",
           )}
         >
-          <div className="flex size-9 items-center justify-center rounded-full bg-destructive/10 text-destructive">
-            <Logout01Icon className="size-4" />
+          <div className="symbol-container bg-destructive/10 text-destructive">
+            <Logout01Icon className="symbol-width" />
           </div>
           <span className="text-sm font-medium text-destructive">Log Out</span>
         </button>
       </div>
 
-      <Dialog open={editField !== null} onOpenChange={(open) => { if (!open) setEditField(null); }}>
+      <Dialog
+        open={editField !== null}
+        onOpenChange={(open) => {
+          if (!open) setEditField(null);
+        }}
+      >
         <DialogContent showCloseButton={false}>
           <DialogHeader>
             <DialogTitle>
@@ -249,7 +266,9 @@ const [scoreOpen, setScoreOpen] = useState(false);
             type={editField === "email" ? "email" : "text"}
             value={editValue}
             onChange={(e) => setEditValue(e.target.value)}
-            placeholder={editField === "name" ? "Chioma Okafor" : "chioma@example.com"}
+            placeholder={
+              editField === "name" ? "Chioma Okafor" : "chioma@example.com"
+            }
             className="w-full rounded-lg bg-background px-4 py-3 text-base outline-none focus:ring-2 focus:ring-ring transition-all"
             autoFocus
           />
@@ -278,11 +297,36 @@ const [scoreOpen, setScoreOpen] = useState(false);
 
           <div className="flex flex-col gap-4">
             {[
-              { label: "BVN Verification", score: 20, max: 20, desc: "Verified identity" },
-              { label: "Payment History", score: Math.min(user?.trustScore ?? 0, 25), max: 25, desc: "On-time contributions" },
-              { label: "Active Memberships", score: Math.min(Math.max((user?.trustScore ?? 0) - 20, 0), 20), max: 20, desc: "Active circles" },
-              { label: "Referral Quality", score: Math.min(Math.max((user?.trustScore ?? 0) - 45, 0), 20), max: 20, desc: "Referred members" },
-              { label: "Account Age", score: Math.min(Math.max((user?.trustScore ?? 0) - 65, 0), 15), max: 15, desc: "Longevity bonus" },
+              {
+                label: "BVN Verification",
+                score: 20,
+                max: 20,
+                desc: "Verified identity",
+              },
+              {
+                label: "Payment History",
+                score: Math.min(user?.trustScore ?? 0, 25),
+                max: 25,
+                desc: "On-time contributions",
+              },
+              {
+                label: "Active Memberships",
+                score: Math.min(Math.max((user?.trustScore ?? 0) - 20, 0), 20),
+                max: 20,
+                desc: "Active circles",
+              },
+              {
+                label: "Referral Quality",
+                score: Math.min(Math.max((user?.trustScore ?? 0) - 45, 0), 20),
+                max: 20,
+                desc: "Referred members",
+              },
+              {
+                label: "Account Age",
+                score: Math.min(Math.max((user?.trustScore ?? 0) - 65, 0), 15),
+                max: 15,
+                desc: "Longevity bonus",
+              },
             ].map((f) => (
               <div key={f.label}>
                 <div className="flex items-center justify-between mb-1">
@@ -297,7 +341,9 @@ const [scoreOpen, setScoreOpen] = useState(false);
                     style={{ width: `${(f.score / f.max) * 100}%` }}
                   />
                 </div>
-                <p className="mt-0.5 text-[10px] text-muted-foreground">{f.desc}</p>
+                <p className="mt-0.5 text-[10px] text-muted-foreground">
+                  {f.desc}
+                </p>
               </div>
             ))}
           </div>

@@ -18,7 +18,7 @@ export function ShortfallAlert({
 
   return (
     <div className="flex items-start gap-3 rounded-xl border border-foreground/10 bg-foreground/5 px-4 py-3">
-      <AlertCircleIcon className="mt-0.5 size-5 shrink-0 text-foreground" />
+      <AlertCircleIcon className="mt-0.5 symbol-width shrink-0 text-foreground" />
       <div>
         <p className="text-sm font-semibold text-foreground">
           {pendingCount + defaultedCount > 0

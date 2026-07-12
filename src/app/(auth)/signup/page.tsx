@@ -1,7 +1,8 @@
 "use client";
 
 import { useForm } from "@tanstack/react-form";
-import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Suspense, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,18 +13,24 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { api } from "@/lib/api";
-import Link from "next/link";
+import { validatePassword } from "@/lib/validations/auth";
 
 function SignUpForm() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [error, setError] = useState<string | null>(null);
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const [initialEmail] = useState(() => {
+    if (typeof window !== "undefined") {
+      return sessionStorage.getItem("pending_email") || "";
+    }
+    return "";
+  });
+
   const form = useForm({
     defaultValues: {
-      email: searchParams.get("email") || "",
+      email: initialEmail,
       firstName: "",
       lastName: "",
     },
@@ -40,8 +47,9 @@ function SignUpForm() {
         return;
       }
 
-      if (password.length < 8) {
-        setError("Password must be at least 8 characters");
+      const pwError = validatePassword(password);
+      if (pwError) {
+        setError(pwError);
         return;
       }
 
@@ -52,7 +60,8 @@ function SignUpForm() {
         await api.auth.sendOtp(value.email);
         sessionStorage.setItem("pending_password", password);
         sessionStorage.setItem("pending_name", name);
-        router.push(`/signup/otp?email=${encodeURIComponent(value.email)}`);
+        sessionStorage.setItem("pending_email", value.email);
+        router.push("/signup/otp");
       } catch {
         setError("Failed to send OTP. Try again.");
       } finally {
@@ -171,7 +180,12 @@ function SignUpForm() {
 
           {error && <p className="text-sm text-destructive">{error}</p>}
 
-          <Button type="submit" size="lg" className="w-full py-4 text-base" disabled={loading}>
+          <Button
+            type="submit"
+            size="lg"
+            className="w-full py-4 text-base"
+            disabled={loading}
+          >
             {loading ? "Sending OTP..." : "Create Account"}
           </Button>
         </form>

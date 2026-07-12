@@ -34,12 +34,16 @@ async function provisionVirtualAccount(
   accountName: string,
   bvn?: string,
 ) {
+  const subAccountId = process.env.NOMBA_SUB_ACCOUNT_ID || "";
   const baseUrl = process.env.NOMBA_BASE_URL || "https://api.nomba.com/v1";
   const isLive = !baseUrl.includes("sandbox");
 
   async function createVA(url: string): Promise<Record<string, unknown>> {
+    const vaPath = subAccountId
+      ? `/v1/accounts/virtual/${subAccountId}`
+      : "/v1/accounts/virtual";
     const result = await nombaPost(
-      "/v1/accounts/virtual",
+      vaPath,
       {
         accountRef: userId,
         accountName,
@@ -166,6 +170,7 @@ export async function POST(req: NextRequest) {
       "Account created",
     );
   } catch (e) {
-    return error((e as Error).message);
+    console.error(e);
+    return error("An unexpected error occurred", "01", 500);
   }
 }

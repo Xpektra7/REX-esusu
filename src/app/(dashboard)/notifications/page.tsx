@@ -2,15 +2,27 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  Alert02Icon,
   Coins02Icon,
   MoneyAdd01Icon,
   Notification01Icon,
+  Shield02Icon,
+  Tick02Icon,
   UserAdd01Icon,
+  UserCircleIcon,
   UserGroupIcon,
+  Wallet01Icon,
 } from "hugeicons-react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { PageBreadcrumbs } from "@/components/shared/page-breadcrumbs";
 import { Button } from "@/components/ui/button";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+} from "@/components/ui/empty";
 import {
   Item,
   ItemContent,
@@ -21,12 +33,6 @@ import {
   ItemTitle,
 } from "@/components/ui/item";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-} from "@/components/ui/empty";
 import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
@@ -37,29 +43,55 @@ interface NotificationItem {
   type: string;
   read: boolean;
   createdAt: string;
+  data?: { route?: string } | null;
 }
 
 const notifIcons: Record<string, { icon: React.ReactNode; bg: string }> = {
   payout: {
-    icon: <MoneyAdd01Icon className="size-4" />,
+    icon: <MoneyAdd01Icon className="symbol-width" />,
     bg: "bg-foreground text-primary",
   },
   contribution_due: {
-    icon: <Coins02Icon className="size-4" />,
+    icon: <Coins02Icon className="symbol-width" />,
+    bg: "bg-primary text-foreground",
+  },
+  reminder: {
+    icon: <Notification01Icon className="symbol-width" />,
     bg: "bg-primary text-foreground",
   },
   member_join: {
-    icon: <UserAdd01Icon className="size-4" />,
+    icon: <UserAdd01Icon className="symbol-width" />,
     bg: "bg-foreground text-primary",
   },
   circle_completed: {
-    icon: <UserGroupIcon className="size-4" />,
+    icon: <UserGroupIcon className="symbol-width" />,
+    bg: "bg-primary text-foreground",
+  },
+  circle_invite: {
+    icon: <UserCircleIcon className="symbol-width" />,
+    bg: "bg-foreground text-primary",
+  },
+  default_alert: {
+    icon: <Alert02Icon className="symbol-width" />,
+    bg: "bg-destructive/10 text-destructive",
+  },
+  trust_score_changed: {
+    icon: <Shield02Icon className="symbol-width" />,
+    bg: "bg-primary text-foreground",
+  },
+  withdrawal_status: {
+    icon: <Wallet01Icon className="symbol-width" />,
+    bg: "bg-foreground text-primary",
+  },
+  debt_cleared: {
+    icon: <Tick02Icon className="symbol-width" />,
     bg: "bg-primary text-foreground",
   },
 };
 
 export default function NotificationsPage() {
   const queryClient = useQueryClient();
+  const router = useRouter();
 
   const { data: res, isLoading } = useQuery({
     queryKey: ["notifications"],
@@ -73,6 +105,18 @@ export default function NotificationsPage() {
       toast.success("All marked as read");
     },
   });
+
+  const markReadMutation = useMutation({
+    mutationFn: (id: string) => api.notifications.markRead(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+    },
+  });
+
+  const handleOpen = (n: NotificationItem) => {
+    if (!n.read) markReadMutation.mutate(n.id);
+    if (n.data?.route) router.push(n.data.route);
+  };
 
   const notifications = (res?.data ?? []) as NotificationItem[];
   const unreadCount = notifications.filter((n) => !n.read).length;
@@ -132,16 +176,26 @@ export default function NotificationsPage() {
         <ItemGroup className="gap-0! py-2 bg-card">
           {notifications.map((n, i) => {
             const meta = notifIcons[n.type] ?? {
-              icon: <Notification01Icon className="size-4" />,
+              icon: <Notification01Icon className="symbol-width" />,
               bg: "bg-primary text-foreground",
             };
             return (
               <div key={n.id}>
                 <ItemSeparator className={i === 0 ? "hidden" : ""} />
-                <Item variant="muted" size="sm">
+                <Item
+                  variant="muted"
+                  size="sm"
+                  render={
+                    <button
+                      type="button"
+                      onClick={() => handleOpen(n)}
+                      className={cn("w-full text-left transition-colors", "")}
+                    />
+                  }
+                >
                   <ItemMedia
                     variant="icon"
-                    className={cn("rounded-full size-8 p-0!", meta.bg)}
+                    className={cn("symbol-container p-0!", meta.bg)}
                   >
                     {meta.icon}
                   </ItemMedia>

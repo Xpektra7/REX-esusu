@@ -2,7 +2,7 @@ import { eq, inArray } from "drizzle-orm";
 import type { NextRequest } from "next/server";
 import { db } from "@/db";
 import { debts, membersCircles } from "@/db/schema";
-import { error, success } from "@/lib/api-response";
+import { handleApiError, success } from "@/lib/api-response";
 import { requireAuth } from "@/lib/middleware";
 
 export async function GET(req: NextRequest) {
@@ -34,6 +34,6 @@ export async function GET(req: NextRequest) {
 
     return success({ outgoing, incoming });
   } catch (e) {
-    return error((e as Error).message);
+    return handleApiError(e);
   }
 }

@@ -3,15 +3,28 @@
 import { useQuery } from "@tanstack/react-query";
 import {
   Coins02Icon,
+  Key01Icon,
   MoneyAdd01Icon,
+  Notification01Icon,
   PlusSignIcon,
   UserAdd01Icon,
   UserGroupIcon,
+  Wallet01Icon,
 } from "hugeicons-react";
 import Link from "next/link";
+import { useState } from "react";
+import { AppBar } from "@/components/layout/app-bar";
+import { JoinByCodeDialog } from "@/components/circles/join-by-code-dialog";
 import { CircleCard, type CircleData } from "@/components/shared/circle-card";
 import { WalletCard } from "@/components/shared/wallet-card";
 import { Button } from "@/components/ui/button";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+} from "@/components/ui/empty";
 import {
   Item,
   ItemContent,
@@ -23,45 +36,52 @@ import {
 } from "@/components/ui/item";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Empty,
-  EmptyContent,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-} from "@/components/ui/empty";
 import { api } from "@/lib/api";
-import { timeAgo } from "@/lib/utils";
-import { AppBar } from "@/components/layout/app-bar";
+import { formatNaira, timeAgo } from "@/lib/utils";
 import type { ActivityItem } from "@/types";
 
-const iconMap: Record<
-  ActivityItem["type"],
-  { icon: React.ReactNode; bg: string }
-> = {
+export default function DashboardPage() {
+  const [joinDialogOpen, setJoinDialogOpen] = useState(false);
+
+const iconMap: Record<string, { icon: React.ReactNode; bg: string }> = {
   contribution: {
-    icon: <Coins02Icon className="size-4" />,
+    icon: <Coins02Icon className="size-6" />,
     bg: "bg-primary text-foreground",
   },
   payout: {
-    icon: <MoneyAdd01Icon className="size-4" />,
+    icon: <MoneyAdd01Icon className="size-6" />,
     bg: "bg-foreground text-primary",
   },
   circle_join: {
-    icon: <UserAdd01Icon className="size-4" />,
+    icon: <UserAdd01Icon className="size-6" />,
     bg: "bg-foreground text-primary",
   },
   circle_create: {
-    icon: <UserGroupIcon className="size-4" />,
+    icon: <UserGroupIcon className="size-6" />,
     bg: "bg-foreground text-primary",
   },
   topup: {
-    icon: <Coins02Icon className="size-4" />,
+    icon: <Coins02Icon className="size-6" />,
     bg: "bg-primary text-foreground",
+  },
+  withdrawal: {
+    icon: <Wallet01Icon className="symbol-width" />,
+    bg: "bg-foreground text-primary",
   },
 };
 
-export default function DashboardPage() {
+// Live activity types are prefixed with `wallet_` (e.g. `wallet_topup`); the
+// mock returns the bare type. Normalize so both resolve, and fall back to a
+// default icon for any unknown type instead of crashing on `meta.bg`.
+const activityIconFallback = {
+  icon: <Notification01Icon className="symbol-width" />,
+  bg: "bg-primary text-foreground",
+};
+function activityMeta(type: string) {
+  const key = type.startsWith("wallet_") ? type.slice("wallet_".length) : type;
+  return iconMap[key as ActivityItem["type"]] ?? activityIconFallback;
+}
+
   const { data: walletRes, isLoading: walletLoading } = useQuery({
     queryKey: ["wallet"],
     queryFn: () => api.wallet.get(),
@@ -81,6 +101,12 @@ export default function DashboardPage() {
   const circleList = (circlesRes?.data?.circles ?? []) as CircleData[];
   const activityItems = activityRes?.data?.items ?? [];
 
+  // T120: accumulated outstanding debt across all the user's circles.
+  const totalDebt = circleList.reduce(
+    (sum, c) => sum + (c.debtAmountKobo ?? 0),
+    0,
+  );
+
   return (
     <div className="relative flex flex-col gap-6">
       <AppBar />
@@ -88,6 +114,17 @@ export default function DashboardPage() {
         <Skeleton className="h-44 rounded-xl" />
       ) : (
         <WalletCard balance={balance} />
+      )}
+
+      {totalDebt > 0 && (
+        <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-4">
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-destructive/80">
+            Outstanding debt
+          </p>
+          <p className="font-heading text-lg font-bold text-destructive">
+            {formatNaira(totalDebt)}
+          </p>
+        </div>
       )}
 
       <section>
@@ -129,12 +166,18 @@ export default function DashboardPage() {
               </EmptyDescription>
             </EmptyHeader>
             <EmptyContent>
-              <Link href="/circles/new">
-                <Button size="sm">
-                  <PlusSignIcon data-icon="inline-start" />
-                  Create Circle
+              <div className="flex flex-col gap-2">
+                <Button size="sm" variant="outline" onClick={() => setJoinDialogOpen(true)}>
+                  <Key01Icon data-icon="inline-start" />
+                  Join with code
                 </Button>
-              </Link>
+                <Link href="/circles/new">
+                  <Button size="sm">
+                    <PlusSignIcon data-icon="inline-start" />
+                    Create Circle
+                  </Button>
+                </Link>
+              </div>
             </EmptyContent>
           </Empty>
         )}
@@ -154,14 +197,14 @@ export default function DashboardPage() {
         ) : activityItems.length > 0 ? (
           <ItemGroup className="bg-card gap-0! py-2">
             {activityItems.map((item, i) => {
-              const meta = iconMap[item.type];
+              const meta = activityMeta(item.type);
               return (
                 <div key={item.id}>
                   <ItemSeparator className={i === 0 ? "hidden" : ""} />
                   <Item variant="muted" size="xs">
                     <ItemMedia
                       variant="icon"
-                      className={`rounded-full size-6 ${meta.bg} p-0!`}
+                      className={`symbol-container ${meta.bg} p-0!`}
                     >
                       {meta.icon}
                     </ItemMedia>
@@ -196,7 +239,9 @@ export default function DashboardPage() {
             </EmptyHeader>
           </Empty>
         )}
-      </section>
+        </section>
+
+      <JoinByCodeDialog open={joinDialogOpen} onOpenChange={setJoinDialogOpen} />
     </div>
   );
 }

@@ -56,16 +56,17 @@ export default function AuthPage() {
 
       setLoading(true);
       try {
-        await api.auth.sendOtp(value.email);
+        await api.auth.sendOtp(value.email, flow === "login" ? password : undefined);
 
         sessionStorage.setItem("pending_password", password);
 
         if (flow === "signup") {
           sessionStorage.setItem("pending_name", name);
         }
-        const params = new URLSearchParams({ email: value.email, flow });
+        sessionStorage.setItem("pending_email", value.email);
+        sessionStorage.setItem("pending_flow", flow);
 
-        router.push(`/auth/otp?${params.toString()}`);
+        router.push("/auth/otp");
       } catch {
         setError("Failed to send OTP. Try again.");
       } finally {

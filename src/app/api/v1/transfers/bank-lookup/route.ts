@@ -1,5 +1,5 @@
 import type { NextRequest } from "next/server";
-import { error, success } from "@/lib/api-response";
+import { error, handleApiError, success } from "@/lib/api-response";
 import { requireAuth } from "@/lib/middleware";
 import { nombaPost } from "@/lib/nomba";
 
@@ -19,8 +19,8 @@ export async function POST(req: NextRequest) {
       bankCode,
     });
 
-    return success(result);
+    return success({ accountName: result?.data?.accountName ?? "" });
   } catch (e) {
-    return error((e as Error).message);
+    return handleApiError(e);
   }
 }

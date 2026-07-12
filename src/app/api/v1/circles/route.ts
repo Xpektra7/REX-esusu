@@ -1,8 +1,14 @@
-import { and, count, eq, inArray } from "drizzle-orm";
+import { and, count, eq, inArray, sql } from "drizzle-orm";
 import type { NextRequest } from "next/server";
 import { db } from "@/db";
-import { circles, inviteCodes, membersCircles } from "@/db/schema";
-import { error, success } from "@/lib/api-response";
+import {
+  circles,
+  cycles,
+  debts,
+  inviteCodes,
+  membersCircles,
+} from "@/db/schema";
+import { error, handleApiError, success } from "@/lib/api-response";
 import { requireAuth } from "@/lib/middleware";
 
 export async function GET(req: NextRequest) {
@@ -40,6 +46,25 @@ export async function GET(req: NextRequest) {
     memberCountRows.map((r) => [r.circleId, r.value]),
   );
 
+  const memberIds = memberships.map((m) => m.id);
+
+  // T113: outstanding debt per circle for this user (active debts only).
+  const activeDebts = await db
+    .select({
+      circleId: cycles.circleId,
+      remaining: sql<number>`coalesce(sum(${debts.amountKobo} - ${debts.paidKobo}), 0)`,
+    })
+    .from(debts)
+    .innerJoin(cycles, eq(debts.cycleId, cycles.id))
+    .where(
+      and(inArray(debts.debtorMemberId, memberIds), eq(debts.status, "active")),
+    )
+    .groupBy(cycles.circleId);
+
+  const debtMap = new Map(
+    activeDebts.map((d) => [d.circleId, Number(d.remaining)]),
+  );
+
   const circlesList = circlesData.map((circle) => {
     const mc = memberships.find((m) => m.circleId === circle.id);
     return {
@@ -53,6 +78,7 @@ export async function GET(req: NextRequest) {
       cycleCount: circle.cycleCount,
       memberPosition: mc?.rotationOrder ?? undefined,
       totalMembers: memberCountMap.get(circle.id) ?? 0,
+      debtAmountKobo: debtMap.get(circle.id) ?? 0,
     };
   });
   return success({ circles: circlesList });
@@ -70,6 +96,8 @@ export async function POST(req: NextRequest) {
       cycleCount,
       defaultResolutionRule,
       gracePeriodHours,
+      capacityEnabled,
+      maxMembers,
     } = await req.json();
     if (!name || !contributionAmountKobo || !frequency || !cycleCount) {
       return error(
@@ -92,6 +120,11 @@ export async function POST(req: NextRequest) {
         cycleCount,
         defaultResolutionRule: defaultResolutionRule || "absorb",
         gracePeriodHours: grace,
+        capacityEnabled: capacityEnabled === true,
+        maxMembers:
+          capacityEnabled === true && typeof maxMembers === "number"
+            ? maxMembers
+            : null,
       })
       .returning();
 
@@ -123,6 +156,6 @@ export async function POST(req: NextRequest) {
       "Circle created",
     );
   } catch (e) {
-    return error((e as Error).message);
+    return handleApiError(e);
   }
 }

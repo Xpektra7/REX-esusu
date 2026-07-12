@@ -14,6 +14,7 @@ import {
 import { api } from "@/lib/api";
 import Link from "next/link";
 import { ViewIcon, ViewOffSlashIcon } from "hugeicons-react";
+import { toast } from "sonner";
 
 const avatarInitials = [
   { initials: "CO", bg: "bg-blue-100", text: "text-blue-800" },
@@ -45,13 +46,16 @@ export default function SignInPage() {
 
       setLoading(true);
       try {
-        const res = await api.auth.sendOtp(value.email);
+        const res = await api.auth.sendOtp(value.email, password);
         if (res.data.isNewUser) {
-          router.push(`/signup?email=${encodeURIComponent(value.email)}`);
+          sessionStorage.setItem("pending_email", value.email);
+          toast("You don't have an account, sign up to create one");
+          router.push("/signup");
           return;
         }
         sessionStorage.setItem("pending_password", password);
-        router.push(`/signin/otp?email=${encodeURIComponent(value.email)}`);
+        sessionStorage.setItem("pending_email", value.email);
+        router.push("/signin/otp");
       } catch {
         setError("Failed to send OTP. Try again.");
       } finally {
@@ -125,14 +129,23 @@ export default function SignInPage() {
                 tabIndex={-1}
                 aria-label={showPassword ? "Hide password" : "Show password"}
               >
-               {showPassword ? <ViewOffSlashIcon className="h-4 w-4" /> : <ViewIcon className="h-4 w-4" />}
+                {showPassword ? (
+                  <ViewOffSlashIcon className="h-4 w-4" />
+                ) : (
+                  <ViewIcon className="h-4 w-4" />
+                )}
               </button>
             </div>
           </div>
 
           {error && <p className="text-sm text-destructive">{error}</p>}
 
-          <Button type="submit" size="lg" className="w-full py-4 text-base" disabled={loading}>
+          <Button
+            type="submit"
+            size="lg"
+            className="w-full py-4 text-base"
+            disabled={loading}
+          >
             {loading ? "Sending OTP..." : "Continue"}
           </Button>
         </form>

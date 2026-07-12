@@ -1,14 +1,15 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import type { NextRequest } from "next/server";
 import { db } from "@/db";
 import {
   circles,
+  contributions,
   cycles,
   inviteCodes,
   membersCircles,
   users,
 } from "@/db/schema";
-import { error, notFound, success } from "@/lib/api-response";
+import { error, handleApiError, notFound, success } from "@/lib/api-response";
 import { requireAuth } from "@/lib/middleware";
 
 export async function GET(
@@ -27,6 +28,17 @@ export async function GET(
       .limit(1);
     if (!circle) return notFound("Circle not found");
 
+    const [myMembership] = await db
+      .select({ role: membersCircles.role })
+      .from(membersCircles)
+      .where(
+        and(
+          eq(membersCircles.circleId, id),
+          eq(membersCircles.userId, auth.user?.userId),
+        ),
+      )
+      .limit(1);
+
     const [inviteRecord] = await db
       .select()
       .from(inviteCodes)
@@ -38,6 +50,43 @@ export async function GET(
       .from(cycles)
       .where(and(eq(cycles.circleId, id), eq(cycles.status, "active")))
       .limit(1);
+
+    // Has the current user already contributed to the active cycle?
+    let userContributedThisCycle = false;
+    if (currentCycle) {
+      const existing = await db
+        .select({ id: contributions.id })
+        .from(contributions)
+        .innerJoin(
+          membersCircles,
+          eq(contributions.memberCircleId, membersCircles.id),
+        )
+        .where(
+          and(
+            eq(membersCircles.userId, auth.user?.userId),
+            eq(contributions.cycleId, currentCycle.id),
+          ),
+        )
+        .limit(1);
+      userContributedThisCycle = existing.length > 0;
+    }
+
+    // Total the user has contributed across all cycles in this circle.
+    const [totalContributedRow] = await db
+      .select({
+        sum: sql<number>`coalesce(sum(${contributions.amountKobo}), 0)`,
+      })
+      .from(contributions)
+      .innerJoin(
+        membersCircles,
+        eq(contributions.memberCircleId, membersCircles.id),
+      )
+      .where(
+        and(
+          eq(membersCircles.userId, auth.user?.userId),
+          eq(membersCircles.circleId, id),
+        ),
+      );
 
     const rows = await db
       .select({
@@ -72,17 +121,22 @@ export async function GET(
       id: circle.id,
       name: circle.name,
       status: circle.status,
+      role: myMembership?.role ?? null,
       contributionAmount: circle.contributionAmountKobo,
       frequency: circle.frequency,
       cycleCount: circle.cycleCount,
       currentCycle: circle.currentCycle,
+      currentCycleId: currentCycle?.id ?? null,
       inviteCode: inviteRecord?.code,
       cyclePeriodDays: circle.cyclePeriodDays,
       deadlineAt: currentCycle?.deadlineAt?.toISOString(),
+      userContributedThisCycle,
+      totalContributedKobo: Number(totalContributedRow?.sum) || 0,
+      gracePeriodHours: circle.gracePeriodHours,
       members,
     });
   } catch (e) {
-    return error((e as Error).message);
+    return handleApiError(e);
   }
 }
 
@@ -115,12 +169,22 @@ export async function PATCH(
     if (!membership || membership.role !== "admin")
       return error("Only admin can update circle", "03", 403);
 
-    const { name, defaultResolutionRule, gracePeriodHours } = await req.json();
+    const {
+      name,
+      defaultResolutionRule,
+      gracePeriodHours,
+      allowMidCycleJoin,
+      capacityEnabled,
+    } = await req.json();
     const updates: Record<string, unknown> = {};
     if (name) updates.name = name;
     if (defaultResolutionRule)
       updates.defaultResolutionRule = defaultResolutionRule;
     if (gracePeriodHours) updates.gracePeriodHours = gracePeriodHours;
+    if (typeof allowMidCycleJoin === "boolean")
+      updates.allowMidCycleJoin = allowMidCycleJoin;
+    if (typeof capacityEnabled === "boolean")
+      updates.capacityEnabled = capacityEnabled;
 
     if (circle.currentCycle > 0) {
       if (name) delete updates.name;
@@ -131,6 +195,6 @@ export async function PATCH(
 
     return success({ message: "Circle updated" });
   } catch (e) {
-    return error((e as Error).message);
+    return handleApiError(e);
   }
 }

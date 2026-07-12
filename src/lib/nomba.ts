@@ -52,7 +52,7 @@ export async function getNombaToken(): Promise<string> {
 export function nombaHeaders(token: string): Record<string, string> {
   return {
     "Content-Type": "application/json",
-    accountId: process.env.NOMBA_SUB_ACCOUNT_ID || "",
+    accountId: process.env.NOMBA_PARENT_ACCOUNT_ID || "",
     Authorization: `Bearer ${token}`,
   };
 }

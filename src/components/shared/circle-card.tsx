@@ -38,8 +38,8 @@ export function CircleCard({ circle }: { circle: CircleData }) {
         <CardHeader className="px-4">
           <div className="flex items-start justify-between p-0!">
             <div className="flex items-center gap-3">
-              <div className="flex size-9 items-center justify-center rounded-full bg-primary/10 text-primary">
-                <Icon className="size-4.5" />
+              <div className="symbol-container bg-primary/10 text-primary">
+                <Icon className="symbol-width" />
               </div>
               <div>
                 <CardTitle>{circle.name}</CardTitle>
@@ -51,6 +51,11 @@ export function CircleCard({ circle }: { circle: CircleData }) {
             <Badge variant={circle.status === "active" ? "default" : "outline"}>
               {circle.status === "active" ? "Active" : "Inactive"}
             </Badge>
+            {circle.debtAmountKobo ? (
+              <Badge variant="destructive">
+                {formatNaira(circle.debtAmountKobo)} debt
+              </Badge>
+            ) : null}
           </div>
         </CardHeader>
 

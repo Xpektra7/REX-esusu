@@ -2,7 +2,7 @@ import { and, count, eq } from "drizzle-orm";
 import type { NextRequest } from "next/server";
 import { db } from "@/db";
 import { circles, cycles, membersCircles, users } from "@/db/schema";
-import { error, success } from "@/lib/api-response";
+import { error, handleApiError, success } from "@/lib/api-response";
 import { requireAuth } from "@/lib/middleware";
 
 export async function POST(
@@ -87,7 +87,7 @@ export async function POST(
         status: "active",
         startsAt: new Date(),
         deadlineAt: new Date(
-          Date.now() + circle.gracePeriodHours * 60 * 60 * 1000,
+          Date.now() + circle.cyclePeriodDays * 24 * 60 * 60 * 1000,
         ),
       })
       .returning();
@@ -113,6 +113,6 @@ export async function POST(
       "Circle activated successfully",
     );
   } catch (e) {
-    return error((e as Error).message);
+    return handleApiError(e);
   }
 }

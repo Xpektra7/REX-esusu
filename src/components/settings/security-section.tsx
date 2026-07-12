@@ -59,14 +59,17 @@ export function SecuritySection() {
     <div className="flex flex-col gap-3">
       <button
         type="button"
-        onClick={() => router.push("/auth/pin?mode=change")}
+        onClick={() => {
+          sessionStorage.setItem("pending_pin_mode", "change");
+          router.push("/auth/pin");
+        }}
         className={cn(
           "flex items-center justify-between rounded-xl card-interactive px-4 py-3 w-full text-left",
         )}
       >
         <div className="flex items-center gap-3">
-          <div className="flex size-9 items-center justify-center rounded-full bg-primary/10 text-primary">
-            <Shield01Icon className="size-4" />
+          <div className="symbol-container bg-primary/10 text-primary">
+            <Shield01Icon className="symbol-width" />
           </div>
           <span className="text-sm font-medium">Change PIN</span>
         </div>
@@ -81,21 +84,29 @@ export function SecuritySection() {
         )}
       >
         <div className="flex items-center gap-3">
-          <div className="flex size-9 items-center justify-center rounded-full bg-primary/10 text-primary">
-            <Shield01Icon className="size-4" />
+          <div className="symbol-container bg-primary/10 text-primary">
+            <Shield01Icon className="symbol-width" />
           </div>
           <span className="text-sm font-medium">Change Password</span>
         </div>
         <span className="text-muted-foreground">&rsaquo;</span>
       </button>
 
-      <Dialog open={passwordOpen} onOpenChange={(open) => {
-        if (!open) { setPasswordOpen(false); setError(null); }
-      }}>
+      <Dialog
+        open={passwordOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            setPasswordOpen(false);
+            setError(null);
+          }
+        }}
+      >
         <DialogContent showCloseButton={false}>
           <DialogHeader>
             <DialogTitle>Change Password</DialogTitle>
-            <DialogDescription>Enter your current password and choose a new one.</DialogDescription>
+            <DialogDescription>
+              Enter your current password and choose a new one.
+            </DialogDescription>
           </DialogHeader>
 
           <div className="flex flex-col gap-3">
@@ -126,13 +137,18 @@ export function SecuritySection() {
           <div className="flex gap-3 justify-end">
             <Button
               variant="outline"
-              onClick={() => { setPasswordOpen(false); setError(null); }}
+              onClick={() => {
+                setPasswordOpen(false);
+                setError(null);
+              }}
             >
               Cancel
             </Button>
             <Button
               onClick={handleChangePassword}
-              disabled={loading || !currentPassword || !newPassword || !confirmPassword}
+              disabled={
+                loading || !currentPassword || !newPassword || !confirmPassword
+              }
             >
               {loading ? "Saving..." : "Change"}
             </Button>

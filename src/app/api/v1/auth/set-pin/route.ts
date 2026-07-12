@@ -36,6 +36,7 @@ export async function POST(req: NextRequest) {
     await db.update(users).set({ pinHash }).where(eq(users.id, user.id));
     return success({ message: "PIN set successfully" });
   } catch (e) {
-    return error((e as Error).message);
+    console.error(e);
+    return error("An unexpected error occurred", "01", 500);
   }
 }
