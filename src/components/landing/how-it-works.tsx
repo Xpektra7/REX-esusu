@@ -7,18 +7,21 @@ import {
 
 const steps = [
   {
+    number: "01",
     icon: UserGroupIcon,
     title: "Create or join a circle",
     description:
       "Set your contribution amount and frequency. Invite members with a private code.",
   },
   {
+    number: "02",
     icon: BankIcon,
     title: "Get your virtual account",
     description:
       "Each member gets a personal Nigerian bank account number from Nomba — no shared accounts.",
   },
   {
+    number: "03",
     icon: CheckmarkCircle01Icon,
     title: "Contribute and get paid",
     description:
@@ -32,13 +35,13 @@ export function HowItWorks() {
   const lineInsetPercent = 100 / (steps.length * 2);
 
   return (
-    <section className="border-b border-border py-16 md:py-20">
-      <div className="mx-auto max-w-4xl px-6">
+    <section className="landing-section">
+      <div className="landing-container max-w-4xl">
         <div className="mb-12 text-center md:mb-16">
-          <h2 className="text-2xl font-bold md:text-3xl">How It Works</h2>
-          <p className="mt-2 text-sm text-muted-foreground md:text-base">
-            Three steps from sign-up to your first payout.
-          </p>
+          <p className="eyebrow text-muted-foreground">How it works</p>
+          <h2 className="mt-2 text-2xl font-bold md:text-3xl">
+            Three steps to your first payout
+          </h2>
         </div>
 
         <div className="relative">
@@ -60,10 +63,13 @@ export function HowItWorks() {
                   key={step.title}
                   className="flex flex-col items-center text-center"
                 >
-                  <div className="flex size-12 items-center justify-center rounded-full border border-border bg-card">
-                    <Icon className="size-5 text-primary" />
+                  <div className="flex size-12 items-center justify-center rounded-full bg-primary">
+                    <Icon className="size-5 text-primary-foreground" />
                   </div>
-                  <h3 className="mt-4 font-semibold">{step.title}</h3>
+                  <span className="eyebrow mt-4 text-muted-foreground">
+                    {step.number}
+                  </span>
+                  <h3 className="mt-1 font-semibold">{step.title}</h3>
                   <p className="mt-1 text-sm text-muted-foreground">
                     {step.description}
                   </p>

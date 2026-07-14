@@ -9,6 +9,9 @@ import type {
 let mockPinAttempts = 0;
 const MOCK_CORRECT_PIN = "0000";
 
+// In-memory OTP rate-limit for mock mode (D8b). Keyed by phone; 5 requests / 60s.
+const mockOtpAttempts = new Map<string, { count: number; resetAt: number }>();
+
 const mockMembers = [
   {
     id: "cm_mock_001",
@@ -157,11 +160,27 @@ async function mockRequest<T>(
 
   // --- Auth endpoints ---
   if (path === "/auth/send-otp" && method === "POST") {
-    // Every phone number gets an OTP — no validation on our side
+    const phone = String(body.phone || "");
+    const now = Date.now();
+    const prev = mockOtpAttempts.get(phone);
+    if (prev && prev.resetAt > now) {
+      if (prev.count >= 5) {
+        return {
+          code: "29",
+          description: "Too many OTP requests. Try again later.",
+          data: null as T,
+        };
+      }
+      prev.count += 1;
+    } else {
+      mockOtpAttempts.set(phone, { count: 1, resetAt: now + 60_000 });
+    }
+    // New users (phone not among the seeded mock members) are flagged as new.
+    const isNewUser = !mockMembers.some((m) => m.user?.phone === phone);
     return {
       code: "00",
       description: "OTP sent successfully",
-      data: { expires_in_seconds: 300, isNewUser: false } as T,
+      data: { expires_in_seconds: 300, isNewUser } as T,
     };
   }
 
@@ -216,7 +235,11 @@ async function mockRequest<T>(
       }
       throw new Error("Wrong PIN");
     }
-    return { code: "00", description: "PIN verified", data: { verified: true } as T };
+    return {
+      code: "00",
+      description: "PIN verified",
+      data: { verified: true } as T,
+    };
   }
 
   if (path === "/auth/logout" && method === "POST") {
@@ -249,6 +272,7 @@ async function mockRequest<T>(
             cycleCount: 12,
             memberPosition: 3,
             totalMembers: 10,
+            debtAmountKobo: 150000,
           },
           {
             id: "circle_mock_002",
@@ -261,6 +285,7 @@ async function mockRequest<T>(
             cycleCount: 10,
             memberPosition: 1,
             totalMembers: 5,
+            debtAmountKobo: 0,
           },
         ],
       } as T,
@@ -335,6 +360,18 @@ async function mockRequest<T>(
     return { code: "00", description: "Joined circle", data: {} as T };
   }
 
+  if (path === "/circles/join-by-code" && method === "POST") {
+    return {
+      code: "00",
+      description: "Joined circle",
+      data: {
+        circleId: "circle_mock_001",
+        circleName: "Weekend Travelers",
+        rotationOrder: 11,
+      } as T,
+    };
+  }
+
   if (path.endsWith("/leave") && method === "POST") {
     return { code: "00", description: "Left circle", data: {} as T };
   }
@@ -387,6 +424,8 @@ async function mockRequest<T>(
         defaultResolutionRule: "absorb",
         gracePeriodHours: 24,
         allowMidCycleJoin: false,
+        capacityEnabled: false,
+        maxMembers: null,
         status: "active",
         createdAt: "2025-01-15T00:00:00Z",
         updatedAt: new Date().toISOString(),
@@ -510,8 +549,11 @@ async function mockRequest<T>(
   if (path === "/contributions/initiate" && method === "POST") {
     return {
       code: "00",
-      description: "Initiated",
-      data: { ref: `TXN${Date.now()}` } as T,
+      description: "Contribution recorded",
+      data: {
+        ourReference: `CONTRIB_mock_${Date.now()}`,
+        amountKobo: 500000,
+      } as T,
     };
   }
 
@@ -655,6 +697,32 @@ async function mockRequest<T>(
     };
   }
 
+  if (path === "/wallet/topup" && method === "POST") {
+    const amountKobo = Number(body.amountKobo) || 0;
+    if (amountKobo < 1000) {
+      return {
+        code: "05",
+        description: "Minimum top-up is ₦10",
+        data: null as T,
+      };
+    }
+    return {
+      code: "00",
+      description: "Top-up reference generated",
+      data: {
+        virtualAccount: {
+          accountNumber: "1234567890",
+          accountName: "Chioma Okafor",
+          bankCode: "Nomba",
+        },
+        amountKobo,
+        reference: `TOPUP_user_mock_001_${Date.now()}`,
+        instructions:
+          "Transfer the exact amount to the virtual account above. Your wallet will be credited automatically once the payment is confirmed.",
+      } as T,
+    };
+  }
+
   // --- Notifications ---
   if (path === "/notifications" && method === "GET") {
     return {
@@ -668,6 +736,7 @@ async function mockRequest<T>(
           type: "payout",
           read: false,
           createdAt: new Date(Date.now() - 3600000).toISOString(),
+          data: { route: "/wallet", circleId: "circle_mock_001", cycle: 4 },
         },
         {
           id: "notif_002",
@@ -676,6 +745,7 @@ async function mockRequest<T>(
           type: "contribution_due",
           read: true,
           createdAt: new Date(Date.now() - 172800000).toISOString(),
+          data: { route: "/circles/circle_mock_002" },
         },
         {
           id: "notif_003",
@@ -684,14 +754,70 @@ async function mockRequest<T>(
           type: "member_join",
           read: false,
           createdAt: new Date(Date.now() - 604800000).toISOString(),
+          data: { route: "/circles/circle_mock_001" },
         },
         {
           id: "notif_004",
           title: "Circle Completed",
-          body: "Weekly Savers has completed all 12 cycles. Congratulations!",
+          body: "Weekend Travelers has completed all 12 cycles. Congratulations!",
           type: "circle_completed",
           read: true,
           createdAt: new Date(Date.now() - 1209600000).toISOString(),
+          data: { route: "/circles/circle_mock_001" },
+        },
+        {
+          id: "notif_005",
+          title: "Contribution Reminder",
+          body: "Reminder: your ₦5,000 contribution to Weekend Travelers is due in 6 hours.",
+          type: "reminder",
+          read: false,
+          createdAt: new Date(Date.now() - 1800000).toISOString(),
+          data: { route: "/circles/circle_mock_001" },
+        },
+        {
+          id: "notif_006",
+          title: "Default Alert",
+          body: "Funke Adeyemi missed a contribution in Weekend Travelers cycle #3. A debt has been recorded.",
+          type: "default_alert",
+          read: false,
+          createdAt: new Date(Date.now() - 86400000).toISOString(),
+          data: { route: "/circles/circle_mock_001" },
+        },
+        {
+          id: "notif_007",
+          title: "Trust Score Changed",
+          body: "Your trust score moved to 88. Keep your contributions on time to climb higher.",
+          type: "trust_score_changed",
+          read: true,
+          createdAt: new Date(Date.now() - 259200000).toISOString(),
+          data: { route: "/profile" },
+        },
+        {
+          id: "notif_008",
+          title: "Withdrawal Status",
+          body: "Your withdrawal of ₦7,500 to GTBank was completed.",
+          type: "withdrawal_status",
+          read: false,
+          createdAt: new Date(Date.now() - 7200000).toISOString(),
+          data: { route: "/wallet" },
+        },
+        {
+          id: "notif_009",
+          title: "Debt Cleared",
+          body: "Tunde Balogun cleared a ₦2,500 debt in Weekend Travelers. Thank you!",
+          type: "debt_cleared",
+          read: true,
+          createdAt: new Date(Date.now() - 432000000).toISOString(),
+          data: { route: "/circles/circle_mock_001" },
+        },
+        {
+          id: "notif_010",
+          title: "Circle Invite",
+          body: "Aisha Bello invited you to join Savers Circle. Tap to view.",
+          type: "circle_invite",
+          read: false,
+          createdAt: new Date(Date.now() - 300000).toISOString(),
+          data: { route: "/circles" },
         },
       ] as T,
     };
@@ -794,7 +920,11 @@ async function mockRequest<T>(
     if (!body.newPassword || body.newPassword.length < 8) {
       throw new Error("New password must be at least 8 characters");
     }
-    return { code: "00", description: "Password reset successfully", data: {} as T };
+    return {
+      code: "00",
+      description: "Password reset successfully",
+      data: {} as T,
+    };
   }
 
   // --- Referrals ---
@@ -874,41 +1004,108 @@ async function mockRequest<T>(
 
   // --- Bank search ---
   if (path === "/bank-search" && method === "POST") {
-    const MOCK_BANKS: { code: string; name: string; prefix: string; accountName: string }[] = [
-      { code: "058", name: "GTBank", prefix: "01", accountName: "CHIOMA OKAFOR" },
-      { code: "044", name: "Access Bank", prefix: "02", accountName: "CHIOMA OKAFOR" },
-      { code: "011", name: "First Bank", prefix: "03", accountName: "AMARA OBI" },
+    const MOCK_BANKS: {
+      code: string;
+      name: string;
+      prefix: string;
+      accountName: string;
+    }[] = [
+      {
+        code: "058",
+        name: "GTBank",
+        prefix: "01",
+        accountName: "CHIOMA OKAFOR",
+      },
+      {
+        code: "044",
+        name: "Access Bank",
+        prefix: "02",
+        accountName: "CHIOMA OKAFOR",
+      },
+      {
+        code: "011",
+        name: "First Bank",
+        prefix: "03",
+        accountName: "AMARA OBI",
+      },
       { code: "033", name: "UBA", prefix: "04", accountName: "EMEKA NWOSU" },
-      { code: "057", name: "Zenith Bank", prefix: "05", accountName: "TUNDE BALOGUN" },
-      { code: "035", name: "Wema Bank", prefix: "06", accountName: "FUNKE ADEYEMI" },
+      {
+        code: "057",
+        name: "Zenith Bank",
+        prefix: "05",
+        accountName: "TUNDE BALOGUN",
+      },
+      {
+        code: "035",
+        name: "Wema Bank",
+        prefix: "06",
+        accountName: "FUNKE ADEYEMI",
+      },
       { code: "214", name: "FCMB", prefix: "07", accountName: "DAVID ADELEKE" },
-      { code: "232", name: "Sterling Bank", prefix: "08", accountName: "NGOZI EZE" },
-      { code: "032", name: "Union Bank", prefix: "09", accountName: "CHIOMA OKAFOR" },
-      { code: "070", name: "Fidelity Bank", prefix: "10", accountName: "CHIOMA OKAFOR" },
-      { code: "221", name: "Stanbic IBTC", prefix: "11", accountName: "AMARA OBI" },
-      { code: "502", name: "Kuda Bank", prefix: "12", accountName: "EMEKA NWOSU" },
+      {
+        code: "232",
+        name: "Sterling Bank",
+        prefix: "08",
+        accountName: "NGOZI EZE",
+      },
+      {
+        code: "032",
+        name: "Union Bank",
+        prefix: "09",
+        accountName: "CHIOMA OKAFOR",
+      },
+      {
+        code: "070",
+        name: "Fidelity Bank",
+        prefix: "10",
+        accountName: "CHIOMA OKAFOR",
+      },
+      {
+        code: "221",
+        name: "Stanbic IBTC",
+        prefix: "11",
+        accountName: "AMARA OBI",
+      },
+      {
+        code: "502",
+        name: "Kuda Bank",
+        prefix: "12",
+        accountName: "EMEKA NWOSU",
+      },
       { code: "999", name: "OPay", prefix: "13", accountName: "TUNDE BALOGUN" },
-      { code: "505", name: "Moniepoint", prefix: "14", accountName: "FUNKE ADEYEMI" },
+      {
+        code: "505",
+        name: "Moniepoint",
+        prefix: "14",
+        accountName: "FUNKE ADEYEMI",
+      },
     ];
 
     const { accountNumber } = body;
     if (!accountNumber || accountNumber.length !== 10) {
-      return { code: "05", description: "Account number must be 10 digits", data: null as T };
+      return {
+        code: "05",
+        description: "Account number must be 10 digits",
+        data: null as T,
+      };
     }
 
     const prefix = accountNumber.slice(0, 2);
-    const exactMatches = MOCK_BANKS.filter((b) => b.prefix === prefix).map((b) => ({
-      bankCode: b.code,
-      bankName: b.name,
-      accountName: b.accountName,
-    }));
-    const matches = exactMatches.length > 0
-      ? exactMatches
-      : MOCK_BANKS.slice(0, 2).map((b) => ({
-          bankCode: b.code,
-          bankName: b.name,
-          accountName: b.accountName,
-        }));
+    const exactMatches = MOCK_BANKS.filter((b) => b.prefix === prefix).map(
+      (b) => ({
+        bankCode: b.code,
+        bankName: b.name,
+        accountName: b.accountName,
+      }),
+    );
+    const matches =
+      exactMatches.length > 0
+        ? exactMatches
+        : MOCK_BANKS.slice(0, 2).map((b) => ({
+            bankCode: b.code,
+            bankName: b.name,
+            accountName: b.accountName,
+          }));
 
     return { code: "00", description: "OK", data: { matches } as T };
   }
@@ -917,7 +1114,11 @@ async function mockRequest<T>(
   if (path === "/bank-lookup" && method === "POST") {
     const { accountNumber, bankCode } = body;
     if (!accountNumber || !bankCode) {
-      return { code: "05", description: "accountNumber and bankCode are required", data: null as T };
+      return {
+        code: "05",
+        description: "accountNumber and bankCode are required",
+        data: null as T,
+      };
     }
     return {
       code: "00",
@@ -1104,7 +1305,10 @@ export const api = {
       ),
 
     /** Changes password (requires current password). */
-    changePassword: (payload: { currentPassword: string; newPassword: string }) =>
+    changePassword: (payload: {
+      currentPassword: string;
+      newPassword: string;
+    }) =>
       request<Record<string, unknown>>("/auth/change-password", {
         method: "POST",
         body: JSON.stringify(payload),
@@ -1161,7 +1365,17 @@ export const api = {
         method: "POST",
       }),
 
-    /** Joins a circle using an invite code. */
+    /** Joins a circle using only an invite code (code-only entry point). */
+    joinByCode: (inviteCode: string) =>
+      request<{ circleId: string; circleName: string; rotationOrder: number }>(
+        "/circles/join-by-code",
+        {
+          method: "POST",
+          body: JSON.stringify({ inviteCode }),
+        },
+      ),
+
+    /** Joins a circle using an invite code (circle-scoped route). */
     join: (id: string, inviteCode: string) =>
       request<Record<string, unknown>>(`/circles/${id}/join`, {
         method: "POST",
@@ -1190,7 +1404,14 @@ export const api = {
       }),
 
     /** Updates circle settings. */
-    updateSettings: (id: string, payload: { allowMidCycleJoin?: boolean }) =>
+    updateSettings: (
+      id: string,
+      payload: {
+        name?: string;
+        allowMidCycleJoin?: boolean;
+        capacityEnabled?: boolean;
+      },
+    ) =>
       request<unknown>(`/circles/${id}/settings`, {
         method: "PATCH",
         body: JSON.stringify(payload),
@@ -1226,8 +1447,15 @@ export const api = {
 
   contributions: {
     /** Initiates a contribution (generates a payment reference). */
-    initiate: (payload: { cycleId: string; amountKobo: number }) =>
-      request<{ ref: string }>("/contributions/initiate", {
+    initiate: (payload: {
+      circleId: string;
+      cycleNumber: number;
+      amountKobo: number;
+    }) =>
+      request<{
+        ourReference: string;
+        amountKobo: number;
+      }>("/contributions/initiate", {
         method: "POST",
         body: JSON.stringify(payload),
       }),
@@ -1248,8 +1476,7 @@ export const api = {
     history: () => request<unknown[]>("/payouts/history"),
 
     /** Receipt for an outward payout transfer. */
-    receipt: (id: string) =>
-      request<TransferReceipt>(`/payouts/${id}/receipt`),
+    receipt: (id: string) => request<TransferReceipt>(`/payouts/${id}/receipt`),
   },
 
   wallet: {
@@ -1381,10 +1608,12 @@ export const api = {
 
   /** Searches for banks matching an account number. */
   bankSearch: (accountNumber: string) =>
-    request<{ matches: { bankCode: string; bankName: string; accountName: string }[] }>(
-      "/bank-search",
-      { method: "POST", body: JSON.stringify({ accountNumber }) },
-    ),
+    request<{
+      matches: { bankCode: string; bankName: string; accountName: string }[];
+    }>("/bank-search", {
+      method: "POST",
+      body: JSON.stringify({ accountNumber }),
+    }),
 
   referrals: {
     /** Gets the user's referral code and referred users. */

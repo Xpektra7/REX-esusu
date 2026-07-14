@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 import { db } from "@/db";
 import { contactMessages } from "@/db/schema";
-import { error, success } from "@/lib/api-response";
+import { error, handleApiError, success } from "@/lib/api-response";
 
 export async function POST(req: NextRequest) {
   try {
@@ -14,6 +14,6 @@ export async function POST(req: NextRequest) {
 
     return success({}, "Message sent successfully");
   } catch (e) {
-    return error((e as Error).message);
+    return handleApiError(e);
   }
 }

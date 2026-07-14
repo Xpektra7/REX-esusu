@@ -1,8 +1,8 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import type { NextRequest } from "next/server";
 import { db } from "@/db";
 import { circles, membersCircles } from "@/db/schema";
-import { error, success } from "@/lib/api-response";
+import { error, handleApiError, success } from "@/lib/api-response";
 import { requireAuth } from "@/lib/middleware";
 
 export async function PATCH(
@@ -36,11 +36,47 @@ export async function PATCH(
 
     const body = await req.json();
 
+    if (typeof body.name === "string") {
+      const trimmed = body.name.trim();
+      if (trimmed.length === 0) return error("Circle name cannot be empty");
+      if (trimmed.length > 255) return error("Circle name is too long");
+      await db.update(circles).set({ name: trimmed }).where(eq(circles.id, id));
+    }
+
     if (body.allowMidCycleJoin !== undefined) {
       await db
         .update(circles)
         .set({ allowMidCycleJoin: body.allowMidCycleJoin })
         .where(eq(circles.id, id));
+    }
+
+    // Capacity: turning joining OFF caps the circle at its current member
+    // count (best-UX interpretation). Turning it ON reopens without a cap.
+    if (body.capacityEnabled !== undefined) {
+      if (body.capacityEnabled === true && body.maxMembers === undefined) {
+        const [{ count }] = await db
+          .select({ count: sql<number>`count(*)::int` })
+          .from(membersCircles)
+          .where(
+            and(
+              eq(membersCircles.circleId, id),
+              eq(membersCircles.status, "active"),
+            ),
+          );
+        await db
+          .update(circles)
+          .set({ capacityEnabled: true, maxMembers: count })
+          .where(eq(circles.id, id));
+      } else {
+        await db
+          .update(circles)
+          .set({
+            capacityEnabled: body.capacityEnabled,
+            maxMembers:
+              body.capacityEnabled === false ? null : (body.maxMembers ?? null),
+          })
+          .where(eq(circles.id, id));
+      }
     }
 
     const [updated] = await db
@@ -51,6 +87,6 @@ export async function PATCH(
 
     return success(updated);
   } catch (e) {
-    return error((e as Error).message);
+    return handleApiError(e);
   }
 }

@@ -17,6 +17,7 @@ import {
   InputOTPSlot,
 } from "@/components/ui/input-otp";
 import { api } from "@/lib/api";
+import { validatePin } from "@/lib/validations/auth";
 import { useAuthStore } from "@/stores/auth-store";
 
 function PinForm() {
@@ -71,6 +72,11 @@ function PinForm() {
       // --- SET PIN ---
       if (step === "enter") {
         if (pin.length < 4) return;
+        const pinError = validatePin(pin);
+        if (pinError) {
+          setError(pinError);
+          return;
+        }
         setStep("confirm");
         return;
       }

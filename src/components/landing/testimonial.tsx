@@ -2,6 +2,7 @@
 
 import { ArrowLeft01Icon, ArrowRight01Icon } from "hugeicons-react";
 import { useRef } from "react";
+import { DiceBearAvatar } from "@/components/shared/dicebear-avatar";
 
 const testimonials = [
   {
@@ -44,12 +45,10 @@ export function Testimonial() {
   };
 
   return (
-    <section className="border-b border-border py-16 md:py-20">
-      <div className="mx-auto max-w-5xl px-6">
+    <section className="landing-section">
+      <div className="landing-container">
         <div className="mb-10 text-center">
-          <p className="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground">
-            Testimonials
-          </p>
+          <p className="eyebrow text-muted-foreground">Testimonials</p>
           <h2 className="mt-2 text-2xl font-bold md:text-3xl">
             Trusted by savers like you
           </h2>
@@ -59,20 +58,23 @@ export function Testimonial() {
         <div className="relative">
           <div
             ref={scrollRef}
-            className="flex gap-7 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-4 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            className="no-scrollbar flex gap-6 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-4"
           >
             {testimonials.map((t) => (
               <div
                 key={t.name}
                 className="w-[85vw] max-w-md shrink-0 snap-start"
               >
-                <div className="flex h-full flex-col rounded-xl bg-card  bg-card p-8 md:p-10">
-                  <p className="flex-1 text-base italic leading-relaxed text-foreground md:text-lg">
-                    &ldquo;{t.quote}
+                <div className="flex h-full flex-col justify-between gap-6 rounded-xl border border-border bg-card p-8 md:p-10">
+                  <p className="text-base leading-relaxed text-foreground md:text-lg">
+                    &ldquo;{t.quote}&rdquo;
                   </p>
-                  <div className="mt-5">
-                    <p className="text-sm font-bold">— {t.name}</p>
-                    <p className="text-xs text-muted-foreground">{t.role}</p>
+                  <div className="flex items-center gap-3">
+                    <DiceBearAvatar name={t.name} />
+                    <div>
+                      <p className="text-sm font-bold">{t.name}</p>
+                      <p className="text-xs text-muted-foreground">{t.role}</p>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -85,7 +87,7 @@ export function Testimonial() {
               type="button"
               onClick={() => scroll("left")}
               aria-label="Previous testimonial"
-              className="flex size-10 items-center justify-center rounded-full card-interactive"
+              className="card-interactive flex size-10 items-center justify-center rounded-full"
             >
               <ArrowLeft01Icon className="size-4" />
             </button>
@@ -93,7 +95,7 @@ export function Testimonial() {
               type="button"
               onClick={() => scroll("right")}
               aria-label="Next testimonial"
-              className="flex size-10 items-center justify-center rounded-full card-interactive"
+              className="card-interactive flex size-10 items-center justify-center rounded-full"
             >
               <ArrowRight01Icon className="size-4" />
             </button>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useForm } from "@tanstack/react-form";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Suspense, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -12,7 +13,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { api } from "@/lib/api";
-import Link from "next/link";
+import { validatePassword } from "@/lib/validations/auth";
 
 function SignUpForm() {
   const router = useRouter();
@@ -46,8 +47,9 @@ function SignUpForm() {
         return;
       }
 
-      if (password.length < 8) {
-        setError("Password must be at least 8 characters");
+      const pwError = validatePassword(password);
+      if (pwError) {
+        setError(pwError);
         return;
       }
 
@@ -178,7 +180,12 @@ function SignUpForm() {
 
           {error && <p className="text-sm text-destructive">{error}</p>}
 
-          <Button type="submit" size="lg" className="w-full py-4 text-base" disabled={loading}>
+          <Button
+            type="submit"
+            size="lg"
+            className="w-full py-4 text-base"
+            disabled={loading}
+          >
             {loading ? "Sending OTP..." : "Create Account"}
           </Button>
         </form>

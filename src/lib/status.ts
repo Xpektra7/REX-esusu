@@ -95,5 +95,6 @@ export const CYCLE_STATUS: Record<string, string> = {
 
 export const DEBT_STATUS: Record<string, string> = {
   active: "bg-foreground/10 text-foreground",
+  redirected: "bg-destructive/10 text-destructive",
   cleared: "bg-primary/15 text-primary",
 };

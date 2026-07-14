@@ -69,10 +69,10 @@ export default function ReferralsPage() {
             <button
               type="button"
               onClick={handleCopy}
-              className="flex size-10 items-center justify-center rounded-full bg-primary/10 text-primary"
+              className="symbol-container bg-primary/10 text-primary"
               aria-label="Copy referral code"
             >
-              <Copy01Icon className="size-5" />
+              <Copy01Icon className="symbol-width" />
             </button>
           </div>
           <p className="mt-2 text-xs text-muted-foreground">

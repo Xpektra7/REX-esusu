@@ -1,4 +1,5 @@
-import { InstallPrompt } from "@/components/shared/install-prompt";
+import { Compare } from "@/components/landing/compare";
+import { Cta } from "@/components/landing/cta";
 import { Features } from "@/components/landing/features";
 import { Footer } from "@/components/landing/footer";
 import { Hero } from "@/components/landing/hero";
@@ -7,6 +8,7 @@ import { Nav } from "@/components/landing/nav";
 import { Security } from "@/components/landing/security";
 import { Testimonial } from "@/components/landing/testimonial";
 import WhoItsFor from "@/components/landing/who-its-for";
+import { InstallPrompt } from "@/components/shared/install-prompt";
 
 export default function Home() {
   return (
@@ -17,8 +19,10 @@ export default function Home() {
         <WhoItsFor />
         <HowItWorks />
         <Features />
-        <Testimonial />
+        <Compare />
         <Security />
+        <Testimonial />
+        <Cta />
       </main>
       <Footer />
       <InstallPrompt />

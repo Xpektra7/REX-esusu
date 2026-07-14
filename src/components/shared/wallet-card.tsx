@@ -27,9 +27,9 @@ export function WalletCard({ balance }: { balance: number }) {
             className="flex items-center justify-center"
           >
             {hidden ? (
-              <ViewOffIcon className="size-4 text-card-foreground/60" />
+              <ViewOffIcon className="symbol-width text-card-foreground/60" />
             ) : (
-              <ViewIcon className="size-4 text-card-foreground/60" />
+              <ViewIcon className="symbol-width text-card-foreground/60" />
             )}
           </button>
         </div>
@@ -47,7 +47,7 @@ export function WalletCard({ balance }: { balance: number }) {
               "hover: transition-opacity",
             )}
           >
-            <PlusSignIcon className="size-4" />
+            <PlusSignIcon className="symbol-width" />
             Top Up
           </Link>
           <Link
@@ -58,7 +58,7 @@ export function WalletCard({ balance }: { balance: number }) {
               "hover: transition-opacity",
             )}
           >
-            <ArrowUp01Icon className="size-4" />
+            <ArrowUp01Icon className="symbol-width" />
             Send
           </Link>
         </div>

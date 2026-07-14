@@ -1,11 +1,17 @@
 import bcrypt from "bcryptjs";
-import type { StringValue } from "ms";
 import { eq } from "drizzle-orm";
 import jwt from "jsonwebtoken";
+import type { StringValue } from "ms";
 import { db } from "@/db";
 import { users } from "@/db/schema";
 
-const JWT_SECRET = process.env.JWT_SECRET || "";
+const JWT_SECRET = (() => {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    throw new Error("JWT_SECRET environment variable is not set");
+  }
+  return secret;
+})();
 const JWT_EXPIRES_IN = (process.env.JWT_EXPIRES_IN || "30m") as StringValue;
 
 type TokenPayload = { userId: string; email: string };
@@ -18,7 +24,9 @@ export function signToken(userId: string, email: string): string {
 
 export function verifyToken(token: string): TokenPayload | null {
   try {
-    return jwt.verify(token, JWT_SECRET) as TokenPayload;
+    return jwt.verify(token, JWT_SECRET, {
+      algorithms: ["HS256"],
+    }) as TokenPayload;
   } catch {
     return null;
   }

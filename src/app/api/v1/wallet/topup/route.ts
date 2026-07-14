@@ -2,7 +2,7 @@ import { and, eq } from "drizzle-orm";
 import type { NextRequest } from "next/server";
 import { db } from "@/db";
 import { virtualAccounts } from "@/db/schema";
-import { error, success } from "@/lib/api-response";
+import { error, handleApiError, success } from "@/lib/api-response";
 import { requireAuth } from "@/lib/middleware";
 
 export async function POST(req: NextRequest) {
@@ -11,8 +11,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const { amountKobo } = await req.json();
-    if (!amountKobo || amountKobo < 1000)
-      return error("Minimum top-up is ₦10");
+    if (!amountKobo || amountKobo < 1000) return error("Minimum top-up is ₦10");
 
     const [va] = await db
       .select()
@@ -41,6 +40,6 @@ export async function POST(req: NextRequest) {
         "Transfer the exact amount to the virtual account above. Your wallet will be credited automatically once the payment is confirmed.",
     });
   } catch (e) {
-    return error((e as Error).message);
+    return handleApiError(e);
   }
 }

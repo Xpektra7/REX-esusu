@@ -8,7 +8,7 @@ import {
   membersCircles,
   users,
 } from "@/db/schema";
-import { error, success } from "@/lib/api-response";
+import { error, handleApiError, success } from "@/lib/api-response";
 import { requireAuth } from "@/lib/middleware";
 
 export async function GET(
@@ -112,6 +112,6 @@ export async function GET(
       memberContributions,
     });
   } catch (e) {
-    return error((e as Error).message);
+    return handleApiError(e);
   }
 }

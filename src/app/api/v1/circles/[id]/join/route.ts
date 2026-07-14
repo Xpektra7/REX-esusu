@@ -1,8 +1,13 @@
-import { and, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import type { NextRequest } from "next/server";
 import { db } from "@/db";
-import { circles, inviteCodes, membersCircles } from "@/db/schema";
-import { error, success } from "@/lib/api-response";
+import { circles } from "@/db/schema";
+import { error, handleApiError, success } from "@/lib/api-response";
+import {
+  JoinError,
+  performJoin,
+  resolveCircleFromCode,
+} from "@/lib/join-circle";
 import { requireAuth } from "@/lib/middleware";
 
 export async function POST(
@@ -16,6 +21,12 @@ export async function POST(
     const { id } = await params;
     const { inviteCode } = await req.json();
 
+    const resolved = await resolveCircleFromCode(inviteCode);
+    if (!resolved) return error("Invalid invite code", "05", 404);
+    if (resolved.circle.id !== id) {
+      return error("Invite code does not belong to this circle", "05", 409);
+    }
+
     const [circle] = await db
       .select()
       .from(circles)
@@ -23,54 +34,14 @@ export async function POST(
       .limit(1);
     if (!circle) return error("Circle not found", "04", 404);
 
-    if (circle.status === "active" && !circle.allowMidCycleJoin) {
-      return error("Joining mid-cycle is disabled", "05", 403);
-    }
-
-    const [code] = await db
-      .select()
-      .from(inviteCodes)
-      .where(
-        and(eq(inviteCodes.circleId, id), eq(inviteCodes.code, inviteCode)),
-      )
-      .limit(1);
-    if (!code) return error("Invalid invite code");
-
-    const existing = await db
-      .select()
-      .from(membersCircles)
-      .where(
-        and(
-          eq(membersCircles.userId, auth.user?.userId),
-          eq(membersCircles.circleId, id),
-        ),
-      )
-      .limit(1);
-    if (existing.length > 0)
-      return error("Already a member of this circle", "05", 409);
-
-    const memberCount = await db
-      .select()
-      .from(membersCircles)
-      .where(eq(membersCircles.circleId, id));
-    const rotationOrder = memberCount.length + 1;
-
-    await db.insert(membersCircles).values({
-      userId: auth.user?.userId,
-      circleId: id,
-      role: "member",
-      status: "active",
-      rotationOrder,
-      joinedAtCycle: circle.currentCycle,
-    });
-
-    await db
-      .update(inviteCodes)
-      .set({ useCount: code.useCount + 1 })
-      .where(eq(inviteCodes.id, code.id));
-
-    return success({ circleId: id, circleName: circle.name, rotationOrder });
+    const result = await performJoin(
+      auth.user?.userId,
+      resolved.circle,
+      resolved.invite,
+    );
+    return success(result, "Joined circle");
   } catch (e) {
-    return error((e as Error).message);
+    if (e instanceof JoinError) return error(e.message, e.code, e.status);
+    return handleApiError(e);
   }
 }

@@ -11,6 +11,7 @@
     "test": "tsx --test scripts/reconciliation.test.ts",
     "test:integration": "tsx --test scripts/reconciliation.integration.test.ts",
     "test:e2e": "tsx --env-file=.env --test scripts/e2e-api.test.ts",
+    "postinstall": "drizzle-kit push",
     "db:push": "drizzle-kit push",
     "db:generate": "drizzle-kit generate",
     "db:studio": "drizzle-kit studio"

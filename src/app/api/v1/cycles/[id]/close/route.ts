@@ -2,7 +2,7 @@ import { and, eq } from "drizzle-orm";
 import type { NextRequest } from "next/server";
 import { db } from "@/db";
 import { circles, cycles, membersCircles } from "@/db/schema";
-import { error, success } from "@/lib/api-response";
+import { error, handleApiError, success } from "@/lib/api-response";
 import { requireAuth } from "@/lib/middleware";
 import { reconcileCycle } from "@/lib/reconciliation";
 
@@ -47,6 +47,6 @@ export async function POST(
 
     return success(result, "Cycle closed");
   } catch (e) {
-    return error((e as Error).message);
+    return handleApiError(e);
   }
 }

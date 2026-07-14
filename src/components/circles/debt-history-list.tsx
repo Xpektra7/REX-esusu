@@ -12,7 +12,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Empty, EmptyDescription, EmptyHeader, EmptyMedia } from "@/components/ui/empty";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+} from "@/components/ui/empty";
 import { Separator } from "@/components/ui/separator";
 import { api } from "@/lib/api";
 import { formatNaira } from "@/lib/utils";
@@ -46,7 +51,11 @@ function DebtBreakdownDialog({
   const handleRemind = async () => {
     setReminding(true);
     try {
-      await api.notifications.sendRemind(debt.memberName, debt.amountKobo, debt.cycle);
+      await api.notifications.sendRemind(
+        debt.memberName,
+        debt.amountKobo,
+        debt.cycle,
+      );
       toast.success(`Reminder sent to ${debt.memberName}`);
     } catch {
       toast.error("Failed to send reminder");
@@ -97,10 +106,26 @@ function DebtBreakdownDialog({
           {debt.status === "active" && (
             <>
               <Separator />
-              <Button className="w-full" size="lg" onClick={handleRemind} disabled={reminding}>
+              <Button
+                className="w-full"
+                size="lg"
+                onClick={handleRemind}
+                disabled={reminding}
+              >
                 <Notification01Icon className="size-4" />
                 {reminding ? "Sending..." : "Remind"}
               </Button>
+            </>
+          )}
+
+          {debt.status === "redirected" && (
+            <>
+              <Separator />
+              <p className="rounded-lg bg-destructive/10 px-3 py-2.5 text-xs text-destructive">
+                This payout was redirected. The affected member defaulted, so
+                their turn was reassigned to the next recipient in the rotation
+                and a debt was recorded for recovery.
+              </p>
             </>
           )}
         </div>
@@ -148,7 +173,9 @@ export function DebtHistoryList({ debts }: DebtHistoryListProps) {
         <DebtBreakdownDialog
           debt={selectedDebt}
           open={selectedDebt !== null}
-          onOpenChange={(open) => { if (!open) setSelectedDebt(null); }}
+          onOpenChange={(open) => {
+            if (!open) setSelectedDebt(null);
+          }}
         />
       )}
     </div>

@@ -11,7 +11,12 @@ import { RecipientHeroCard } from "@/components/circles/recipient-hero-card";
 import { ShortfallAlert } from "@/components/circles/shortfall-alert";
 import { PageBreadcrumbs } from "@/components/shared/page-breadcrumbs";
 import { Card } from "@/components/ui/card";
-import { Empty, EmptyDescription, EmptyHeader, EmptyMedia } from "@/components/ui/empty";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+} from "@/components/ui/empty";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/lib/api";
@@ -51,7 +56,7 @@ export default function CycleDetailPage(props: {
   if (!cycle) {
     return (
       <div className="flex flex-col items-center gap-4 py-16 text-center">
-        <AlertCircleIcon className="size-10 text-muted-foreground" />
+        <AlertCircleIcon className="symbol-width text-muted-foreground" />
         <p className="text-sm text-muted-foreground">Cycle not found.</p>
         <Link href={`/circles/${id}`}>
           <button
@@ -84,7 +89,11 @@ export default function CycleDetailPage(props: {
   ).length;
 
   const rl = circle
-    ? rotationLabel(cycle.cycleNumber, circle.cycleCount, circle.members?.length ?? 0)
+    ? rotationLabel(
+        cycle.cycleNumber,
+        circle.cycleCount,
+        circle.members?.length ?? 0,
+      )
     : null;
 
   return (
@@ -94,7 +103,11 @@ export default function CycleDetailPage(props: {
           { label: "Home", href: "/dashboard" },
           { label: "Circles", href: "/circles" },
           { label: circle?.name ?? "Circle", href: `/circles/${id}` },
-          { label: rl ? `Rotation ${rl.rotation} · Round ${rl.round}` : `Cycle #${cycle.cycleNumber}` },
+          {
+            label: rl
+              ? `Rotation ${rl.rotation} · Round ${rl.round}`
+              : `Cycle #${cycle.cycleNumber}`,
+          },
         ]}
       />
 
@@ -172,7 +185,7 @@ export default function CycleDetailPage(props: {
           <Empty className="p-4">
             <EmptyHeader>
               <EmptyMedia variant="icon">
-                <Coins02Icon className="size-6" />
+                <Coins02Icon className="symbol-width" />
               </EmptyMedia>
               <EmptyDescription>No contributions recorded.</EmptyDescription>
             </EmptyHeader>

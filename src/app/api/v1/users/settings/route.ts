@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 import { z } from "zod";
 import { db } from "@/db";
 import { userSettings } from "@/db/schema";
-import { error, success } from "@/lib/api-response";
+import { error, handleApiError, success } from "@/lib/api-response";
 import { requireAuth } from "@/lib/middleware";
 
 const updateSchema = z.object({
@@ -78,7 +78,7 @@ export async function GET(req: NextRequest) {
       notifyWithdrawal: settings.notifyWithdrawal,
     });
   } catch (e) {
-    return error((e as Error).message);
+    return handleApiError(e);
   }
 }
 
@@ -107,6 +107,6 @@ export async function PATCH(req: NextRequest) {
 
     return success({}, "Settings updated");
   } catch (e) {
-    return error((e as Error).message);
+    return handleApiError(e);
   }
 }

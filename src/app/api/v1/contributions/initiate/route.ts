@@ -7,8 +7,9 @@ import {
   cycles,
   membersCircles,
   virtualAccounts,
+  walletTransactions,
 } from "@/db/schema";
-import { error, success } from "@/lib/api-response";
+import { error, handleApiError, success } from "@/lib/api-response";
 import { requireAuth } from "@/lib/middleware";
 
 export async function POST(req: NextRequest) {
@@ -92,32 +93,46 @@ export async function POST(req: NextRequest) {
     const timestamp = Date.now().toString(36);
     const ourReference = `CONTRIB_${circleId.slice(0, 8)}_${cycleNumber}_${auth.user?.userId.slice(0, 8)}_${timestamp}`;
 
-    const [_contribution] = await db
+    const [contribution] = await db
       .insert(contributions)
       .values({
         memberCircleId: membership.id,
         cycleId: currentCycle.id,
         virtualAccountId: va.id,
         amountKobo,
-        status: "pending",
+        appliedKobo: amountKobo,
+        status: "fully_applied",
         ourReference,
+        reconciledAt: new Date(),
       })
       .returning();
+
+    // Record the debit on the wallet ledger so it appears in the user's
+    // transaction history (the balance was already deducted above).
+    await db
+      .insert(walletTransactions)
+      .values({
+        userId: auth.user?.userId,
+        type: "contribution",
+        amountKobo,
+        reference: ourReference,
+        status: "success",
+        metadata: {
+          circleId,
+          cycleId: currentCycle.id,
+          contributionId: contribution.id,
+        },
+      })
+      .onConflictDoNothing();
 
     return success(
       {
         ourReference,
         amountKobo,
-        virtualAccount: {
-          accountNumber: va.accountNumber,
-          accountName: va.accountName,
-          bankCode: va.bankCode || "Nomba",
-        },
-        instructions: `Transfer ₦${(amountKobo / 100).toLocaleString()} to the account above. Include the reference in narration.`,
       },
-      "Contribution initiated",
+      "Contribution recorded",
     );
   } catch (e) {
-    return error((e as Error).message);
+    return handleApiError(e);
   }
 }

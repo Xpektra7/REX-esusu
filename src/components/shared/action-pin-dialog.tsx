@@ -1,6 +1,6 @@
 "use client";
 
-import { Logout01Icon, LockIcon } from "hugeicons-react";
+import { LockIcon, Logout01Icon } from "hugeicons-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -49,11 +49,14 @@ export function ActionPinDialog({
       if (res.data?.verified) {
         useAuthStore.getState().resetPinAttempts();
         setPin("");
+        onOpenChange(false);
         onSuccess();
         return;
       }
     } catch {
-      // fall through
+      // fall through to failure handling
+    } finally {
+      setLoading(false);
     }
 
     const attempts = useAuthStore.getState().pinAttempts + 1;
@@ -66,7 +69,6 @@ export function ActionPinDialog({
 
     setError(`Incorrect PIN. ${3 - attempts} attempt(s) remaining.`);
     setPin("");
-    setLoading(false);
   };
 
   const handleLockedSignOut = async () => {
@@ -92,8 +94,8 @@ export function ActionPinDialog({
       <DialogContent className="sm:max-w-sm w-fit">
         {locked ? (
           <div className="flex flex-col items-center gap-4 py-6 text-center">
-            <div className="flex size-12 items-center justify-center rounded-full bg-destructive/10">
-              <LockIcon className="size-5 text-destructive" />
+            <div className="symbol-container bg-destructive/10">
+              <LockIcon className="symbol-width text-destructive" />
             </div>
             <DialogHeader>
               <DialogTitle>Too many attempts</DialogTitle>
@@ -115,8 +117,8 @@ export function ActionPinDialog({
             onSubmit={handleSubmit}
             className="w-fit flex flex-col items-center gap-4 py-4"
           >
-            <div className="flex size-12 items-center justify-center rounded-full bg-primary/10">
-              <LockIcon className="size-5 text-primary" />
+            <div className="symbol-container bg-primary/10">
+              <LockIcon className="symbol-width text-primary" />
             </div>
 
             <DialogHeader className="text-center">

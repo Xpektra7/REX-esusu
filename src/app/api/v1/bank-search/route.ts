@@ -1,5 +1,5 @@
 import type { NextRequest } from "next/server";
-import { error, success } from "@/lib/api-response";
+import { error, handleApiError, success } from "@/lib/api-response";
 import { requireAuth } from "@/lib/middleware";
 
 const BANKS: { code: string; name: string }[] = [
@@ -51,7 +51,11 @@ export async function POST(req: NextRequest) {
   try {
     const { accountNumber } = await req.json();
 
-    if (!accountNumber || accountNumber.length !== 10 || !/^\d{10}$/.test(accountNumber)) {
+    if (
+      !accountNumber ||
+      accountNumber.length !== 10 ||
+      !/^\d{10}$/.test(accountNumber)
+    ) {
       return error("Account number must be 10 digits");
     }
 
@@ -68,6 +72,6 @@ export async function POST(req: NextRequest) {
 
     return success({ matches }, "Bank search successful");
   } catch (e) {
-    return error((e as Error).message);
+    return handleApiError(e);
   }
 }

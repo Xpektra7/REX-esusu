@@ -20,6 +20,9 @@ export interface Circle {
   currentCycle: number;
   defaultResolutionRule: "absorb" | "shrink" | "end_early";
   gracePeriodHours: number;
+  allowMidCycleJoin: boolean;
+  capacityEnabled: boolean;
+  maxMembers: number | null;
   status: "pending" | "active" | "completed" | "dissolved";
   createdAt: string;
   updatedAt: string;
@@ -152,6 +155,7 @@ export interface CircleListItem {
   cycleCount: number;
   memberPosition?: number;
   totalMembers?: number;
+  debtAmountKobo?: number;
 }
 
 export interface CircleDetail extends Circle {
@@ -218,15 +222,21 @@ export interface CirclePageData {
   id: string;
   name: string;
   status: string;
+  role?: "admin" | "member" | null;
   contributionAmount: number;
   frequency: string;
   cycleCount: number;
   currentCycle: number;
-  gracePeriodHours: number;
+  currentCycleId?: string | null;
   allowMidCycleJoin: boolean;
+  capacityEnabled: boolean;
+  maxMembers: number | null;
   inviteCode?: string;
   cyclePeriodDays?: number;
   deadlineAt?: string;
+  gracePeriodHours: number;
+  userContributedThisCycle?: boolean;
+  totalContributedKobo?: number;
   members?: MemberItem[];
 }
 

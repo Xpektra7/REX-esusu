@@ -47,6 +47,8 @@ export function AppPinScreen({ children }: { children: React.ReactNode }) {
       }
     } catch {
       // fall through to error
+    } finally {
+      setLoading(false);
     }
 
     const attempts = useAuthStore.getState().pinAttempts + 1;
@@ -59,7 +61,6 @@ export function AppPinScreen({ children }: { children: React.ReactNode }) {
 
     setError(`Incorrect PIN. ${3 - attempts} attempt(s) remaining.`);
     setPin("");
-    setLoading(false);
   };
 
   const handleSignOut = async () => {
