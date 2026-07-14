@@ -344,20 +344,24 @@ export const userSettings = pgTable(
       .unique(),
     autoPay: boolean("auto_pay").default(false).notNull(),
     pushEnabled: boolean("push_enabled").default(true).notNull(),
-    reminderDueDate: boolean("reminder_due_date").default(true).notNull(),
-    reminderCycleStart: boolean("reminder_cycle_start").default(true).notNull(),
-    reminderPaymentConfirm: boolean("reminder_payment_confirm")
+    reminder24h: boolean("reminder_24h").default(true).notNull(),
+    reminder6h: boolean("reminder_6h").default(true).notNull(),
+    reminderDeadline: boolean("reminder_deadline").default(true).notNull(),
+    reminderGraceExpiry: boolean("reminder_grace_expiry")
+      .default(false)
+      .notNull(),
+    notifyPaymentReceived: boolean("notify_payment_received")
       .default(true)
       .notNull(),
-    reminderDebt: boolean("reminder_debt").default(true).notNull(),
-    notifContribution: boolean("notif_contribution").default(true).notNull(),
-    notifPayout: boolean("notif_payout").default(true).notNull(),
-    notifDebt: boolean("notif_debt").default(true).notNull(),
-    notifCycle: boolean("notif_cycle").default(true).notNull(),
-    notifMember: boolean("notif_member").default(true).notNull(),
-    notifReferral: boolean("notif_referral").default(true).notNull(),
-    notifSystem: boolean("notif_system").default(true).notNull(),
-    notifPromo: boolean("notif_promo").default(true).notNull(),
+    notifyDebtCleared: boolean("notify_debt_cleared").default(true).notNull(),
+    notifyCycleReminders: boolean("notify_cycle_reminders")
+      .default(true)
+      .notNull(),
+    notifyPayout: boolean("notify_payout").default(true).notNull(),
+    notifyDefaultAlert: boolean("notify_default_alert").default(true).notNull(),
+    notifyCircleInvite: boolean("notify_circle_invite").default(true).notNull(),
+    notifyTrustScore: boolean("notify_trust_score").default(true).notNull(),
+    notifyWithdrawal: boolean("notify_withdrawal").default(true).notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },

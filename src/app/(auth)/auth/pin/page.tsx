@@ -36,9 +36,14 @@ function PinForm() {
 
   const [pin, setPin] = useState("");
   const [confirmPin, setConfirmPin] = useState("");
-  const [step, setStep] = useState<"enter" | "confirm">("enter");
+  const [currentPin, setCurrentPin] = useState("");
+  const [step, setStep] = useState<"current" | "enter" | "confirm">("enter");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (mode === "change") setStep("current");
+  }, [mode]);
 
   useEffect(() => {
     if (mode !== "verify") return;
@@ -90,6 +95,49 @@ function PinForm() {
       } finally {
         setLoading(false);
       }
+    } else if (mode === "change") {
+      // --- CHANGE PIN ---
+      if (step === "current") {
+        if (currentPin.length < 4) return;
+        setLoading(true);
+        try {
+          await api.auth.verifyPin(currentPin);
+          setStep("enter");
+          setCurrentPin("");
+        } catch (err) {
+          setError(err instanceof Error ? err.message : "Wrong PIN");
+          setCurrentPin("");
+        } finally {
+          setLoading(false);
+        }
+        return;
+      }
+
+      if (step === "enter") {
+        if (pin.length < 4) return;
+        setStep("confirm");
+        return;
+      }
+
+      // Confirm step — do the two values match?
+      if (pin !== confirmPin) {
+        setError("PINs do not match");
+        setStep("enter");
+        setPin("");
+        setConfirmPin("");
+        return;
+      }
+
+      setLoading(true);
+      try {
+        await api.auth.changePin({ currentPin, newPin: pin });
+        sessionStorage.removeItem("pending_pin_mode");
+        router.push("/dashboard");
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to change PIN");
+      } finally {
+        setLoading(false);
+      }
     } else {
       // --- VERIFY PIN ---
       if (isLocked) return;
@@ -115,14 +163,26 @@ function PinForm() {
       ? step === "enter"
         ? "Create your PIN"
         : "Confirm your PIN"
-      : "Enter your PIN";
+      : mode === "change"
+        ? step === "current"
+          ? "Enter current PIN"
+          : step === "enter"
+            ? "Choose a new PIN"
+            : "Confirm new PIN"
+        : "Enter your PIN";
 
   const description =
     mode === "set"
       ? step === "enter"
         ? "Choose a 4-digit PIN to secure your account"
         : "Re-enter your PIN to confirm"
-      : "Enter your 4-digit PIN to continue";
+      : mode === "change"
+        ? step === "current"
+          ? "Enter your current PIN to continue"
+          : step === "enter"
+            ? "Choose a new 4-digit PIN"
+            : "Re-enter your new PIN to confirm"
+        : "Enter your 4-digit PIN to continue";
 
   // ------------------------------------------------------------------
   // Render
@@ -139,9 +199,17 @@ function PinForm() {
           <InputOTP
             maxLength={4}
             className="flex justify-center4"
-            value={mode === "set" && step === "confirm" ? confirmPin : pin}
+            value={
+              mode === "change" && step === "current"
+                ? currentPin
+                : mode === "set" && step === "confirm"
+                  ? confirmPin
+                  : pin
+            }
             onChange={(val) => {
-              if (mode === "set" && step === "confirm") {
+              if (mode === "change" && step === "current") {
+                setCurrentPin(val);
+              } else if (mode === "set" && step === "confirm") {
                 setConfirmPin(val);
               } else {
                 setPin(val);
@@ -173,7 +241,8 @@ function PinForm() {
             disabled={
               loading ||
               isLocked ||
-              (mode === "set" && step === "enter" && pin.length < 4)
+              (mode === "set" && step === "enter" && pin.length < 4) ||
+              (mode === "change" && step === "current" && currentPin.length < 4)
             }
           >
             {loading
@@ -182,7 +251,13 @@ function PinForm() {
                 ? "Continue"
                 : mode === "set" && step === "confirm"
                   ? "Set PIN"
-                  : "Unlock"}
+                  : mode === "change" && step === "current"
+                    ? "Continue"
+                    : mode === "change" && step === "enter"
+                      ? "Continue"
+                      : mode === "change" && step === "confirm"
+                        ? "Change PIN"
+                        : "Unlock"}
           </Button>
           {mode === "verify" && pinAttempts >= 3 && pinAttempts < 10 && (
             <Button

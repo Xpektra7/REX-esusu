@@ -1,7 +1,7 @@
 import { and, eq, gte, sql } from "drizzle-orm";
 import type { NextRequest } from "next/server";
 import { db } from "@/db";
-import { users, virtualAccounts } from "@/db/schema";
+import { users, virtualAccounts, walletTransactions } from "@/db/schema";
 import { error, success } from "@/lib/api-response";
 import { requireAuth } from "@/lib/middleware";
 import { nombaPost } from "@/lib/nomba";
@@ -101,8 +101,26 @@ export async function POST(req: NextRequest) {
       nombaResp?.data?.id ||
       merchantTxRef;
 
+    const [walletTx] = await db
+      .insert(walletTransactions)
+      .values({
+        userId: auth.user?.userId,
+        type: "withdrawal",
+        amountKobo,
+        reference: transferRef,
+        status: "pending",
+        metadata: {
+          bankCode,
+          accountNumber,
+          accountName,
+          narration: "Esusu wallet withdrawal",
+        },
+      })
+      .returning();
+
     return success(
       {
+        transactionId: walletTx.id,
         amountKobo,
         status: "pending",
         nombaTransferRef: transferRef,

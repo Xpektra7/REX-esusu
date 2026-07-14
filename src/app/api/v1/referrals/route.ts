@@ -11,6 +11,15 @@ export async function GET(req: NextRequest) {
   const userId = auth.user.userId;
 
   try {
+    const [me] = await db
+      .select({ name: users.name })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+
+    const firstName = (me?.name ?? "").split(" ")[0].replace(/[^a-zA-Z]/g, "");
+    const code = `${firstName.toUpperCase() || "ESUSU"}${userId.slice(0, 4).toUpperCase()}`;
+
     const rows = await db
       .select({
         name: users.name,
@@ -24,13 +33,27 @@ export async function GET(req: NextRequest) {
       .where(eq(referrals.referrerUserId, userId))
       .orderBy(desc(referrals.createdAt));
 
+    const referred = rows.map((r) => ({
+      name: r.name,
+      phone: r.phone,
+      status: r.status,
+      bonusKobo: r.bonusKobo,
+      joinedAt: r.createdAt,
+    }));
+
     const totalReferred = rows.length;
     const pendingCount = rows.filter((r) => r.status === "pending").length;
     const totalEarnedKobo = rows
       .filter((r) => r.status === "completed")
       .reduce((sum, r) => sum + r.bonusKobo, 0);
 
-    return success({ totalReferred, pendingCount, totalEarnedKobo, referred: rows });
+    return success({
+      code,
+      totalReferred,
+      pendingCount,
+      totalEarnedKobo,
+      referred,
+    });
   } catch (e) {
     return error((e as Error).message);
   }
