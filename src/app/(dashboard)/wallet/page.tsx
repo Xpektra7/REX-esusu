@@ -214,6 +214,13 @@ export default function WalletPage() {
         )}
       </section>
 
+      <Link
+        href="/payouts"
+        className="block text-center text-sm text-muted-foreground hover:text-foreground"
+      >
+        View payout history
+      </Link>
+
       <Separator />
 
       <Link href="/wallet/withdraw">
