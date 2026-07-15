@@ -13,8 +13,8 @@ import {
 } from "hugeicons-react";
 import Link from "next/link";
 import { useState } from "react";
-import { AppBar } from "@/components/layout/app-bar";
 import { JoinByCodeDialog } from "@/components/circles/join-by-code-dialog";
+import { AppBar } from "@/components/layout/app-bar";
 import { CircleCard, type CircleData } from "@/components/shared/circle-card";
 import { WalletCard } from "@/components/shared/wallet-card";
 import { Button } from "@/components/ui/button";
@@ -43,44 +43,46 @@ import type { ActivityItem } from "@/types";
 export default function DashboardPage() {
   const [joinDialogOpen, setJoinDialogOpen] = useState(false);
 
-const iconMap: Record<string, { icon: React.ReactNode; bg: string }> = {
-  contribution: {
-    icon: <Coins02Icon className="size-6" />,
-    bg: "bg-primary text-foreground",
-  },
-  payout: {
-    icon: <MoneyAdd01Icon className="size-6" />,
-    bg: "bg-foreground text-primary",
-  },
-  circle_join: {
-    icon: <UserAdd01Icon className="size-6" />,
-    bg: "bg-foreground text-primary",
-  },
-  circle_create: {
-    icon: <UserGroupIcon className="size-6" />,
-    bg: "bg-foreground text-primary",
-  },
-  topup: {
-    icon: <Coins02Icon className="size-6" />,
-    bg: "bg-primary text-foreground",
-  },
-  withdrawal: {
-    icon: <Wallet01Icon className="symbol-width" />,
-    bg: "bg-foreground text-primary",
-  },
-};
+  const iconMap: Record<string, { icon: React.ReactNode; bg: string }> = {
+    contribution: {
+      icon: <Coins02Icon className="size-6" />,
+      bg: "bg-primary text-foreground",
+    },
+    payout: {
+      icon: <MoneyAdd01Icon className="size-6" />,
+      bg: "bg-foreground text-primary",
+    },
+    circle_join: {
+      icon: <UserAdd01Icon className="size-6" />,
+      bg: "bg-foreground text-primary",
+    },
+    circle_create: {
+      icon: <UserGroupIcon className="size-6" />,
+      bg: "bg-foreground text-primary",
+    },
+    topup: {
+      icon: <Coins02Icon className="size-6" />,
+      bg: "bg-primary text-foreground",
+    },
+    withdrawal: {
+      icon: <Wallet01Icon className="symbol-width" />,
+      bg: "bg-foreground text-primary",
+    },
+  };
 
-// Live activity types are prefixed with `wallet_` (e.g. `wallet_topup`); the
-// mock returns the bare type. Normalize so both resolve, and fall back to a
-// default icon for any unknown type instead of crashing on `meta.bg`.
-const activityIconFallback = {
-  icon: <Notification01Icon className="symbol-width" />,
-  bg: "bg-primary text-foreground",
-};
-function activityMeta(type: string) {
-  const key = type.startsWith("wallet_") ? type.slice("wallet_".length) : type;
-  return iconMap[key as ActivityItem["type"]] ?? activityIconFallback;
-}
+  // Live activity types are prefixed with `wallet_` (e.g. `wallet_topup`); the
+  // mock returns the bare type. Normalize so both resolve, and fall back to a
+  // default icon for any unknown type instead of crashing on `meta.bg`.
+  const activityIconFallback = {
+    icon: <Notification01Icon className="symbol-width" />,
+    bg: "bg-primary text-foreground",
+  };
+  function activityMeta(type: string) {
+    const key = type.startsWith("wallet_")
+      ? type.slice("wallet_".length)
+      : type;
+    return iconMap[key as ActivityItem["type"]] ?? activityIconFallback;
+  }
 
   const { data: walletRes, isLoading: walletLoading } = useQuery({
     queryKey: ["wallet"],
@@ -167,7 +169,11 @@ function activityMeta(type: string) {
             </EmptyHeader>
             <EmptyContent>
               <div className="flex flex-col gap-2">
-                <Button size="sm" variant="outline" onClick={() => setJoinDialogOpen(true)}>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setJoinDialogOpen(true)}
+                >
                   <Key01Icon data-icon="inline-start" />
                   Join with code
                 </Button>
@@ -186,7 +192,15 @@ function activityMeta(type: string) {
       <Separator />
 
       <section>
-        <h2 className="mb-4 text-lg font-bold">Recent Activity</h2>
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-lg font-bold">Recent Activity</h2>
+          <Link
+            href="/wallet"
+            className="text-xs font-medium text-muted-foreground hover:text-foreground"
+          >
+            View all
+          </Link>
+        </div>
 
         {activityLoading ? (
           <div className="flex flex-col gap-3">
@@ -239,9 +253,12 @@ function activityMeta(type: string) {
             </EmptyHeader>
           </Empty>
         )}
-        </section>
+      </section>
 
-      <JoinByCodeDialog open={joinDialogOpen} onOpenChange={setJoinDialogOpen} />
+      <JoinByCodeDialog
+        open={joinDialogOpen}
+        onOpenChange={setJoinDialogOpen}
+      />
     </div>
   );
 }
