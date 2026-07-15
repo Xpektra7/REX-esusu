@@ -13,6 +13,7 @@ import { useState } from "react";
 import { DiceBearAvatar } from "@/components/shared/dicebear-avatar";
 import { PageBreadcrumbs } from "@/components/shared/page-breadcrumbs";
 import { ReceiptDialog } from "@/components/shared/receipt-dialog";
+import { TransactionDetailDialog } from "@/components/shared/transaction-detail-dialog";
 import { Button } from "@/components/ui/button";
 import {
   Empty,
@@ -20,7 +21,6 @@ import {
   EmptyHeader,
   EmptyMedia,
 } from "@/components/ui/empty";
-import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/lib/api";
 import { cn, formatNaira } from "@/lib/utils";
@@ -50,12 +50,10 @@ interface WalletData {
 export default function WalletPage() {
   const [hidden, setHidden] = useState(false);
   const [receiptTxId, setReceiptTxId] = useState<string | null>(null);
+  const [detailTx, setDetailTx] = useState<WalletTransaction | null>(null);
 
   const receiptMutation = useMutation({
     mutationFn: (id: string) => api.wallet.receipt(id),
-    onSuccess: () => {
-      /* receipt data stored via onMutate / onSettled patterns below */
-    },
   });
 
   const { data: res, isLoading } = useQuery({
@@ -184,7 +182,16 @@ export default function WalletPage() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    {!isCredit && (
+                    {isCredit ? (
+                      <button
+                        type="button"
+                        onClick={() => setDetailTx(tx)}
+                        className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted transition-colors"
+                        title="View details"
+                      >
+                        <ViewIcon className="size-4" />
+                      </button>
+                    ) : (
                       <button
                         type="button"
                         onClick={() => {
@@ -214,15 +221,6 @@ export default function WalletPage() {
         )}
       </section>
 
-      <Link
-        href="/payouts"
-        className="block text-center text-sm text-muted-foreground hover:text-foreground"
-      >
-        View payout history
-      </Link>
-
-      <Separator />
-
       <Link href="/wallet/withdraw">
         <Button className="w-full">
           <ArrowUp01Icon className="size-4" />
@@ -237,6 +235,26 @@ export default function WalletPage() {
         }}
         receipt={activeReceipt ?? null}
         loading={receiptMutation.isPending}
+      />
+
+      <TransactionDetailDialog
+        open={!!detailTx}
+        onOpenChange={(o) => {
+          if (!o) setDetailTx(null);
+        }}
+        tx={
+          detailTx
+            ? {
+                id: detailTx.id,
+                amountKobo: detailTx.amountKobo,
+                reference: detailTx.reference,
+                status: detailTx.status,
+                description: detailTx.description,
+                metadata: detailTx.metadata as Record<string, unknown> | null,
+                createdAt: detailTx.createdAt,
+              }
+            : null
+        }
       />
     </div>
   );
