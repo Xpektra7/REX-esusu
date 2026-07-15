@@ -91,7 +91,7 @@ export async function POST(
     if (recipientVA) {
       try {
         nombaResp = await nombaPost("/v2/transfers/bank", {
-          amount: cycle.actualTotalKobo,
+          amount: cycle.actualTotalKobo / 100,
           bankCode: recipientVA.bankCode || "000",
           accountNumber: recipientVA.accountNumber,
           accountName: recipientVA.accountName,

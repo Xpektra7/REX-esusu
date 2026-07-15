@@ -78,7 +78,7 @@ export async function POST(req: NextRequest) {
     let nombaResp: any;
     try {
       nombaResp = await nombaPost("/v2/transfers/bank", {
-        amount: amountKobo,
+        amount: amountKobo / 100,
         bankCode,
         accountNumber,
         accountName,
