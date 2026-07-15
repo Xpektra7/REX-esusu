@@ -103,7 +103,7 @@ export async function POST(req: NextRequest) {
 
     // Record the withdrawal in the wallet transaction history so it shows up
     // in the user's transaction list and activity feed.
-    await db
+    const [walletTx] = await db
       .insert(walletTransactions)
       .values({
         userId: auth.user?.userId,
@@ -117,10 +117,11 @@ export async function POST(req: NextRequest) {
           nombaTransferRef: transferRef,
         },
       })
-      .onConflictDoNothing();
+      .returning();
 
     return success(
       {
+        transactionId: walletTx.id,
         amountKobo,
         status: "pending",
         nombaTransferRef: transferRef,
