@@ -223,7 +223,7 @@ export default function CircleSettingsPage(props: {
               name.trim() === circle.name
             }
           >
-            Save
+            {updateMutation.isPending ? "Saving..." : "Save Name"}
           </Button>
         </div>
       </Card>
