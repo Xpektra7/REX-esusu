@@ -248,7 +248,7 @@ async function getExpectedPerActiveCircle(
         and(
           eq(contributions.memberCircleId, mcId),
           eq(contributions.cycleId, activeCycle.id),
-        ),        
+        ),
       );
 
     result[mcId] = Math.max(
