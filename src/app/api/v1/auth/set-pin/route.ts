@@ -1,20 +1,22 @@
 import bcrypt from "bcryptjs";
 import { eq } from "drizzle-orm";
 import type { NextRequest } from "next/server";
+import { z } from "zod";
 import { db } from "@/db";
 import { users } from "@/db/schema";
 import { error, success } from "@/lib/api-response";
 import { verifyPassword } from "@/lib/auth";
 import { requireAuth } from "@/lib/middleware";
+import { pinSchema } from "@/lib/validations";
 
 export async function POST(req: NextRequest) {
   const auth = requireAuth(req);
   if (auth.error) return auth.error;
 
   try {
-    const { pin, currentPassword } = await req.json();
-    if (!pin || pin.length < 4 || pin.length > 6)
-      return error("PIN must be 4-6 digits");
+    const body = pinSchema.extend({ currentPassword: z.string().optional() }).safeParse(await req.json());
+    if (!body.success) return error(body.error.issues[0].message, "02");
+    const { pin, currentPassword } = body.data;
 
     const [user] = await db
       .select()

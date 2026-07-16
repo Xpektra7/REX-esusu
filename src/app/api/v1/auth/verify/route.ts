@@ -12,6 +12,10 @@ import {
 } from "@/lib/auth";
 import { nombaPost } from "@/lib/nomba";
 import { verifyOtp } from "@/lib/otp";
+import { rateLimit } from "@/lib/rate-limit";
+import { signupSchema } from "@/lib/validations";
+
+const verifyLimiter = rateLimit({ windowMs: 60_000, maxRequests: 10 });
 
 const SANDBOX_URL = "https://sandbox.nomba.com/v1";
 const ALGO = "aes-256-gcm";
@@ -82,9 +86,14 @@ async function provisionVirtualAccount(
 
 export async function POST(req: NextRequest) {
   try {
-    const { email, otp, password, name, bvn } = await req.json();
-    if (!email || !otp || !password)
-      return error("Email, OTP, and password are required");
+    const body = signupSchema.partial({ name: true }).safeParse(await req.json());
+    if (!body.success) return error(body.error.issues[0].message, "02");
+    const { email, otp, password, name, bvn } = body.data;
+
+    const limit = verifyLimiter.check(`verify:${email}`);
+    if (!limit.allowed) {
+      return error("Too many requests. Try again later.", "06", 429);
+    }
 
     if (!(await verifyOtp(email, otp))) return error("Invalid or expired OTP");
 

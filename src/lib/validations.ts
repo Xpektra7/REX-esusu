@@ -32,6 +32,16 @@ export const loginSchema = z.object({
   password: z.string().min(1, "Password is required"),
 });
 
+export const sendOtpSchema = z.object({
+  email: z.string().email("Enter a valid email address"),
+  password: z.string().optional(),
+});
+
+export const changePinSchema = z.object({
+  currentPin: z.string().regex(/^\d{4,6}$/, "PIN must be 4-6 digits"),
+  newPin: z.string().regex(/^\d{4,6}$/, "PIN must be 4-6 digits"),
+});
+
 export const createCircleSchema = z.object({
   name: z.string().min(2, "Circle name must be at least 2 characters"),
   contributionAmount: z
@@ -43,6 +53,9 @@ export const createCircleSchema = z.object({
   defaultResolutionRule: z
     .enum(["absorb", "shrink", "end_early"])
     .default("absorb"),
+  gracePeriodHours: z.number().positive().optional(),
+  capacityEnabled: z.boolean().optional(),
+  maxMembers: z.number().positive().optional(),
 });
 
 export const joinCircleSchema = z.object({
@@ -59,6 +72,7 @@ export const withdrawSchema = z.object({
 });
 
 export const contributionSchema = z.object({
-  cycleId: z.string().uuid(),
-  amountKobo: z.number().min(1),
+  circleId: z.string().uuid("Circle ID is required"),
+  cycleNumber: z.number().int().positive("Cycle number must be a positive integer"),
+  amountKobo: z.number().int().min(1, "Amount must be at least 1 kobo"),
 });

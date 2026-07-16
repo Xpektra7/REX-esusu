@@ -5,14 +5,24 @@ import { db } from "@/db";
 import { users } from "@/db/schema";
 import { error, success } from "@/lib/api-response";
 import { requireAuth } from "@/lib/middleware";
+import { rateLimit } from "@/lib/rate-limit";
+import { pinSchema } from "@/lib/validations";
+
+const pinLimiter = rateLimit({ windowMs: 60_000, maxRequests: 5 });
 
 export async function POST(req: NextRequest) {
   const auth = requireAuth(req);
   if (auth.error) return auth.error;
 
   try {
-    const { pin } = await req.json();
-    if (!pin) return error("PIN is required");
+    const body = pinSchema.safeParse(await req.json());
+    if (!body.success) return error(body.error.issues[0].message, "02");
+    const { pin } = body.data;
+
+    const limit = pinLimiter.check(`verify-pin:${auth.user.userId}`);
+    if (!limit.allowed) {
+      return error("Too many attempts. Try again later.", "06", 429);
+    }
 
     const [user] = await db
       .select()

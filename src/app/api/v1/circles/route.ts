@@ -10,6 +10,7 @@ import {
 } from "@/db/schema";
 import { error, handleApiError, success } from "@/lib/api-response";
 import { requireAuth } from "@/lib/middleware";
+import { createCircleSchema } from "@/lib/validations";
 
 export async function GET(req: NextRequest) {
   const auth = requireAuth(req);
@@ -89,21 +90,19 @@ export async function POST(req: NextRequest) {
   if (auth.error) return auth.error;
 
   try {
+    const body = createCircleSchema.safeParse(await req.json());
+    if (!body.success) return error(body.error.issues[0].message, "02");
     const {
       name,
-      contributionAmountKobo,
+      contributionAmount,
       frequency,
       cycleCount,
       defaultResolutionRule,
       gracePeriodHours,
       capacityEnabled,
       maxMembers,
-    } = await req.json();
-    if (!name || !contributionAmountKobo || !frequency || !cycleCount) {
-      return error(
-        "name, contributionAmountKobo, frequency, and cycleCount are required",
-      );
-    }
+    } = body.data;
+    const contributionAmountKobo = Math.round(contributionAmount * 100);
 
     const cyclePeriodDays = frequency === "weekly" ? 7 : 30;
     const grace = gracePeriodHours || (frequency === "weekly" ? 24 : 72);
@@ -118,7 +117,7 @@ export async function POST(req: NextRequest) {
         frequency,
         cyclePeriodDays,
         cycleCount,
-        defaultResolutionRule: defaultResolutionRule || "absorb",
+        defaultResolutionRule,
         gracePeriodHours: grace,
         capacityEnabled: capacityEnabled === true,
         maxMembers:

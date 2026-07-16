@@ -5,19 +5,16 @@ import { db } from "@/db";
 import { users } from "@/db/schema";
 import { error, success } from "@/lib/api-response";
 import { requireAuth } from "@/lib/middleware";
+import { changePinSchema } from "@/lib/validations";
 
 export async function POST(req: NextRequest) {
   const auth = requireAuth(req);
   if (auth.error) return auth.error;
 
   try {
-    const { currentPin, newPin } = await req.json();
-    if (!currentPin || !newPin) {
-      return error("currentPin and newPin are required");
-    }
-    if (!/^\d{4}$/.test(newPin)) {
-      return error("New PIN must be exactly 4 digits", "01", 422);
-    }
+    const body = changePinSchema.safeParse(await req.json());
+    if (!body.success) return error(body.error.issues[0].message, "02");
+    const { currentPin, newPin } = body.data;
 
     const userId = auth.user.userId;
     const [user] = await db

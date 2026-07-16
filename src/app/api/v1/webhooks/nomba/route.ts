@@ -2,7 +2,7 @@ import crypto from "node:crypto";
 import { eq } from "drizzle-orm";
 import type { NextRequest } from "next/server";
 import { db } from "@/db";
-import { webhookEvents } from "@/db/schema";
+import { notifications, webhookEvents } from "@/db/schema";
 import { handlePayoutFailed, handlePayoutSuccess } from "@/lib/payout";
 import { reconcilePayment } from "@/lib/reconciliation";
 
@@ -144,8 +144,6 @@ async function processWebhook(payload: any) {
         await handlePayoutFailed(payload);
         break;
       case "payment_failed":
-      case "payment_reversal":
-      case "payout_refund":
         console.warn(
           `[Webhook] Unhandled event type '${eventType}' — ack'd but no action taken`,
         );
@@ -153,6 +151,50 @@ async function processWebhook(payload: any) {
           .update(webhookEvents)
           .set({ status: "unhandled", processedAt: new Date() })
           .where(eq(webhookEvents.nombaRequestId, requestId));
+        return;
+      case "payment_reversal":
+        console.warn(
+          `[Webhook] payment_reversal for request ${requestId} — notifying user`,
+        );
+        await db
+          .update(webhookEvents)
+          .set({ status: "unhandled", processedAt: new Date() })
+          .where(eq(webhookEvents.nombaRequestId, requestId));
+        try {
+          const revUserId = payload.data?.merchant?.userId;
+          if (revUserId) {
+            await db.insert(notifications).values({
+              userId: revUserId,
+              title: "Payment reversed",
+              body: "A previous payment was reversed. Contact support if you have questions.",
+              type: "payment",
+            });
+          }
+        } catch (nErr) {
+          console.error("[Webhook] Failed to send reversal notification:", nErr);
+        }
+        return;
+      case "payout_refund":
+        console.warn(
+          `[Webhook] payout_refund for request ${requestId} — notifying user`,
+        );
+        await db
+          .update(webhookEvents)
+          .set({ status: "unhandled", processedAt: new Date() })
+          .where(eq(webhookEvents.nombaRequestId, requestId));
+        try {
+          const refUserId = payload.data?.merchant?.userId;
+          if (refUserId) {
+            await db.insert(notifications).values({
+              userId: refUserId,
+              title: "Payout refunded",
+              body: "A previous payout was refunded. Contact support if you have questions.",
+              type: "payment",
+            });
+          }
+        } catch (nErr) {
+          console.error("[Webhook] Failed to send refund notification:", nErr);
+        }
         return;
       default: {
         const isKnown = HANDLED_EVENTS.has(eventType);

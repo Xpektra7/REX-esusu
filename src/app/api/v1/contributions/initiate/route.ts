@@ -11,15 +11,16 @@ import {
 } from "@/db/schema";
 import { error, handleApiError, success } from "@/lib/api-response";
 import { requireAuth } from "@/lib/middleware";
+import { contributionSchema } from "@/lib/validations";
 
 export async function POST(req: NextRequest) {
   const auth = requireAuth(req);
   if (auth.error) return auth.error;
 
   try {
-    const { circleId, cycleNumber, amountKobo } = await req.json();
-    if (!circleId || !cycleNumber || !amountKobo)
-      return error("circleId, cycleNumber, and amountKobo are required");
+    const body = contributionSchema.safeParse(await req.json());
+    if (!body.success) return error(body.error.issues[0].message, "02");
+    const { circleId, cycleNumber, amountKobo } = body.data;
 
     const [circle] = await db
       .select()
