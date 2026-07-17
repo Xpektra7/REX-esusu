@@ -3,7 +3,12 @@
 import { Refresh01Icon } from "hugeicons-react";
 import Link from "next/link";
 import { CycleBadge } from "@/components/circles/cycle-badge";
-import { Empty, EmptyDescription, EmptyHeader, EmptyMedia } from "@/components/ui/empty";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+} from "@/components/ui/empty";
 import { formatNaira } from "@/lib/utils";
 
 interface CycleItem {

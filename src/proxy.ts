@@ -1,8 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { rateLimit } from "@/lib/rate-limit";
 
-const apiLimiter = rateLimit({ windowMs: 60_000, maxRequests: 30 });
-const authLimiter = rateLimit({ windowMs: 60_000, maxRequests: 5 });
+const apiLimiter = rateLimit({ windowMs: 60_000, maxRequests: 300 });
+const authLimiter = rateLimit({ windowMs: 60_000, maxRequests: 60 });
 
 function clientIp(request: NextRequest): string {
   return (

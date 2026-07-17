@@ -1,5 +1,10 @@
 import { useAuthStore } from "@/stores/auth-store";
-import type { ApiResponse, CircleListItem, CycleContribution } from "@/types";
+import type {
+  ApiResponse,
+  CircleListItem,
+  CycleContribution,
+  TransferReceipt,
+} from "@/types";
 
 let mockPinAttempts = 0;
 const MOCK_CORRECT_PIN = "0000";
@@ -639,6 +644,59 @@ async function mockRequest<T>(
     };
   }
 
+  const walletReceiptMatch = path.match(
+    /^\/wallet\/transactions\/([^/]+)\/receipt$/,
+  );
+  if (walletReceiptMatch && method === "GET") {
+    return {
+      code: "00",
+      description: "Receipt generated",
+      data: {
+        receiptId: walletReceiptMatch[1],
+        type: "withdrawal",
+        direction: "outward",
+        status: "pending",
+        amountKobo: 5000000,
+        reference: `WTH${Date.now()}`,
+        narration: "Esusu wallet withdrawal",
+        sender: { name: "Chioma Okafor", email: "chioma@example.com" },
+        recipient: {
+          accountName: "Chioma Okafor",
+          accountNumber: "0123456789",
+          bankCode: "058",
+        },
+        createdAt: new Date().toISOString(),
+      } as T,
+    };
+  }
+
+  const payoutReceiptMatch = path.match(/^\/payouts\/([^/]+)\/receipt$/);
+  if (payoutReceiptMatch && method === "GET") {
+    return {
+      code: "00",
+      description: "Receipt generated",
+      data: {
+        receiptId: payoutReceiptMatch[1],
+        type: "payout",
+        direction: "outward",
+        status: "completed",
+        amountKobo: 50000000,
+        reference: `PO${Date.now()}`,
+        narration: "Payout Cycle 4 - Weekend Travelers",
+        circle: { name: "Weekend Travelers", cycleNumber: 4 },
+        recipient: {
+          name: "Chioma Okafor",
+          email: "chioma@example.com",
+          accountName: "Chioma Okafor",
+          accountNumber: "0123456789",
+          bankCode: "058",
+        },
+        createdAt: new Date().toISOString(),
+        completedAt: new Date().toISOString(),
+      } as T,
+    };
+  }
+
   if (path === "/wallet/topup" && method === "POST") {
     const amountKobo = Number(body.amountKobo) || 0;
     if (amountKobo < 1000) {
@@ -844,6 +902,29 @@ async function mockRequest<T>(
       throw new Error("Current PIN is incorrect");
     }
     return { code: "00", description: "PIN changed", data: {} as T };
+  }
+
+  if (path === "/auth/forgot-password" && method === "POST") {
+    return {
+      code: "00",
+      description:
+        "If an account exists for this email, a reset code has been sent",
+      data: { expiresInSeconds: 300 } as T,
+    };
+  }
+
+  if (path === "/auth/reset-password" && method === "POST") {
+    if (!body.otp || String(body.otp).length < 4) {
+      throw new Error("Invalid or expired OTP");
+    }
+    if (!body.newPassword || body.newPassword.length < 8) {
+      throw new Error("New password must be at least 8 characters");
+    }
+    return {
+      code: "00",
+      description: "Password reset successfully",
+      data: {} as T,
+    };
   }
 
   // --- Referrals ---
@@ -1239,6 +1320,24 @@ export const api = {
         method: "POST",
         body: JSON.stringify(payload),
       }),
+
+    /** Sends a password-reset OTP to the given email address. */
+    forgotPassword: (email: string) =>
+      request<{ expiresInSeconds: number }>("/auth/forgot-password", {
+        method: "POST",
+        body: JSON.stringify({ email }),
+      }),
+
+    /** Resets password using the emailed OTP. */
+    resetPassword: (payload: {
+      email: string;
+      otp: string;
+      newPassword: string;
+    }) =>
+      request<Record<string, unknown>>("/auth/reset-password", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      }),
   },
 
   circles: {
@@ -1375,6 +1474,9 @@ export const api = {
   payouts: {
     /** Past payouts received by the current user. */
     history: () => request<unknown[]>("/payouts/history"),
+
+    /** Receipt for an outward payout transfer. */
+    receipt: (id: string) => request<TransferReceipt>(`/payouts/${id}/receipt`),
   },
 
   wallet: {
@@ -1392,6 +1494,10 @@ export const api = {
 
     /** Full transaction history. */
     transactions: () => request<unknown[]>("/wallet/transactions"),
+
+    /** Receipt for an outward wallet transfer (e.g. withdrawal). */
+    receipt: (id: string) =>
+      request<TransferReceipt>(`/wallet/transactions/${id}/receipt`),
 
     /** Withdraws funds to a bank account. */
     withdraw: (payload: {

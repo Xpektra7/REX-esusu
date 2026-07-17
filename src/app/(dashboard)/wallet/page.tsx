@@ -1,9 +1,10 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import {
   ArrowUp01Icon,
   PlusSignIcon,
+  ReceiptDollarIcon,
   ViewIcon,
   ViewOffIcon,
 } from "hugeicons-react";
@@ -11,6 +12,8 @@ import Link from "next/link";
 import { useState } from "react";
 import { DiceBearAvatar } from "@/components/shared/dicebear-avatar";
 import { PageBreadcrumbs } from "@/components/shared/page-breadcrumbs";
+import { ReceiptDialog } from "@/components/shared/receipt-dialog";
+import { TransactionDetailDialog } from "@/components/shared/transaction-detail-dialog";
 import { Button } from "@/components/ui/button";
 import {
   Empty,
@@ -18,10 +21,10 @@ import {
   EmptyHeader,
   EmptyMedia,
 } from "@/components/ui/empty";
-import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/lib/api";
 import { cn, formatNaira } from "@/lib/utils";
+import type { TransferReceipt } from "@/types";
 
 interface WalletTransaction {
   id: string;
@@ -46,6 +49,12 @@ interface WalletData {
 
 export default function WalletPage() {
   const [hidden, setHidden] = useState(false);
+  const [receiptTxId, setReceiptTxId] = useState<string | null>(null);
+  const [detailTx, setDetailTx] = useState<WalletTransaction | null>(null);
+
+  const receiptMutation = useMutation({
+    mutationFn: (id: string) => api.wallet.receipt(id),
+  });
 
   const { data: res, isLoading } = useQuery({
     queryKey: ["wallet"],
@@ -62,6 +71,10 @@ export default function WalletPage() {
   const transactions = ((
     txRes?.data as { transactions: WalletTransaction[] } | undefined
   )?.transactions ?? []) as WalletTransaction[];
+
+  const activeReceipt = receiptMutation.data?.data as
+    | TransferReceipt
+    | undefined;
 
   return (
     <div className="flex flex-col gap-6">
@@ -168,15 +181,39 @@ export default function WalletPage() {
                       </p>
                     </div>
                   </div>
-                  <p
-                    className={cn(
-                      "font-heading text-sm font-bold",
-                      isCredit ? "text-primary" : "text-muted-foreground",
+                  <div className="flex items-center gap-2">
+                    {isCredit ? (
+                      <button
+                        type="button"
+                        onClick={() => setDetailTx(tx)}
+                        className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted transition-colors"
+                        title="View details"
+                      >
+                        <ViewIcon className="size-4" />
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setReceiptTxId(tx.id);
+                          receiptMutation.mutate(tx.id);
+                        }}
+                        className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted transition-colors"
+                        title="View receipt"
+                      >
+                        <ReceiptDollarIcon className="size-4" />
+                      </button>
                     )}
-                  >
-                    {isCredit ? "+" : "-"}
-                    {formatNaira(tx.amountKobo)}
-                  </p>
+                    <p
+                      className={cn(
+                        "font-heading text-sm font-bold",
+                        isCredit ? "text-primary" : "text-muted-foreground",
+                      )}
+                    >
+                      {isCredit ? "+" : "-"}
+                      {formatNaira(tx.amountKobo)}
+                    </p>
+                  </div>
                 </div>
               );
             })}
@@ -184,14 +221,41 @@ export default function WalletPage() {
         )}
       </section>
 
-      <Separator />
-
       <Link href="/wallet/withdraw">
         <Button className="w-full">
           <ArrowUp01Icon className="size-4" />
           Withdraw Funds
         </Button>
       </Link>
+
+      <ReceiptDialog
+        open={!!receiptTxId}
+        onOpenChange={(o) => {
+          if (!o) setReceiptTxId(null);
+        }}
+        receipt={activeReceipt ?? null}
+        loading={receiptMutation.isPending}
+      />
+
+      <TransactionDetailDialog
+        open={!!detailTx}
+        onOpenChange={(o) => {
+          if (!o) setDetailTx(null);
+        }}
+        tx={
+          detailTx
+            ? {
+                id: detailTx.id,
+                amountKobo: detailTx.amountKobo,
+                reference: detailTx.reference,
+                status: detailTx.status,
+                description: detailTx.description,
+                metadata: detailTx.metadata as Record<string, unknown> | null,
+                createdAt: detailTx.createdAt,
+              }
+            : null
+        }
+      />
     </div>
   );
 }

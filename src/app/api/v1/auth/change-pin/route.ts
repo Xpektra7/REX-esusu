@@ -5,13 +5,21 @@ import { db } from "@/db";
 import { users } from "@/db/schema";
 import { error, success } from "@/lib/api-response";
 import { requireAuth } from "@/lib/middleware";
+import { rateLimit } from "@/lib/rate-limit";
 import { changePinSchema } from "@/lib/validations";
 
+const changePinLimiter = rateLimit({ windowMs: 60_000, maxRequests: 5 });
+
 export async function POST(req: NextRequest) {
-  const auth = requireAuth(req);
+  const auth = await requireAuth(req);
   if (auth.error) return auth.error;
 
   try {
+    const limit = changePinLimiter.check(`change-pin:${auth.user.userId}`);
+    if (!limit.allowed) {
+      return error("Too many attempts. Try again later.", "06", 429);
+    }
+
     const body = changePinSchema.safeParse(await req.json());
     if (!body.success) return error(body.error.issues[0].message, "02");
     const { currentPin, newPin } = body.data;

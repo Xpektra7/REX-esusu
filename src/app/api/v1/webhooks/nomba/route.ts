@@ -3,8 +3,8 @@ import { eq } from "drizzle-orm";
 import type { NextRequest } from "next/server";
 import { db } from "@/db";
 import { notifications, webhookEvents } from "@/db/schema";
-import { handlePayoutFailed, handlePayoutSuccess } from "@/lib/payout";
-import { reconcilePayment } from "@/lib/reconciliation";
+import { handlePayoutFailedInTx, handlePayoutSuccessInTx } from "@/lib/payout";
+import { reconcilePaymentInTx } from "@/lib/reconciliation";
 
 export async function POST(request: NextRequest) {
   try {
@@ -71,8 +71,7 @@ export async function POST(request: NextRequest) {
       .where(eq(webhookEvents.nombaRequestId, payload.requestId))
       .limit(1);
 
-    // Terminal states: already successfully processed, or intentionally
-    // unhandled (no action needed). Nothing to do — ack Nomba.
+    // Terminal states: already successfully processed.
     if (
       existing.length > 0 &&
       (existing[0].status === "processed" || existing[0].status === "unhandled")
@@ -82,10 +81,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // No record yet, or a previous attempt failed ("received"/"failed") →
-    // (re)process. Anchor with a dedup row (insert on first try, update on
-    // retry) so concurrent deliveries can't double-process and failures can
-    // be retried.
+    // Anchor with a dedup row so concurrent deliveries can't double-process.
     if (existing.length > 0) {
       await db
         .update(webhookEvents)
@@ -100,9 +96,10 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Reconcile now. On failure processWebhook records "failed" and re-throws,
-    // so we fall through to the catch and return "09" — Nomba retries the
-    // delivery instead of treating the payment as successfully processed.
+    // Process the event. Every handled event type wraps both the business logic
+    // AND the status update in a single db.transaction so that if a crash occurs
+    // after the business logic completes but before the status update, the entire
+    // transaction rolls back. Nomba retries safely.
     await processWebhook(payload);
 
     return new Response(
@@ -110,10 +107,9 @@ export async function POST(request: NextRequest) {
     );
   } catch (e) {
     console.error("Webhook error:", e);
-    // "09" = temporary failure — Nomba will retry with backoff instead of
-    // treating the payment as successfully processed.
     return new Response(
       JSON.stringify({ code: "09", description: "Processing failed" }),
+      { status: 500 },
     );
   }
 }
@@ -134,15 +130,45 @@ async function processWebhook(payload: any) {
 
   try {
     switch (eventType) {
+      // -------------------------------------------------------------------
+      // payment_success — reconcile + status update in ONE transaction
+      // -------------------------------------------------------------------
       case "payment_success":
-        await reconcilePayment(payload);
-        break;
+        await db.transaction(async (tx) => {
+          await reconcilePaymentInTx(tx, payload);
+          await tx
+            .update(webhookEvents)
+            .set({ status: "processed", processedAt: new Date() })
+            .where(eq(webhookEvents.nombaRequestId, requestId));
+        });
+        return;
+
+      // -------------------------------------------------------------------
+      // payout_success / payout_failed — payout + status in ONE transaction
+      // -------------------------------------------------------------------
       case "payout_success":
-        await handlePayoutSuccess(payload);
-        break;
+        await db.transaction(async (tx) => {
+          await handlePayoutSuccessInTx(tx, payload);
+          await tx
+            .update(webhookEvents)
+            .set({ status: "processed", processedAt: new Date() })
+            .where(eq(webhookEvents.nombaRequestId, requestId));
+        });
+        return;
+
       case "payout_failed":
-        await handlePayoutFailed(payload);
-        break;
+        await db.transaction(async (tx) => {
+          await handlePayoutFailedInTx(tx, payload);
+          await tx
+            .update(webhookEvents)
+            .set({ status: "processed", processedAt: new Date() })
+            .where(eq(webhookEvents.nombaRequestId, requestId));
+        });
+        return;
+
+      // -------------------------------------------------------------------
+      // Unhandled / non-financial events — just record status
+      // -------------------------------------------------------------------
       case "payment_failed":
         console.warn(
           `[Webhook] Unhandled event type '${eventType}' — ack'd but no action taken`,
@@ -152,50 +178,63 @@ async function processWebhook(payload: any) {
           .set({ status: "unhandled", processedAt: new Date() })
           .where(eq(webhookEvents.nombaRequestId, requestId));
         return;
+
       case "payment_reversal":
         console.warn(
           `[Webhook] payment_reversal for request ${requestId} — notifying user`,
         );
-        await db
-          .update(webhookEvents)
-          .set({ status: "unhandled", processedAt: new Date() })
-          .where(eq(webhookEvents.nombaRequestId, requestId));
-        try {
-          const revUserId = payload.data?.merchant?.userId;
-          if (revUserId) {
-            await db.insert(notifications).values({
-              userId: revUserId,
-              title: "Payment reversed",
-              body: "A previous payment was reversed. Contact support if you have questions.",
-              type: "payment",
-            });
+        await db.transaction(async (tx) => {
+          await tx
+            .update(webhookEvents)
+            .set({ status: "unhandled", processedAt: new Date() })
+            .where(eq(webhookEvents.nombaRequestId, requestId));
+          try {
+            const revUserId = payload.data?.merchant?.userId;
+            if (revUserId) {
+              await tx.insert(notifications).values({
+                userId: revUserId,
+                title: "Payment reversed",
+                body: "A previous payment was reversed. Contact support if you have questions.",
+                type: "payment",
+              });
+            }
+          } catch (nErr) {
+            console.error(
+              "[Webhook] Failed to send reversal notification:",
+              nErr,
+            );
           }
-        } catch (nErr) {
-          console.error("[Webhook] Failed to send reversal notification:", nErr);
-        }
+        });
         return;
+
       case "payout_refund":
         console.warn(
           `[Webhook] payout_refund for request ${requestId} — notifying user`,
         );
-        await db
-          .update(webhookEvents)
-          .set({ status: "unhandled", processedAt: new Date() })
-          .where(eq(webhookEvents.nombaRequestId, requestId));
-        try {
-          const refUserId = payload.data?.merchant?.userId;
-          if (refUserId) {
-            await db.insert(notifications).values({
-              userId: refUserId,
-              title: "Payout refunded",
-              body: "A previous payout was refunded. Contact support if you have questions.",
-              type: "payment",
-            });
+        await db.transaction(async (tx) => {
+          await tx
+            .update(webhookEvents)
+            .set({ status: "unhandled", processedAt: new Date() })
+            .where(eq(webhookEvents.nombaRequestId, requestId));
+          try {
+            const refUserId = payload.data?.merchant?.userId;
+            if (refUserId) {
+              await tx.insert(notifications).values({
+                userId: refUserId,
+                title: "Payout refunded",
+                body: "A previous payout was refunded. Contact support if you have questions.",
+                type: "payment",
+              });
+            }
+          } catch (nErr) {
+            console.error(
+              "[Webhook] Failed to send refund notification:",
+              nErr,
+            );
           }
-        } catch (nErr) {
-          console.error("[Webhook] Failed to send refund notification:", nErr);
-        }
+        });
         return;
+
       default: {
         const isKnown = HANDLED_EVENTS.has(eventType);
         console.error(
@@ -208,18 +247,12 @@ async function processWebhook(payload: any) {
         return;
       }
     }
-
-    await db
-      .update(webhookEvents)
-      .set({ status: "processed", processedAt: new Date() })
-      .where(eq(webhookEvents.nombaRequestId, requestId));
   } catch (e) {
     console.error(`[Webhook] Processing failed for ${eventType}:`, e);
     await db
       .update(webhookEvents)
       .set({ status: "failed" })
       .where(eq(webhookEvents.nombaRequestId, requestId));
-    // Re-throw so the route returns "09" and Nomba retries the delivery.
     throw e;
   }
 }

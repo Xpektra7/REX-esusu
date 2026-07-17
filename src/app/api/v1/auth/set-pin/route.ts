@@ -10,11 +10,13 @@ import { requireAuth } from "@/lib/middleware";
 import { pinSchema } from "@/lib/validations";
 
 export async function POST(req: NextRequest) {
-  const auth = requireAuth(req);
+  const auth = await requireAuth(req);
   if (auth.error) return auth.error;
 
   try {
-    const body = pinSchema.extend({ currentPassword: z.string().optional() }).safeParse(await req.json());
+    const body = pinSchema
+      .extend({ currentPassword: z.string().optional() })
+      .safeParse(await req.json());
     if (!body.success) return error(body.error.issues[0].message, "02");
     const { pin, currentPassword } = body.data;
 

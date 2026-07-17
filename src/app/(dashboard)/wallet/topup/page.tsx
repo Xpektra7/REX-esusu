@@ -33,8 +33,7 @@ export default function TopUpPage() {
     | undefined;
 
   const mutation = useMutation({
-    mutationFn: (amountKobo: number) =>
-      api.wallet.topup({ amountKobo }),
+    mutationFn: (amountKobo: number) => api.wallet.topup({ amountKobo }),
     onSuccess: (res) => {
       const data = res.data as {
         reference: string;
@@ -103,9 +102,7 @@ export default function TopUpPage() {
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
             />
-            <p className="text-xs text-muted-foreground">
-              Minimum: ₦10
-            </p>
+            <p className="text-xs text-muted-foreground">Minimum: ₦10</p>
           </div>
 
           <Button
@@ -116,7 +113,9 @@ export default function TopUpPage() {
             {mutation.isPending && (
               <Loading01Icon className="size-4 animate-spin" />
             )}
-            {mutation.isPending ? "Generating..." : "Generate Payment Reference"}
+            {mutation.isPending
+              ? "Generating..."
+              : "Generate Payment Reference"}
           </Button>
         </form>
       ) : (
@@ -144,9 +143,7 @@ export default function TopUpPage() {
                 <button
                   type="button"
                   onClick={() =>
-                    copyToClipboard(
-                      wallet?.virtualAccount.accountName ?? "",
-                    )
+                    copyToClipboard(wallet?.virtualAccount.accountName ?? "")
                   }
                   className="flex size-8 items-center justify-center rounded-md hover:bg-muted"
                 >
@@ -156,7 +153,9 @@ export default function TopUpPage() {
 
               <div className="flex items-center justify-between rounded-lg bg-muted/50 px-4 py-3">
                 <div>
-                  <p className="text-xs text-muted-foreground">Account Number</p>
+                  <p className="text-xs text-muted-foreground">
+                    Account Number
+                  </p>
                   <p className="text-sm font-medium tracking-widest">
                     {wallet?.virtualAccount.accountNumber}
                   </p>
@@ -164,9 +163,7 @@ export default function TopUpPage() {
                 <button
                   type="button"
                   onClick={() =>
-                    copyToClipboard(
-                      wallet?.virtualAccount.accountNumber ?? "",
-                    )
+                    copyToClipboard(wallet?.virtualAccount.accountNumber ?? "")
                   }
                   className="flex size-8 items-center justify-center rounded-md hover:bg-muted"
                 >
@@ -184,9 +181,7 @@ export default function TopUpPage() {
                 <button
                   type="button"
                   onClick={() =>
-                    copyToClipboard(
-                      wallet?.virtualAccount.bankCode ?? "",
-                    )
+                    copyToClipboard(wallet?.virtualAccount.bankCode ?? "")
                   }
                   className="flex size-8 items-center justify-center rounded-md hover:bg-muted"
                 >

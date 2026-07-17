@@ -12,7 +12,7 @@ import { requireAuth } from "@/lib/middleware";
  * this resolves the circle from the code and joins in a single call.
  */
 export async function POST(req: NextRequest) {
-  const auth = requireAuth(req);
+  const auth = await requireAuth(req);
   if (auth.error) return auth.error;
 
   try {

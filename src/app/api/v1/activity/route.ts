@@ -13,7 +13,7 @@ type ActivityItem = {
 };
 
 export async function GET(req: NextRequest) {
-  const auth = requireAuth(req);
+  const auth = await requireAuth(req);
   if (auth.error) return auth.error;
 
   const userId = auth.user.userId;

@@ -1,11 +1,11 @@
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { users } from "@/db/schema";
+import { conflict, error, handleApiError, success } from "@/lib/api-response";
 import { requireAuth } from "@/lib/middleware";
-import { success, error, conflict, handleApiError } from "@/lib/api-response";
 
 export async function POST(req: Request) {
-  const auth = requireAuth(req);
+  const auth = await requireAuth(req);
   if (auth.error) return auth.error;
 
   const body = await req.json();
@@ -33,9 +33,12 @@ export async function POST(req: Request) {
     return handleApiError(e);
   }
 
-  return success({
-    verified: true,
-    name: "Chioma Okafor",
-    dob: "15-03-1990",
-  }, "BVN verified");
+  return success(
+    {
+      verified: true,
+      name: "Chioma Okafor",
+      dob: "15-03-1990",
+    },
+    "BVN verified",
+  );
 }

@@ -1,9 +1,10 @@
 import crypto from "node:crypto";
 import { eq } from "drizzle-orm";
 import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { users, virtualAccounts } from "@/db/schema";
-import { error, success } from "@/lib/api-response";
+import { error } from "@/lib/api-response";
 import {
   findUserByEmail,
   hashPassword,
@@ -86,7 +87,9 @@ async function provisionVirtualAccount(
 
 export async function POST(req: NextRequest) {
   try {
-    const body = signupSchema.partial({ name: true }).safeParse(await req.json());
+    const body = signupSchema
+      .partial({ name: true })
+      .safeParse(await req.json());
     if (!body.success) return error(body.error.issues[0].message, "02");
     const { email, otp, password, name, bvn } = body.data;
 
@@ -123,22 +126,38 @@ export async function POST(req: NextRequest) {
         return error("Invalid password");
       }
 
+      const sv = existing.sessionVersion;
+      const token = signToken(existing.id, existing.email, sv);
+      const refreshToken = signToken(existing.id, existing.email, sv);
+
       await db
         .update(users)
         .set({ loginAttempts: 0, lockedUntil: null })
         .where(eq(users.id, existing.id));
 
-      return success({
-        user: {
-          id: existing.id,
-          name: existing.name,
-          email: existing.email,
+      return NextResponse.json(
+        {
+          code: "00",
+          description: "Success",
+          data: {
+            user: {
+              id: existing.id,
+              name: existing.name,
+              email: existing.email,
+            },
+            token,
+            refreshToken,
+            needsBvn: false,
+            pinSet: !!existing.pinHash,
+          },
         },
-        token: signToken(existing.id, existing.email),
-        refreshToken: signToken(existing.id, existing.email),
-        needsBvn: false,
-        pinSet: !!existing.pinHash,
-      });
+        {
+          headers: {
+            "Set-Cookie":
+              "esusu-auth=true; path=/; max-age=604800; HttpOnly; Secure; SameSite=Strict",
+          },
+        },
+      );
     }
 
     if (!name) return error("No account found with this email. Sign up first.");
@@ -164,19 +183,31 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    return success(
+    const newToken = signToken(user.id, user.email, user.sessionVersion);
+    const newRefreshToken = signToken(user.id, user.email, user.sessionVersion);
+
+    return NextResponse.json(
       {
-        user: {
-          id: user.id,
-          name: user.name,
-          email: user.email,
+        code: "00",
+        description: "Account created",
+        data: {
+          user: {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+          },
+          token: newToken,
+          refreshToken: newRefreshToken,
+          needsBvn: false,
+          pinSet: false,
         },
-        token: signToken(user.id, user.email),
-        refreshToken: signToken(user.id, user.email),
-        needsBvn: false,
-        pinSet: false,
       },
-      "Account created",
+      {
+        headers: {
+          "Set-Cookie":
+            "esusu-auth=true; path=/; max-age=604800; HttpOnly; Secure; SameSite=Strict",
+        },
+      },
     );
   } catch (e) {
     console.error(e);

@@ -4,6 +4,7 @@ import type { NextRequest } from "next/server";
 import { db } from "@/db";
 import { users } from "@/db/schema";
 import { error, success } from "@/lib/api-response";
+import { signPinToken } from "@/lib/auth";
 import { requireAuth } from "@/lib/middleware";
 import { rateLimit } from "@/lib/rate-limit";
 import { pinSchema } from "@/lib/validations";
@@ -11,7 +12,7 @@ import { pinSchema } from "@/lib/validations";
 const pinLimiter = rateLimit({ windowMs: 60_000, maxRequests: 5 });
 
 export async function POST(req: NextRequest) {
-  const auth = requireAuth(req);
+  const auth = await requireAuth(req);
   if (auth.error) return auth.error;
 
   try {
@@ -59,7 +60,9 @@ export async function POST(req: NextRequest) {
       .set({ loginAttempts: 0, lockedUntil: null })
       .where(eq(users.id, auth.user?.userId));
 
-    return success({ verified: true });
+    const pinToken = signPinToken(auth.user.userId);
+
+    return success({ verified: true, pinToken });
   } catch (e) {
     console.error(e);
     return error("An unexpected error occurred", "01", 500);

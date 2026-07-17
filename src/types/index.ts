@@ -246,6 +246,33 @@ export interface ApiResponse<T> {
   data: T;
 }
 
+export interface TransferReceipt {
+  receiptId: string;
+  type: "withdrawal" | "payout" | "contribution" | "debt_payment";
+  direction: "outward";
+  status: string;
+  amountKobo: number;
+  reference: string | null;
+  narration: string | null;
+  sender?: {
+    name: string | null;
+    email: string | null;
+  };
+  circle?: {
+    name: string;
+    cycleNumber: number;
+  };
+  recipient: {
+    name?: string | null;
+    email?: string | null;
+    accountName: string | null;
+    accountNumber: string | null;
+    bankCode: string | null;
+  };
+  createdAt: string;
+  completedAt?: string | null;
+}
+
 export interface ActivityItem {
   id: string;
   type: "contribution" | "payout" | "circle_join" | "circle_create" | "topup";

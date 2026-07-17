@@ -40,20 +40,18 @@ function Toggle({
   );
 }
 
-export function NotificationPreferences({ settings }: NotificationPreferencesProps) {
+export function NotificationPreferences({
+  settings,
+}: NotificationPreferencesProps) {
   const [prefs, setPrefs] = useState(settings);
-  const [saving, setSaving] = useState(false);
 
   const update = async (patch: Partial<UserSettings>) => {
-    setSaving(true);
     const next = { ...prefs, ...patch };
     setPrefs(next);
     try {
       await api.users.settings.update(patch);
     } catch {
       setPrefs(prefs);
-    } finally {
-      setSaving(false);
     }
   };
 
@@ -139,10 +137,6 @@ export function NotificationPreferences({ settings }: NotificationPreferencesPro
             onChange={(v) => update({ notifyWithdrawal: v })}
           />
         </>
-      )}
-
-      {saving && (
-        <p className="text-xs text-muted-foreground">Saving...</p>
       )}
     </div>
   );

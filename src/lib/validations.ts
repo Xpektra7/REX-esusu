@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const otpSchema = z.object({
-  otp: z.string().length(4, "OTP must be 4 digits"),
+  otp: z.string().length(6, "OTP must be 6 digits"),
 });
 
 export const passwordSchema = z.object({
@@ -17,8 +17,11 @@ export const pinSchema = z.object({
 
 export const signupSchema = z.object({
   email: z.string().email("Enter a valid email address"),
-  otp: z.string().length(4, "OTP must be 4 digits"),
-  password: z.string().min(8, "Password must be at least 8 characters").max(128),
+  otp: z.string().length(6, "OTP must be 6 digits"),
+  password: z
+    .string()
+    .min(8, "Password must be at least 8 characters")
+    .max(128),
   name: z.string().min(2, "Name must be at least 2 characters"),
   bvn: z
     .string()
@@ -40,6 +43,19 @@ export const sendOtpSchema = z.object({
 export const changePinSchema = z.object({
   currentPin: z.string().regex(/^\d{4,6}$/, "PIN must be 4-6 digits"),
   newPin: z.string().regex(/^\d{4,6}$/, "PIN must be 4-6 digits"),
+});
+
+export const forgotPasswordSchema = z.object({
+  email: z.string().email("Enter a valid email address"),
+});
+
+export const resetPasswordSchema = z.object({
+  email: z.string().email("Enter a valid email address"),
+  otp: z.string().length(6, "OTP must be 6 digits"),
+  newPassword: z
+    .string()
+    .min(8, "Password must be at least 8 characters")
+    .max(128),
 });
 
 export const createCircleSchema = z.object({
@@ -69,10 +85,14 @@ export const withdrawSchema = z.object({
     .string()
     .length(10, "Account number must be 10 digits")
     .regex(/^\d{10}$/),
+  pinToken: z.string().min(1, "PIN verification is required"),
 });
 
 export const contributionSchema = z.object({
   circleId: z.string().uuid("Circle ID is required"),
-  cycleNumber: z.number().int().positive("Cycle number must be a positive integer"),
+  cycleNumber: z
+    .number()
+    .int()
+    .positive("Cycle number must be a positive integer"),
   amountKobo: z.number().int().min(1, "Amount must be at least 1 kobo"),
 });

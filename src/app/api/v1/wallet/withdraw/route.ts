@@ -3,12 +3,16 @@ import type { NextRequest } from "next/server";
 import { db } from "@/db";
 import { users, virtualAccounts, walletTransactions } from "@/db/schema";
 import { error, handleApiError, success } from "@/lib/api-response";
+import { verifyPinToken } from "@/lib/auth";
 import { requireAuth } from "@/lib/middleware";
 import { nombaPost } from "@/lib/nomba";
+import { rateLimit } from "@/lib/rate-limit";
 import { withdrawSchema } from "@/lib/validations";
 
+const withdrawLimiter = rateLimit({ windowMs: 60_000, maxRequests: 5 });
+
 export async function POST(req: NextRequest) {
-  const auth = requireAuth(req);
+  const auth = await requireAuth(req);
   if (auth.error) return auth.error;
 
   try {
@@ -17,7 +21,23 @@ export async function POST(req: NextRequest) {
     if (!parsed.success) {
       return error(parsed.error.issues.map((e) => e.message).join("; "));
     }
-    const { amountKobo, bankCode, accountNumber } = parsed.data;
+    const { amountKobo, bankCode, accountNumber, pinToken } = parsed.data;
+
+    // Rate limit withdrawals per user
+    const limit = withdrawLimiter.check(`withdraw:${auth.user?.userId}`);
+    if (!limit.allowed) {
+      return error("Too many withdrawals. Try again later.", "06", 429);
+    }
+
+    // Verify PIN token
+    const pinPayload = verifyPinToken(pinToken);
+    if (!pinPayload || pinPayload.userId !== auth.user?.userId) {
+      return error(
+        "Invalid or expired PIN verification. Please verify your PIN again.",
+        "03",
+        401,
+      );
+    }
 
     // Get user's name for senderName
     const [user] = await db
@@ -27,7 +47,24 @@ export async function POST(req: NextRequest) {
       .limit(1);
     if (!user) return error("User not found", "04", 404);
 
-    // Atomic balance deduction — check-and-decrement in one SQL statement
+    // Step 1: Resolve account name via bank lookup (no balance change yet)
+    let accountName = "";
+    try {
+      const lookup = await nombaPost("/v1/transfers/bank/lookup", {
+        accountNumber,
+        bankCode,
+      });
+      accountName = lookup?.data?.accountName ?? "";
+    } catch {
+      return error(
+        "Could not verify bank account. Please check the account number.",
+      );
+    }
+    if (!accountName) {
+      return error("Could not resolve account name for this bank account.");
+    }
+
+    // Step 2: Atomic balance deduction — check-and-decrement in one SQL statement
     const [updatedVa] = await db
       .update(virtualAccounts)
       .set({ balanceKobo: sql`balance_kobo - ${amountKobo}` })
@@ -43,39 +80,11 @@ export async function POST(req: NextRequest) {
       return error("Insufficient balance", "07");
     }
 
-    // Resolve account name via bank lookup
-    let accountName = "";
-    try {
-      const lookup = await nombaPost("/v1/transfers/bank/lookup", {
-        accountNumber,
-        bankCode,
-      });
-      accountName = lookup?.data?.accountName ?? "";
-    } catch {
-      // Revert the atomic deduction on failure
-      await db
-        .update(virtualAccounts)
-        .set({
-          balanceKobo: sql`balance_kobo + ${amountKobo}`,
-        })
-        .where(eq(virtualAccounts.id, updatedVa.id));
-      return error(
-        "Could not verify bank account. Please check the account number.",
-      );
-    }
-    if (!accountName) {
-      await db
-        .update(virtualAccounts)
-        .set({
-          balanceKobo: sql`balance_kobo + ${amountKobo}`,
-        })
-        .where(eq(virtualAccounts.id, updatedVa.id));
-      return error("Could not resolve account name for this bank account.");
-    }
-
+    // Step 3: Initiate transfer via Nomba
     const merchantTxRef = `WITHDRAW_${auth.user?.userId.slice(0, 8)}_${Date.now()}`;
     // biome-ignore lint/suspicious/noExplicitAny: Nomba API response is dynamic
     let nombaResp: any;
+    let transferFailed = false;
     try {
       nombaResp = await nombaPost("/v2/transfers/bank", {
         amount: amountKobo / 100,
@@ -87,13 +96,9 @@ export async function POST(req: NextRequest) {
         narration: "Esusu wallet withdrawal",
       });
     } catch {
-      await db
-        .update(virtualAccounts)
-        .set({
-          balanceKobo: sql`balance_kobo + ${amountKobo}`,
-        })
-        .where(eq(virtualAccounts.id, updatedVa.id));
-      return error("Transfer failed. Please try again.");
+      // Network error — DO NOT refund balance. Record as pending and
+      // let the Nomba webhook settle it (confirm or refund).
+      transferFailed = true;
     }
 
     const transferRef =
@@ -101,26 +106,26 @@ export async function POST(req: NextRequest) {
       nombaResp?.data?.id ||
       merchantTxRef;
 
-    // Record the withdrawal in the wallet transaction history so it shows up
-    // in the user's transaction list and activity feed.
-    await db
+    const [walletTx] = await db
       .insert(walletTransactions)
       .values({
         userId: auth.user?.userId,
         type: "withdrawal",
         amountKobo,
         reference: transferRef,
-        status: "success",
+        status: transferFailed ? "pending" : "success",
         metadata: {
           bankCode,
           accountNumber: accountNumber.slice(-4),
           nombaTransferRef: transferRef,
+          transferFailed,
         },
       })
-      .onConflictDoNothing();
+      .returning();
 
     return success(
       {
+        transactionId: walletTx.id,
         amountKobo,
         status: "pending",
         nombaTransferRef: transferRef,

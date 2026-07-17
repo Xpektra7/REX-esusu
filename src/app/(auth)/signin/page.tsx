@@ -1,8 +1,11 @@
 "use client";
 
 import { useForm } from "@tanstack/react-form";
+import { ViewIcon, ViewOffSlashIcon } from "hugeicons-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -12,9 +15,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { api } from "@/lib/api";
-import Link from "next/link";
-import { ViewIcon, ViewOffSlashIcon } from "hugeicons-react";
-import { toast } from "sonner";
 
 const avatarInitials = [
   { initials: "CO", bg: "bg-blue-100", text: "text-blue-800" },
@@ -148,6 +148,13 @@ export default function SignInPage() {
           >
             {loading ? "Sending OTP..." : "Continue"}
           </Button>
+
+          <Link
+            href="/forgot-password"
+            className="block text-center text-sm text-muted-foreground hover:text-foreground"
+          >
+            Forgot password?
+          </Link>
         </form>
       </CardContent>
 

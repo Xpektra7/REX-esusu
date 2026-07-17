@@ -83,10 +83,6 @@ export const useAuthStore = create<AuthState>()(
        * needsBvn / pinSet tell the app which onboarding step is next.
        */
       setAuth: (payload) => {
-        if (typeof document !== "undefined") {
-          // biome-ignore lint/suspicious/noDocumentCookie: need cookie for middleware auth guard
-          document.cookie = "esusu-auth=true; path=/; max-age=604800; SameSite=Lax";
-        }
         return set({
           accessToken: payload.access_token ?? payload.token ?? null,
           refreshToken: payload.refresh_token ?? payload.refreshToken ?? null,
@@ -112,16 +108,12 @@ export const useAuthStore = create<AuthState>()(
 
       /** Full logout — wipes everything back to defaults. */
       clearAuth: () => {
-        if (typeof document !== "undefined") {
-          // biome-ignore lint/suspicious/noDocumentCookie: need cookie for middleware auth guard
-          document.cookie = "esusu-auth=; path=/; max-age=0; SameSite=Lax";
-        }
         return set({
           accessToken: null,
           refreshToken: null,
           user: null,
           isAuthenticated: false,
-      needsBvn: false,
+          needsBvn: false,
           pinSet: false,
           pinAttempts: 0,
         });

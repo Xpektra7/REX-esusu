@@ -3,7 +3,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Loading01Icon } from "hugeicons-react";
 import { useEffect, useState } from "react";
-import { api } from "@/lib/api";
 import {
   Combobox,
   ComboboxContent,
@@ -12,6 +11,7 @@ import {
   ComboboxItem,
   ComboboxList,
 } from "@/components/ui/combobox";
+import { api } from "@/lib/api";
 
 interface BankMatch {
   bankCode: string;
@@ -70,12 +70,22 @@ export function BankSearchInput({
         const name = res?.data?.accountName ?? null;
         setLookupResult(name);
         if (name) {
-          onSelect({ bankCode: bankCodeMap[selectedBank], bankName: selectedBank, accountName: name });
+          onSelect({
+            bankCode: bankCodeMap[selectedBank],
+            bankName: selectedBank,
+            accountName: name,
+          });
         }
       })
-      .catch(() => { if (!cancelled) setLookupResult(null); })
-      .finally(() => { if (!cancelled) setLookupLoading(false); });
-    return () => { cancelled = true; };
+      .catch(() => {
+        if (!cancelled) setLookupResult(null);
+      })
+      .finally(() => {
+        if (!cancelled) setLookupLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [value, selectedBank]);
 
   function handleClear() {
@@ -138,9 +148,7 @@ export function BankSearchInput({
       {!lookupLoading && lookupResult && selectedBank && (
         <div className="flex items-center justify-between rounded-lg border border-primary/30 bg-primary/5 px-3 py-2">
           <div className="flex flex-col">
-            <span className="text-sm font-semibold">
-              {selectedBank}
-            </span>
+            <span className="text-sm font-semibold">{selectedBank}</span>
             <span className="text-xs text-muted-foreground">
               {lookupResult}
             </span>

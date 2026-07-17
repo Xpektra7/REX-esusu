@@ -150,7 +150,7 @@ export function SecuritySection() {
                 loading || !currentPassword || !newPassword || !confirmPassword
               }
             >
-              {loading ? "Saving..." : "Change"}
+              Change
             </Button>
           </div>
         </DialogContent>
