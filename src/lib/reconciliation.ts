@@ -572,6 +572,7 @@ export async function reconcileCycle(cycleId: string) {
           debtorMemberId: mc.id,
           creditorMemberId: cycle.recipientMemberId,
           amountKobo: deficit,
+          fineKobo: 50000,
           paidKobo: 0,
           status: "active",
         });
