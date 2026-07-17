@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { rateLimit } from "@/lib/rate-limit";
+import { requirePageAuth } from "@/lib/middleware";
 
 const apiLimiter = rateLimit({ windowMs: 60_000, maxRequests: 30 });
 const authLimiter = rateLimit({ windowMs: 60_000, maxRequests: 5 });
@@ -36,7 +37,19 @@ const PUBLIC_ROUTES = [
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const isAuthenticated = request.cookies.has("esusu-auth");
+
+  // CORS preflight
+  if (request.method === "OPTIONS") {
+    return new NextResponse(null, {
+      status: 204,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, POST, PATCH, DELETE, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization",
+        "Access-Control-Max-Age": "86400",
+      },
+    });
+  }
 
   // Rate limiting for API routes (M-01). Auth routes get a tighter limit to
   // blunt brute-force / OTP abuse.
@@ -64,6 +77,10 @@ export function proxy(request: NextRequest) {
     }
   }
 
+  // JWT-based auth via HttpOnly cookie (CVE-2025-29927: proxy is a lightweight
+  // routing layer — auth enforcement also happens in route handlers.)
+  const authUser = requirePageAuth(request);
+
   const isProtected = PROTECTED_ROUTES.some(
     (route) => pathname === route || pathname.startsWith(`${route}/`),
   );
@@ -72,21 +89,31 @@ export function proxy(request: NextRequest) {
     (route) => pathname === route || pathname.startsWith(`${route}/`),
   );
 
-  if (isProtected && !isAuthenticated) {
+  if (isProtected && !authUser) {
     const signinUrl = new URL("/signin", request.url);
     signinUrl.searchParams.set("redirect", pathname);
     return NextResponse.redirect(signinUrl);
   }
 
-  if (isAuthenticated && pathname === "/") {
+  if (authUser && pathname === "/") {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
-  if (isPublic && isAuthenticated && pathname.startsWith("/signin")) {
+  if (authUser && isPublic && pathname.startsWith("/signin")) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
-  return NextResponse.next();
+  // Security headers
+  const response = NextResponse.next();
+  response.headers.set("X-Frame-Options", "DENY");
+  response.headers.set("X-Content-Type-Options", "nosniff");
+  response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+  response.headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
+  if (pathname.startsWith("/api/")) {
+    response.headers.set("Access-Control-Allow-Origin", "*");
+  }
+
+  return response;
 }
 
 export const config = {

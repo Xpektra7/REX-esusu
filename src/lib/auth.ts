@@ -56,3 +56,26 @@ export async function findUserById(id: string) {
   const result = await db.select().from(users).where(eq(users.id, id)).limit(1);
   return result[0] ?? null;
 }
+
+export function setAuthCookie(response: Response, token: string): void {
+  const isProd = process.env.NODE_ENV === "production";
+  response.headers.set(
+    "Set-Cookie",
+    `esusu-token=${token}; HttpOnly; ${isProd ? "Secure;" : ""} Path=/; Max-Age=1800; SameSite=Strict`,
+  );
+}
+
+export function clearAuthCookie(response: Response): void {
+  response.headers.set(
+    "Set-Cookie",
+    "esusu-token=; HttpOnly; Path=/; Max-Age=0; SameSite=Strict",
+  );
+}
+
+const REFRESH_EXPIRES_IN = "7d" as StringValue;
+
+export function signRefreshToken(userId: string, email: string): string {
+  return jwt.sign({ userId, email, type: "refresh" } satisfies TokenPayload & { type: string }, JWT_SECRET, {
+    expiresIn: REFRESH_EXPIRES_IN,
+  });
+}

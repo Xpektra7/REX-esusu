@@ -7,6 +7,7 @@ import { error, success } from "@/lib/api-response";
 import {
   findUserByEmail,
   hashPassword,
+  setAuthCookie,
   signToken,
   verifyPassword,
 } from "@/lib/auth";
@@ -97,17 +98,20 @@ export async function POST(req: NextRequest) {
         .set({ loginAttempts: 0, lockedUntil: null })
         .where(eq(users.id, existing.id));
 
-      return success({
+      const token = signToken(existing.id, existing.email);
+      const res = success({
         user: {
           id: existing.id,
           name: existing.name,
           email: existing.email,
         },
-        token: signToken(existing.id, existing.email),
+        token,
         refreshToken: signToken(existing.id, existing.email),
         needsBvn: false,
         pinSet: !!existing.pinHash,
       });
+      setAuthCookie(res, token);
+      return res;
     }
 
     if (!name) return error("No account found with this email. Sign up first.");
@@ -139,20 +143,23 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    return success(
+    const newToken = signToken(user.id, user.email);
+    const res2 = success(
       {
         user: {
           id: user.id,
           name: user.name,
           email: user.email,
         },
-        token: signToken(user.id, user.email),
+        token: newToken,
         refreshToken: signToken(user.id, user.email),
         needsBvn: false,
         pinSet: false,
       },
       "Account created",
     );
+    setAuthCookie(res2, newToken);
+    return res2;
   } catch (e) {
     console.error(e);
     return error("An unexpected error occurred", "01", 500);

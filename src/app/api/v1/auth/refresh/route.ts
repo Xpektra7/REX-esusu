@@ -1,6 +1,6 @@
 import type { NextRequest } from "next/server";
 import { error, success } from "@/lib/api-response";
-import { signToken, verifyToken } from "@/lib/auth";
+import { setAuthCookie, signToken, verifyToken } from "@/lib/auth";
 
 export async function POST(req: NextRequest) {
   try {
@@ -10,7 +10,9 @@ export async function POST(req: NextRequest) {
     const payload = verifyToken(token);
     if (!payload) return error("Invalid or expired refresh token", "01", 401);
     const accessToken = signToken(payload.userId, payload.email);
-    return success({ accessToken, token: accessToken });
+    const res = success({ accessToken, token: accessToken });
+    setAuthCookie(res, accessToken);
+    return res;
   } catch (e) {
     console.error(e);
     return error("An unexpected error occurred", "01", 500);
