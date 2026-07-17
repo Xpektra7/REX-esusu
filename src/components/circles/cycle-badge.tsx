@@ -1,9 +1,10 @@
 "use client";
 
+import { memo } from "react";
 import { CYCLE_STATUS } from "@/lib/status";
 import { cn } from "@/lib/utils";
 
-export function CycleBadge({ status }: { status: string }) {
+export const CycleBadge = memo(function CycleBadge({ status }: { status: string }) {
   return (
     <span
       className={cn(
@@ -16,4 +17,4 @@ export function CycleBadge({ status }: { status: string }) {
         : status.charAt(0).toUpperCase() + status.slice(1)}
     </span>
   );
-}
+});

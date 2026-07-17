@@ -25,7 +25,11 @@ function OtpForm() {
   const router = useRouter();
   const setAuth = useAuthStore((s) => s.setAuth);
 
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(() =>
+    typeof window !== "undefined"
+      ? sessionStorage.getItem("pending_email") || ""
+      : "",
+  );
   const [otp, setOtp] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -39,16 +43,10 @@ function OtpForm() {
       ? sessionStorage.getItem("pending_name") || ""
       : "";
 
-  useEffect(() => {
-    const storedEmail = sessionStorage.getItem("pending_email");
-    if (storedEmail) {
-      setEmail(storedEmail);
-    } else {
-      router.replace("/signup");
-    }
-  }, [router]);
-
-  if (!email) return null;
+  if (!email) {
+    router.replace("/signup");
+    return null;
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

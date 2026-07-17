@@ -2,7 +2,7 @@
 
 import { IdVerifiedIcon, Shield01Icon } from "hugeicons-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -34,18 +34,14 @@ export default function KycPage() {
   const [verifiedName, setVerifiedName] = useState("");
   const [error, setError] = useState<string | null>(null);
 
-  // Guard: if not authenticated send to /auth.
-  // If BVN is already done, skip ahead to PIN setup instead.
-  useEffect(() => {
-    if (!accessToken) {
-      router.replace("/auth");
-    } else if (!needsBvn) {
-      sessionStorage.setItem("pending_pin_mode", "set");
-      router.replace("/auth/pin");
-    }
-  }, [accessToken, needsBvn, router]);
+  if (!accessToken) {
+    router.replace("/auth");
+    return null;
+  }
 
-  if (!accessToken || !needsBvn) {
+  if (!needsBvn) {
+    sessionStorage.setItem("pending_pin_mode", "set");
+    router.replace("/auth/pin");
     return null;
   }
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -22,12 +22,11 @@ import { useAuthStore } from "@/stores/auth-store";
 
 function PinForm() {
   const router = useRouter();
-  const [mode, setMode] = useState("verify");
-
-  useEffect(() => {
-    const stored = sessionStorage.getItem("pending_pin_mode");
-    if (stored) setMode(stored);
-  }, []);
+  const [mode, setMode] = useState(() =>
+    typeof window !== "undefined"
+      ? sessionStorage.getItem("pending_pin_mode") || "verify"
+      : "verify",
+  );
 
   const setPinSet = useAuthStore((s) => s.setPinSet);
   const incrementPinAttempt = useAuthStore((s) => s.incrementPinAttempt);
@@ -38,21 +37,20 @@ function PinForm() {
   const [pin, setPin] = useState("");
   const [confirmPin, setConfirmPin] = useState("");
   const [currentPin, setCurrentPin] = useState("");
-  const [step, setStep] = useState<"current" | "enter" | "confirm">("enter");
+  const verifiedCurrentPin = useRef("");
+  const [step, setStep] = useState<"current" | "enter" | "confirm">(
+    mode === "change" ? "current" : "enter",
+  );
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    if (mode === "change") setStep("current");
-  }, [mode]);
-
-  useEffect(() => {
-    if (mode !== "verify") return;
-    if (pinAttempts >= 10) {
-      clearAuth();
-      router.push("/signin");
-    }
-  }, [pinAttempts, mode, clearAuth, router]);
+  // Redirect on excessive PIN attempts (verify mode only)
+  const prevAttempts = useRef(pinAttempts);
+  if (mode === "verify" && pinAttempts >= 10 && prevAttempts.current < 10) {
+    clearAuth();
+    router.push("/signin");
+  }
+  prevAttempts.current = pinAttempts;
 
   const isLocked = mode === "verify" && pinAttempts >= 3;
   const lockMessage =
@@ -108,6 +106,7 @@ function PinForm() {
         setLoading(true);
         try {
           await api.auth.verifyPin(currentPin);
+          verifiedCurrentPin.current = currentPin;
           setStep("enter");
           setCurrentPin("");
         } catch (err) {
@@ -136,7 +135,7 @@ function PinForm() {
 
       setLoading(true);
       try {
-        await api.auth.changePin({ currentPin, newPin: pin });
+        await api.auth.changePin({ currentPin: verifiedCurrentPin.current, newPin: pin });
         sessionStorage.removeItem("pending_pin_mode");
         router.push("/dashboard");
       } catch (err) {
@@ -201,7 +200,7 @@ function PinForm() {
       </CardHeader>
 
       <form onSubmit={handleSubmit}>
-        <CardContent className="space-y-4">
+        <CardContent className="flex flex-col gap-4">
           <InputOTP
             maxLength={4}
             className="flex justify-center4"

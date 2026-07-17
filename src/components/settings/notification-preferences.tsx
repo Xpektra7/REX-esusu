@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Separator } from "@/components/ui/separator";
 import { api } from "@/lib/api";
+import { cn } from "@/lib/utils";
 import type { UserSettings } from "@/types";
 
 interface NotificationPreferencesProps {
@@ -24,16 +26,18 @@ function Toggle({
       <button
         type="button"
         onClick={() => onChange(!on)}
-        className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors ${
-          on ? "bg-primary" : "bg-muted"
-        }`}
+        className={cn(
+          "relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors",
+          on ? "bg-primary" : "bg-muted",
+        )}
         role="switch"
         aria-checked={on}
       >
         <span
-          className={`inline-block size-4 rounded-full bg-white shadow-sm transition-transform ${
-            on ? "translate-x-4" : "translate-x-0"
-          }`}
+          className={cn(
+            "inline-block size-4 rounded-full bg-white shadow-sm transition-transform",
+            on ? "translate-x-4" : "translate-x-0",
+          )}
         />
       </button>
     </label>
@@ -43,6 +47,7 @@ function Toggle({
 export function NotificationPreferences({
   settings,
 }: NotificationPreferencesProps) {
+  const queryClient = useQueryClient();
   const [prefs, setPrefs] = useState(settings);
 
   const update = async (patch: Partial<UserSettings>) => {
@@ -50,6 +55,7 @@ export function NotificationPreferences({
     setPrefs(next);
     try {
       await api.users.settings.update(patch);
+      queryClient.invalidateQueries({ queryKey: ["settings"] });
     } catch {
       setPrefs(prefs);
     }

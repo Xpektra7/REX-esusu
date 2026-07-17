@@ -1,13 +1,16 @@
 "use client";
 
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
+import { cn } from "@/lib/utils";
 
 interface AutoPayToggleProps {
   enabled: boolean;
 }
 
 export function AutoPayToggle({ enabled }: AutoPayToggleProps) {
+  const queryClient = useQueryClient();
   const [on, setOn] = useState(enabled);
   const [saving, setSaving] = useState(false);
 
@@ -16,6 +19,7 @@ export function AutoPayToggle({ enabled }: AutoPayToggleProps) {
     try {
       await api.users.settings.update({ autoPay: !on });
       setOn(!on);
+      queryClient.invalidateQueries({ queryKey: ["settings"] });
     } catch {
       // silently revert
     } finally {
@@ -35,16 +39,18 @@ export function AutoPayToggle({ enabled }: AutoPayToggleProps) {
         type="button"
         onClick={toggle}
         disabled={saving}
-        className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors ${
-          on ? "bg-primary" : "bg-muted"
-        }`}
+        className={cn(
+          "relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors",
+          on ? "bg-primary" : "bg-muted",
+        )}
         role="switch"
         aria-checked={on}
       >
         <span
-          className={`inline-block size-5 rounded-full bg-white shadow-sm transition-transform ${
-            on ? "translate-x-5" : "translate-x-0"
-          }`}
+          className={cn(
+            "inline-block size-5 rounded-full bg-white shadow-sm transition-transform",
+            on ? "translate-x-5" : "translate-x-0",
+          )}
         />
       </button>
     </div>

@@ -111,6 +111,7 @@ export default function NotificationsPage() {
     mutationFn: (id: string) => api.notifications.markRead(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["notifications-mini"] });
     },
   });
 
@@ -119,7 +120,7 @@ export default function NotificationsPage() {
     if (n.data?.route) router.push(n.data.route);
   };
 
-  const notifications = (res?.data ?? []) as NotificationItem[];
+  const notifications = ((res?.data as { items: NotificationItem[] } | undefined)?.items ?? []) as NotificationItem[];
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   return (

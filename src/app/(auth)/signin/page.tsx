@@ -130,9 +130,9 @@ export default function SignInPage() {
                 aria-label={showPassword ? "Hide password" : "Show password"}
               >
                 {showPassword ? (
-                  <ViewOffSlashIcon className="h-4 w-4" />
+                  <ViewOffSlashIcon className="size-4" />
                 ) : (
-                  <ViewIcon className="h-4 w-4" />
+                  <ViewIcon className="size-4" />
                 )}
               </button>
             </div>

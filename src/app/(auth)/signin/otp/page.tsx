@@ -25,7 +25,11 @@ function OtpForm() {
   const router = useRouter();
   const setAuth = useAuthStore((s) => s.setAuth);
 
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(() =>
+    typeof window !== "undefined"
+      ? sessionStorage.getItem("pending_email") || ""
+      : "",
+  );
   const [otp, setOtp] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -35,16 +39,10 @@ function OtpForm() {
       ? sessionStorage.getItem("pending_password") || ""
       : "";
 
-  useEffect(() => {
-    const storedEmail = sessionStorage.getItem("pending_email");
-    if (storedEmail) {
-      setEmail(storedEmail);
-    } else {
-      router.replace("/signin");
-    }
-  }, [router]);
-
-  if (!email) return null;
+  if (!email) {
+    router.replace("/signin");
+    return null;
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,7 +70,13 @@ function OtpForm() {
         pin_set: data.pinSet,
       });
 
-      router.push("/dashboard");
+      if (data.needsBvn) {
+        router.push("/auth/kyc");
+      } else if (!data.pinSet) {
+        router.push("/auth/pin");
+      } else {
+        router.push("/dashboard");
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Verification failed");
     } finally {

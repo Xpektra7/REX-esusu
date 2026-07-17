@@ -1,7 +1,8 @@
+import { memo } from "react";
 import { CONTRIBUTION_STATUS } from "@/lib/status";
 import { cn } from "@/lib/utils";
 
-export function ContributionStatusBadge({
+export const ContributionStatusBadge = memo(function ContributionStatusBadge({
   status,
 }: {
   status: keyof typeof CONTRIBUTION_STATUS;
@@ -20,4 +21,4 @@ export function ContributionStatusBadge({
       {c.label}
     </span>
   );
-}
+});

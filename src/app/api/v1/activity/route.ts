@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
     const walletTx = await db
       .select({
         type: sql<string>`'wallet_${walletTransactions.type}'`,
-        description: sql<string>`CASE WHEN ${walletTransactions.type} = 'topup' THEN 'Wallet topup' WHEN ${walletTransactions.type} = 'withdrawal' THEN 'Wallet withdrawal' WHEN ${walletTransactions.type} = 'contribution' THEN 'Contribution payment' WHEN ${walletTransactions.type} = 'payout' THEN 'Payout received' ELSE 'Wallet transaction' END`,
+        description: sql<string>`CASE WHEN ${walletTransactions.type} = 'topup' THEN concat('Topped up wallet with ₦', (${walletTransactions.amountKobo} / 100)::text) WHEN ${walletTransactions.type} = 'withdrawal' THEN concat('Withdrew ₦', (${walletTransactions.amountKobo} / 100)::text, ' from wallet') WHEN ${walletTransactions.type} = 'contribution' THEN concat('Contributed ₦', (${walletTransactions.amountKobo} / 100)::text, ' to a circle') WHEN ${walletTransactions.type} = 'payout' THEN concat('Received payout of ₦', (${walletTransactions.amountKobo} / 100)::text) ELSE 'Wallet transaction' END`,
         amountKobo: walletTransactions.amountKobo,
         createdAt: walletTransactions.createdAt,
       })

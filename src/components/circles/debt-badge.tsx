@@ -1,9 +1,10 @@
 "use client";
 
+import { memo } from "react";
 import { DEBT_STATUS } from "@/lib/status";
 import { cn } from "@/lib/utils";
 
-export function DebtBadge({ status }: { status: string }) {
+export const DebtBadge = memo(function DebtBadge({ status }: { status: string }) {
   return (
     <span
       className={cn(
@@ -14,4 +15,4 @@ export function DebtBadge({ status }: { status: string }) {
       {status.charAt(0).toUpperCase() + status.slice(1)}
     </span>
   );
-}
+});

@@ -1,7 +1,7 @@
 "use client";
 
+import { Fragment, memo } from "react";
 import Link from "next/link";
-import { Fragment } from "react";
 import {
   Breadcrumb,
   BreadcrumbEllipsis,
@@ -14,7 +14,7 @@ import {
 
 export type Crumb = { label: string; href?: string };
 
-export function PageBreadcrumbs({ items }: { items: Crumb[] }) {
+export const PageBreadcrumbs = memo(function PageBreadcrumbs({ items }: { items: Crumb[] }) {
   const showEllipsis = items.length > 3;
 
   function renderCrumb(item: Crumb) {
@@ -56,4 +56,4 @@ export function PageBreadcrumbs({ items }: { items: Crumb[] }) {
       </BreadcrumbList>
     </Breadcrumb>
   );
-}
+});

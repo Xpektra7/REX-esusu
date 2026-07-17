@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 
 const ONE_SECOND = 1000;
@@ -16,7 +16,7 @@ function calcRemaining(deadlineAt: string, gracePeriodHours: number): number {
   return Math.max(0, deadline + graceMs - Date.now());
 }
 
-export function GraceCountdown({
+export const GraceCountdown = memo(function GraceCountdown({
   deadlineAt,
   gracePeriodHours,
 }: GraceCountdownProps) {
@@ -56,4 +56,4 @@ export function GraceCountdown({
       )}
     </Card>
   );
-}
+});

@@ -1,4 +1,5 @@
-import { Avatar, AvatarImage } from "@/components/ui/avatar";
+import { memo } from "react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface DiceBearAvatarProps {
   name: string;
@@ -6,12 +7,18 @@ interface DiceBearAvatarProps {
   className?: string;
 }
 
-export function DiceBearAvatar({
+export const DiceBearAvatar = memo(function DiceBearAvatar({
   name,
   size = "default",
   className,
 }: DiceBearAvatarProps) {
   const seed = encodeURIComponent(name);
+  const initials = name
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
 
   return (
     <Avatar size={size} className={className}>
@@ -19,6 +26,7 @@ export function DiceBearAvatar({
         src={`https://api.dicebear.com/10.x/identicon/svg?rowColor=f5c211&backgroundColor=000000&seed=${seed}`}
         alt={name}
       />
+      <AvatarFallback>{initials}</AvatarFallback>
     </Avatar>
   );
-}
+});

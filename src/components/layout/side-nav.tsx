@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  Coins02Icon,
   Home01Icon,
   Logout01Icon,
   Notification01Icon,
@@ -21,6 +22,7 @@ const navItems = [
   { href: "/dashboard", label: "Home", icon: Home01Icon },
   { href: "/circles", label: "Circles", icon: UserGroupIcon },
   { href: "/wallet", label: "Wallet", icon: Wallet01Icon },
+  { href: "/payouts", label: "Payouts", icon: Coins02Icon },
   { href: "/profile", label: "Profile", icon: UserIcon },
   { href: "/settings", label: "Settings", icon: Settings01Icon },
   { href: "/notifications", label: "Notifications", icon: Notification01Icon },

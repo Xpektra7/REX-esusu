@@ -82,7 +82,7 @@ export function RightPanel() {
   });
 
   const notifications = (
-    (Array.isArray(notifRes?.data) ? notifRes.data : []) as NotificationItem[]
+    ((notifRes?.data as { items: NotificationItem[] } | undefined)?.items ?? []) as NotificationItem[]
   ).slice(0, 5);
   const transactions = (
     (txRes?.data as { transactions?: TransactionItem[] } | undefined)

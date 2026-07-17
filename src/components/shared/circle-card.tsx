@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import {
   Calendar01Icon,
   PiggyBankIcon,
@@ -23,7 +24,7 @@ const iconSet = [
 
 export type { CircleData };
 
-export function CircleCard({ circle }: { circle: CircleData }) {
+export const CircleCard = memo(function CircleCard({ circle }: { circle: CircleData }) {
   const idx = circle.name.length % iconSet.length;
   const Icon = iconSet[idx].icon;
   const progress =
@@ -97,4 +98,4 @@ export function CircleCard({ circle }: { circle: CircleData }) {
       </Card>
     </Link>
   );
-}
+});

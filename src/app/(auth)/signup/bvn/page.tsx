@@ -2,7 +2,7 @@
 
 import { IdVerifiedIcon, Shield01Icon } from "hugeicons-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -24,15 +24,15 @@ export default function BvnPage() {
   const [verifiedName, setVerifiedName] = useState("");
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!accessToken) {
-      router.replace("/signin");
-    } else if (!needsBvn) {
-      router.replace("/signup/pin");
-    }
-  }, [accessToken, needsBvn, router]);
+  if (!accessToken) {
+    router.replace("/signin");
+    return null;
+  }
 
-  if (!accessToken || !needsBvn) return null;
+  if (!needsBvn) {
+    router.replace("/signup/pin");
+    return null;
+  }
 
   const handleVerify = async () => {
     setError(null);

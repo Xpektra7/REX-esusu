@@ -25,19 +25,16 @@ function OtpForm() {
   const router = useRouter();
   const setAuth = useAuthStore((s) => s.setAuth);
 
-  const [email, setEmail] = useState("");
-  const [flow, setFlow] = useState("login");
-
-  useEffect(() => {
-    const storedEmail = sessionStorage.getItem("pending_email");
-    const storedFlow = sessionStorage.getItem("pending_flow");
-    if (storedEmail) {
-      setEmail(storedEmail);
-      if (storedFlow) setFlow(storedFlow);
-    } else {
-      router.replace("/auth");
-    }
-  }, [router]);
+  const [email, setEmail] = useState(() =>
+    typeof window !== "undefined"
+      ? sessionStorage.getItem("pending_email") || ""
+      : "",
+  );
+  const [flow, setFlow] = useState(() =>
+    typeof window !== "undefined"
+      ? sessionStorage.getItem("pending_flow") || "login"
+      : "login",
+  );
 
   const name =
     typeof window !== "undefined"
@@ -53,13 +50,8 @@ function OtpForm() {
       ? sessionStorage.getItem("pending_password") || ""
       : "";
 
-  useEffect(() => {
-    if (!email) {
-      router.replace("/auth");
-    }
-  }, [email, router]);
-
   if (!email) {
+    router.replace("/auth");
     return null;
   }
 

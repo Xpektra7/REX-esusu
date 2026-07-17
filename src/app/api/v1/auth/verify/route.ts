@@ -3,7 +3,7 @@ import { eq } from "drizzle-orm";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { db } from "@/db";
-import { users, virtualAccounts } from "@/db/schema";
+import { notifications, users, virtualAccounts } from "@/db/schema";
 import { error } from "@/lib/api-response";
 import {
   findUserByEmail,
@@ -181,6 +181,12 @@ export async function POST(req: NextRequest) {
         "VA provisioning failed (non-fatal):",
         vaErr instanceof Error ? vaErr.message : vaErr,
       );
+      await db.insert(notifications).values({
+        userId: user.id,
+        title: "Wallet setup pending",
+        body: "Your virtual account is being created. You'll be notified once it's ready to receive deposits.",
+        type: "payment",
+      });
     }
 
     const newToken = signToken(user.id, user.email, user.sessionVersion);
