@@ -1,12 +1,10 @@
 import type { Metadata, Viewport } from "next";
-import dynamic from "next/dynamic";
 import { Inter, Manrope } from "next/font/google";
 import { preconnect } from "react-dom";
 import "./globals.css";
 import { PwaRegister } from "@/components/pwa-register";
+import { ToasterWrapper } from "@/components/ui/toaster";
 import { cn } from "@/lib/utils";
-
-const Toaster = dynamic(() => import("sonner").then((m) => ({ default: m.Toaster })), { ssr: false });
 
 const inter = Inter({
   subsets: ["latin"],
@@ -56,7 +54,7 @@ export default function RootLayout({
       <head></head>
       <body className="min-h-full relative flex flex-col">
         {children}
-        <Toaster />
+        <ToasterWrapper />
         <PwaRegister />
       </body>
     </html>
