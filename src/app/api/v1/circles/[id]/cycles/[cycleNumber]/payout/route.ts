@@ -108,29 +108,33 @@ export async function POST(
       }
     }
 
-    const [payout] = await db
-      .insert(payoutTransactions)
-      .values({
-        cycleId: cycle.id,
-        recipientUserId: recipient.userId,
-        amountKobo: cycle.actualTotalKobo,
-        nombaTransferRef: transferRef,
-        status: "pending",
-        nombaResponse: nombaResp,
-      })
-      .returning();
+    const payout = await db.transaction(async (tx) => {
+      const [p] = await tx
+        .insert(payoutTransactions)
+        .values({
+          cycleId: cycle.id,
+          recipientUserId: recipient.userId,
+          amountKobo: cycle.actualTotalKobo,
+          nombaTransferRef: transferRef,
+          status: "pending",
+          nombaResponse: nombaResp,
+        })
+        .returning();
 
-    await db
-      .update(cycles)
-      .set({
-        status:
-          nombaResp?.status === "SUCCESS" ||
-          nombaResp?.data?.status === "SUCCESS"
-            ? "paid_out"
-            : "active",
-        closedAt: new Date(),
-      })
-      .where(eq(cycles.id, cycle.id));
+      await tx
+        .update(cycles)
+        .set({
+          status:
+            nombaResp?.status === "SUCCESS" ||
+            nombaResp?.data?.status === "SUCCESS"
+              ? "paid_out"
+              : "active",
+          closedAt: new Date(),
+        })
+        .where(eq(cycles.id, cycle.id));
+
+      return p;
+    });
 
     return success(
       {

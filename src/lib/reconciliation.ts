@@ -12,6 +12,8 @@ import {
   walletTransactions,
 } from "@/db/schema";
 
+type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
+
 type WebhookPayload = {
   event_type: string;
   requestId: string;
@@ -71,36 +73,19 @@ export async function reconcilePayment(payload: WebhookPayload) {
 
   const actual = Math.round((txn.transactionAmount || 0) * 100);
 
-  // Funds are NOT credited up front. Debt clearing (FIFO) and cycle allocation
-  // run below; only the unallocated remainder is credited to the wallet balance
-  // as a top-up at the end. This prevents the double-credit bug where the full
-  // amount was added to the balance AND allocated to contributions/debts.
-
   const ourRef = extractReference(txn.narration || "");
 
-  let _contribution: typeof contributions.$inferSelect | null = null;
-  if (ourRef) {
-    const results = await db
-      .select()
-      .from(contributions)
-      .where(eq(contributions.ourReference, ourRef))
-      .limit(1);
-    _contribution = results[0] || null;
-  }
-
   const mcIds = await getMemberCircleIds(va[0].userId);
+
+  // Pre-fetch expectations before the transaction (read-only)
   const perCircleExpected = await getExpectedPerActiveCircle(mcIds);
   const baseExpectedTotal = Object.values(perCircleExpected).reduce(
     (s, v) => s + v,
     0,
   );
-  // Case 4: include outstanding debts so classification reflects true obligation
   const outstandingDebts = await getOutstandingDebtsForMemberCircles(mcIds);
   const totalExpected = baseExpectedTotal + outstandingDebts;
 
-  // A payment with no contribution reference AND no outstanding dues is a plain
-  // wallet top-up. Credit it without flagging for review — "misdirected" is now
-  // reserved for when dues exist but the amount doesn't match (ratio out of range).
   let classification: Classification;
   if (totalExpected <= 0 && !ourRef) {
     classification = "topup";
@@ -109,89 +94,88 @@ export async function reconcilePayment(payload: WebhookPayload) {
   }
 
   if (classification === "misdirected") {
-    // Non-blocking: flag for review but still credit/allocate the funds below
-    // so legitimate payments are not rejected.
     await flagForReview(va[0], actual);
   }
 
-  let remaining = await applyFifoDebtClearing(va[0].userId, actual, va[0].id);
+  const result = await db.transaction(async (tx) => {
+    let remaining = await applyFifoDebtClearingTx(tx, va[0].userId, actual, va[0].id);
 
-  if (remaining > 0) {
-    remaining = await allocateToCycle(
-      va[0].userId,
-      remaining,
-      va[0].id,
-      classification,
-      perCircleExpected,
-    );
-  }
-
-  // Credit any unallocated remainder to the wallet balance as a top-up.
-  // Covers pure top-ups (no dues), overpayment excess, and any amount not
-  // consumed by debts + cycle contributions.
-  if (remaining > 0) {
-    await db
-      .update(virtualAccounts)
-      .set({ balanceKobo: sql`balance_kobo + ${remaining}` })
-      .where(eq(virtualAccounts.id, va[0].id));
-
-    await db
-      .insert(walletTransactions)
-      .values({
-        userId: va[0].userId,
-        type: "topup",
-        amountKobo: remaining,
-        reference: `topup_${txn.transactionId}`,
-        status: "success",
-        metadata: {
-          nombaRequestId: payload.requestId,
-          originalAmount: actual,
-          classification,
-        },
-      })
-      .onConflictDoNothing();
-
-    if (classification === "topup") {
-      await db.insert(notifications).values({
-        userId: va[0].userId,
-        title: "Top-up received",
-        body: `₦${(remaining / 100).toLocaleString()} has been added to your wallet.`,
-        type: "payment",
-      });
+    if (remaining > 0) {
+      remaining = await allocateToCycleTx(
+        tx,
+        va[0].userId,
+        remaining,
+        va[0].id,
+        classification,
+        perCircleExpected,
+      );
     }
-  }
 
-  if (classification === "underpayment") {
-    let contributionShortfallNotified = false;
-    for (const mcId of Object.keys(perCircleExpected)) {
-      const expectedAmt = perCircleExpected[mcId];
-      if (actual < expectedAmt) {
-        contributionShortfallNotified = true;
-        await db.insert(notifications).values({
+    if (remaining > 0) {
+      await tx
+        .update(virtualAccounts)
+        .set({ balanceKobo: sql`balance_kobo + ${remaining}` })
+        .where(eq(virtualAccounts.id, va[0].id));
+
+      await tx
+        .insert(walletTransactions)
+        .values({
           userId: va[0].userId,
-          title: "Underpayment detected",
-          body: `You paid ₦${(actual / 100).toLocaleString()} but ₦${(expectedAmt / 100).toLocaleString()} was expected. Grace period started.`,
+          type: "topup",
+          amountKobo: remaining,
+          reference: `topup_${txn.transactionId}`,
+          status: "success",
+          metadata: {
+            nombaRequestId: payload.requestId,
+            originalAmount: actual,
+            classification,
+          },
+        })
+        .onConflictDoNothing();
+
+      if (classification === "topup") {
+        await tx.insert(notifications).values({
+          userId: va[0].userId,
+          title: "Top-up received",
+          body: `₦${(remaining / 100).toLocaleString()} has been added to your wallet.`,
           type: "payment",
         });
       }
     }
-    // Gap A: underpayment due to debt, not contribution shortfall
-    if (!contributionShortfallNotified && outstandingDebts > 0) {
-      await db.insert(notifications).values({
-        userId: va[0].userId,
-        title: "Debt deducted from payment",
-        body: `₦${(outstandingDebts / 100).toLocaleString()} debt was cleared from your payment. Your cycle contribution was reduced.`,
-        type: "payment",
-      });
+
+    if (classification === "underpayment") {
+      let contributionShortfallNotified = false;
+      for (const mcId of Object.keys(perCircleExpected)) {
+        const expectedAmt = perCircleExpected[mcId];
+        if (actual < expectedAmt) {
+          contributionShortfallNotified = true;
+          await tx.insert(notifications).values({
+            userId: va[0].userId,
+            title: "Underpayment detected",
+            body: `You paid ₦${(actual / 100).toLocaleString()} but ₦${(expectedAmt / 100).toLocaleString()} was expected. Grace period started.`,
+            type: "payment",
+          });
+        }
+      }
+      if (!contributionShortfallNotified && outstandingDebts > 0) {
+        await tx.insert(notifications).values({
+          userId: va[0].userId,
+          title: "Debt deducted from payment",
+          body: `₦${(outstandingDebts / 100).toLocaleString()} debt was cleared from your payment. Your cycle contribution was reduced.`,
+          type: "payment",
+        });
+      }
     }
-  }
+
+    return { remaining };
+  });
 
   return {
     status: "reconciled",
     classification,
     actual,
     totalExpected,
-    allocated: actual - remaining,
+    allocated: actual - result.remaining,
   };
 }
 
@@ -316,6 +300,50 @@ async function applyFifoDebtClearing(
   return remaining;
 }
 
+async function applyFifoDebtClearingTx(
+  tx: Tx,
+  userId: string,
+  amountKobo: number,
+  _vaId: string,
+): Promise<number> {
+  const mcIds = await getMemberCircleIds(userId);
+  if (mcIds.length === 0) return amountKobo;
+
+  const activeDebts = await tx
+    .select()
+    .from(debts)
+    .where(
+      and(inArray(debts.debtorMemberId, mcIds), eq(debts.status, "active")),
+    )
+    .orderBy(asc(debts.createdAt));
+
+  let remaining = amountKobo;
+
+  for (const debt of activeDebts) {
+    const debtRemaining = debt.amountKobo - debt.paidKobo;
+    if (remaining >= debtRemaining) {
+      remaining -= debtRemaining;
+      await tx
+        .update(debts)
+        .set({
+          paidKobo: debt.amountKobo,
+          status: "cleared",
+          clearedAt: new Date(),
+        })
+        .where(eq(debts.id, debt.id));
+    } else {
+      await tx
+        .update(debts)
+        .set({ paidKobo: debt.paidKobo + remaining })
+        .where(eq(debts.id, debt.id));
+      remaining = 0;
+      break;
+    }
+  }
+
+  return remaining;
+}
+
 async function allocateToCycle(
   _userId: string,
   amountKobo: number,
@@ -369,6 +397,60 @@ async function allocateToCycle(
   return remaining;
 }
 
+async function allocateToCycleTx(
+  tx: Tx,
+  _userId: string,
+  amountKobo: number,
+  vaId: string,
+  classification: Classification,
+  expected: Record<string, number>,
+): Promise<number> {
+  let remaining = amountKobo;
+  const sortedEntries = Object.entries(expected).sort(([a], [b]) =>
+    a.localeCompare(b),
+  );
+  for (const [mcId, expectedAmt] of sortedEntries) {
+    if (remaining <= 0) break;
+
+    const [mc] = await tx
+      .select({ circleId: membersCircles.circleId })
+      .from(membersCircles)
+      .where(eq(membersCircles.id, mcId))
+      .limit(1);
+    if (!mc) continue;
+
+    const [activeCycle] = await tx
+      .select()
+      .from(cycles)
+      .where(and(eq(cycles.circleId, mc.circleId), eq(cycles.status, "active")))
+      .limit(1);
+    if (!activeCycle) continue;
+
+    const alloc = Math.min(remaining, expectedAmt);
+    if (alloc <= 0) continue;
+
+    await tx.insert(contributions).values({
+      memberCircleId: mcId,
+      cycleId: activeCycle.id,
+      virtualAccountId: vaId,
+      amountKobo: alloc,
+      appliedKobo: alloc,
+      status: classification === "underpayment" ? "partial" : "fully_applied",
+      reconciledAt: new Date(),
+    });
+
+    await tx
+      .update(cycles)
+      .set({
+        actualTotalKobo: sql`actual_total_kobo + ${alloc}`,
+      })
+      .where(eq(cycles.id, activeCycle.id));
+
+    remaining -= alloc;
+  }
+  return remaining;
+}
+
 // ---------------------------------------------------------------------------
 // reconcileCycle — closes a cycle, creates debts, advances to next cycle
 // ---------------------------------------------------------------------------
@@ -403,7 +485,6 @@ export async function reconcileCycle(cycleId: string) {
 
   if (members.length === 0) throw new Error("No active members");
 
-  // Pre-fetch member names once
   const memberInfo = await Promise.all(
     members.map(async (mc) => {
       const [user] = await db
@@ -422,207 +503,208 @@ export async function reconcileCycle(cycleId: string) {
     memberInfo.find((m) => m.mcId === cycle.recipientMemberId)?.name ||
     "Unknown";
 
-  let totalPaid = 0;
-  const missedPayers: Array<{
-    memberId: string;
-    name: string;
-    deficit: number;
-  }> = [];
-  const debtsCreated: Array<{
-    debtorName: string;
-    debtorId: string;
-    creditorName: string;
-    amountKobo: number;
-  }> = [];
+  const result = await db.transaction(async (tx) => {
+    let totalPaid = 0;
+    const missedPayers: Array<{
+      memberId: string;
+      name: string;
+      deficit: number;
+    }> = [];
+    const debtsCreated: Array<{
+      debtorName: string;
+      debtorId: string;
+      creditorName: string;
+      amountKobo: number;
+    }> = [];
 
-  // Single pass: compute contributions, insert debts, build response, create notifications
-  for (const mc of members) {
-    const memberContribs = await db
-      .select({ sum: sql<number>`coalesce(sum(amount_kobo), 0)` })
-      .from(contributions)
-      .where(
-        and(
-          eq(contributions.memberCircleId, mc.id),
-          eq(contributions.cycleId, cycle.id),
-        ),
-      );
-    const paidKobo = Number(memberContribs[0]?.sum) || 0;
-    totalPaid += paidKobo;
-
-    const userName =
-      memberInfo.find((m) => m.mcId === mc.id)?.name || "Unknown";
-
-    if (paidKobo < circle.contributionAmountKobo) {
-      const deficit = circle.contributionAmountKobo - paidKobo;
-
-      await db.insert(debts).values({
-        cycleId: cycle.id,
-        debtorMemberId: mc.id,
-        creditorMemberId: cycle.recipientMemberId,
-        amountKobo: deficit,
-        paidKobo: 0,
-        status: "active",
-      });
-
-      await db
-        .update(membersCircles)
-        .set({
-          missedCycles: sql`missed_cycles + 1`,
-        })
-        .where(eq(membersCircles.id, mc.id));
-
-      missedPayers.push({ memberId: mc.id, name: userName, deficit });
-      debtsCreated.push({
-        debtorName: userName,
-        debtorId: mc.id,
-        creditorName: recipientName,
-        amountKobo: deficit,
-      });
-
-      await db.insert(notifications).values({
-        userId: mc.userId,
-        title: "Debt recorded for missed contribution",
-        body: `Cycle ${cycle.cycleNumber} shortfall of ₦${(deficit / 100).toLocaleString()} recorded. This amount carries forward.`,
-        type: "payment",
-      });
-    }
-
-    if (paidKobo > circle.contributionAmountKobo) {
-      const excess = paidKobo - circle.contributionAmountKobo;
-      const [va] = await db
-        .select()
-        .from(virtualAccounts)
+    for (const mc of members) {
+      const memberContribs = await tx
+        .select({ sum: sql<number>`coalesce(sum(amount_kobo), 0)` })
+        .from(contributions)
         .where(
           and(
-            eq(virtualAccounts.userId, mc.userId),
-            eq(virtualAccounts.type, "personal"),
-          ),
-        )
-        .limit(1);
-      if (va) {
-        await db
-          .update(virtualAccounts)
-          .set({
-            balanceKobo: sql`balance_kobo + ${excess}`,
-          })
-          .where(eq(virtualAccounts.id, va.id));
-      }
-    }
-  }
-
-  // Close the cycle
-  await db
-    .update(cycles)
-    .set({
-      actualTotalKobo: totalPaid,
-      status: "closed",
-      closedAt: new Date(),
-    })
-    .where(eq(cycles.id, cycle.id));
-
-  // Advance to next cycle
-  let nextCycle = null;
-  if (cycle.cycleNumber < circle.cycleCount) {
-    const nextCycleNumber = cycle.cycleNumber + 1;
-    const nextRecipientIndex = (nextCycleNumber - 1) % members.length;
-    const nextRecipient = members[nextRecipientIndex];
-    if (nextRecipient) {
-      const deadlineHours =
-        circle.gracePeriodHours || (circle.frequency === "weekly" ? 24 : 72);
-      [nextCycle] = await db
-        .insert(cycles)
-        .values({
-          circleId: circle.id,
-          recipientMemberId: nextRecipient.id,
-          cycleNumber: nextCycleNumber,
-          expectedTotalKobo: circle.contributionAmountKobo * members.length,
-          actualTotalKobo: 0,
-          status: "active",
-          startsAt: new Date(),
-          deadlineAt: new Date(Date.now() + deadlineHours * 60 * 60 * 1000),
-        })
-        .returning();
-
-      await db
-        .update(circles)
-        .set({ currentCycle: nextCycleNumber })
-        .where(eq(circles.id, circle.id));
-
-      // Case 4: gather active debts per member for the next-cycle notification
-      const memberDebtMap = new Map<string, number>();
-      const allActiveDebts = await db
-        .select({
-          debtorMemberId: debts.debtorMemberId,
-          remaining: sql<number>`amount_kobo - paid_kobo`,
-        })
-        .from(debts)
-        .where(
-          and(
-            inArray(
-              debts.debtorMemberId,
-              members.map((m) => m.id),
-            ),
-            eq(debts.status, "active"),
+            eq(contributions.memberCircleId, mc.id),
+            eq(contributions.cycleId, cycle.id),
           ),
         );
-      for (const d of allActiveDebts) {
-        const current = memberDebtMap.get(d.debtorMemberId) || 0;
-        memberDebtMap.set(d.debtorMemberId, current + Number(d.remaining));
-      }
+      const paidKobo = Number(memberContribs[0]?.sum) || 0;
+      totalPaid += paidKobo;
 
-      for (const mc of members) {
-        const outstandingDebt = memberDebtMap.get(mc.id) || 0;
-        const totalRequired = circle.contributionAmountKobo + outstandingDebt;
-        const formattedContribution = `₦${(circle.contributionAmountKobo / 100).toLocaleString()}`;
-        const deadline = nextCycle.deadlineAt?.toLocaleDateString() ?? "N/A";
-        const body =
-          outstandingDebt > 0
-            ? `Contribute ₦${(totalRequired / 100).toLocaleString()} (${formattedContribution} + ₦${(outstandingDebt / 100).toLocaleString()} debt) by ${deadline}.`
-            : `Contribute ${formattedContribution} by ${deadline}.`;
+      const userName =
+        memberInfo.find((m) => m.mcId === mc.id)?.name || "Unknown";
 
-        await db.insert(notifications).values({
+      if (paidKobo < circle.contributionAmountKobo) {
+        const deficit = circle.contributionAmountKobo - paidKobo;
+
+        await tx.insert(debts).values({
+          cycleId: cycle.id,
+          debtorMemberId: mc.id,
+          creditorMemberId: cycle.recipientMemberId,
+          amountKobo: deficit,
+          paidKobo: 0,
+          status: "active",
+        });
+
+        await tx
+          .update(membersCircles)
+          .set({
+            missedCycles: sql`missed_cycles + 1`,
+          })
+          .where(eq(membersCircles.id, mc.id));
+
+        missedPayers.push({ memberId: mc.id, name: userName, deficit });
+        debtsCreated.push({
+          debtorName: userName,
+          debtorId: mc.id,
+          creditorName: recipientName,
+          amountKobo: deficit,
+        });
+
+        await tx.insert(notifications).values({
           userId: mc.userId,
-          title: `Cycle ${nextCycleNumber} started`,
-          body,
-          type: "cycle",
+          title: "Debt recorded for missed contribution",
+          body: `Cycle ${cycle.cycleNumber} shortfall of ₦${(deficit / 100).toLocaleString()} recorded. This amount carries forward.`,
+          type: "payment",
         });
       }
+
+      if (paidKobo > circle.contributionAmountKobo) {
+        const excess = paidKobo - circle.contributionAmountKobo;
+        const [va] = await tx
+          .select()
+          .from(virtualAccounts)
+          .where(
+            and(
+              eq(virtualAccounts.userId, mc.userId),
+              eq(virtualAccounts.type, "personal"),
+            ),
+          )
+          .limit(1);
+        if (va) {
+          await tx
+            .update(virtualAccounts)
+            .set({
+              balanceKobo: sql`balance_kobo + ${excess}`,
+            })
+            .where(eq(virtualAccounts.id, va.id));
+        }
+      }
     }
-  }
 
-  // Notify recipient
-  const recipientInfo = memberInfo.find(
-    (m) => m.mcId === cycle.recipientMemberId,
-  );
-  if (recipientInfo) {
-    await db.insert(notifications).values({
-      userId: recipientInfo.userId,
-      title: `Cycle ${cycle.cycleNumber} payout`,
-      body: `₦${(totalPaid / 100).toLocaleString()} collected for your cycle.${totalPaid < cycle.expectedTotalKobo ? ` Shortfall ₦${((cycle.expectedTotalKobo - totalPaid) / 100).toLocaleString()} tracked as debts.` : ""}`,
-      type: "payout",
-    });
-  }
+    await tx
+      .update(cycles)
+      .set({
+        actualTotalKobo: totalPaid,
+        status: "closed",
+        closedAt: new Date(),
+      })
+      .where(eq(cycles.id, cycle.id));
 
-  const isLastCycle = cycle.cycleNumber >= circle.cycleCount;
-  if (isLastCycle) {
-    await db
-      .update(circles)
-      .set({ status: "completed" })
-      .where(eq(circles.id, circle.id));
-  }
+    let nextCycle = null;
+    if (cycle.cycleNumber < circle.cycleCount) {
+      const nextCycleNumber = cycle.cycleNumber + 1;
+      const nextRecipientIndex = (nextCycleNumber - 1) % members.length;
+      const nextRecipient = members[nextRecipientIndex];
+      if (nextRecipient) {
+        const deadlineHours =
+          circle.gracePeriodHours || (circle.frequency === "weekly" ? 24 : 72);
+        [nextCycle] = await tx
+          .insert(cycles)
+          .values({
+            circleId: circle.id,
+            recipientMemberId: nextRecipient.id,
+            cycleNumber: nextCycleNumber,
+            expectedTotalKobo: circle.contributionAmountKobo * members.length,
+            actualTotalKobo: 0,
+            status: "active",
+            startsAt: new Date(),
+            deadlineAt: new Date(Date.now() + deadlineHours * 60 * 60 * 1000),
+          })
+          .returning();
+
+        await tx
+          .update(circles)
+          .set({ currentCycle: nextCycleNumber })
+          .where(eq(circles.id, circle.id));
+
+        const memberDebtMap = new Map<string, number>();
+        const allActiveDebts = await tx
+          .select({
+            debtorMemberId: debts.debtorMemberId,
+            remaining: sql<number>`amount_kobo - paid_kobo`,
+          })
+          .from(debts)
+          .where(
+            and(
+              inArray(
+                debts.debtorMemberId,
+                members.map((m) => m.id),
+              ),
+              eq(debts.status, "active"),
+            ),
+          );
+        for (const d of allActiveDebts) {
+          const current = memberDebtMap.get(d.debtorMemberId) || 0;
+          memberDebtMap.set(d.debtorMemberId, current + Number(d.remaining));
+        }
+
+        for (const mc of members) {
+          const outstandingDebt = memberDebtMap.get(mc.id) || 0;
+          const totalRequired = circle.contributionAmountKobo + outstandingDebt;
+          const formattedContribution = `₦${(circle.contributionAmountKobo / 100).toLocaleString()}`;
+          const deadline = nextCycle.deadlineAt?.toLocaleDateString() ?? "N/A";
+          const body =
+            outstandingDebt > 0
+              ? `Contribute ₦${(totalRequired / 100).toLocaleString()} (${formattedContribution} + ₦${(outstandingDebt / 100).toLocaleString()} debt) by ${deadline}.`
+              : `Contribute ${formattedContribution} by ${deadline}.`;
+
+          await tx.insert(notifications).values({
+            userId: mc.userId,
+            title: `Cycle ${nextCycleNumber} started`,
+            body,
+            type: "cycle",
+          });
+        }
+      }
+    }
+
+    const recipientInfo = memberInfo.find(
+      (m) => m.mcId === cycle.recipientMemberId,
+    );
+    if (recipientInfo) {
+      await tx.insert(notifications).values({
+        userId: recipientInfo.userId,
+        title: `Cycle ${cycle.cycleNumber} payout`,
+        body: `₦${(totalPaid / 100).toLocaleString()} collected for your cycle.${totalPaid < cycle.expectedTotalKobo ? ` Shortfall ₦${((cycle.expectedTotalKobo - totalPaid) / 100).toLocaleString()} tracked as debts.` : ""}`,
+        type: "payout",
+      });
+    }
+
+    const isLastCycle = cycle.cycleNumber >= circle.cycleCount;
+    if (isLastCycle) {
+      await tx
+        .update(circles)
+        .set({ status: "completed" })
+        .where(eq(circles.id, circle.id));
+    }
+
+    return { totalPaid, missedPayers, debtsCreated, nextCycle, isLastCycle };
+  });
+
+  const isLastCycle = result.isLastCycle;
 
   return {
     cycleNumber: cycle.cycleNumber,
     totalExpectedKobo: cycle.expectedTotalKobo,
-    totalPaidKobo: totalPaid,
-    shortfallKobo: cycle.expectedTotalKobo - totalPaid,
-    debtsCreated,
-    missedPayers,
-    nextCycle: nextCycle
+    totalPaidKobo: result.totalPaid,
+    shortfallKobo: cycle.expectedTotalKobo - result.totalPaid,
+    debtsCreated: result.debtsCreated,
+    missedPayers: result.missedPayers,
+    nextCycle: result.nextCycle
       ? {
-          cycleNumber: nextCycle.cycleNumber,
-          id: nextCycle.id,
-          deadlineAt: nextCycle.deadlineAt,
+          cycleNumber: result.nextCycle.cycleNumber,
+          id: result.nextCycle.id,
+          deadlineAt: result.nextCycle.deadlineAt,
         }
       : null,
     circleCompleted: isLastCycle,

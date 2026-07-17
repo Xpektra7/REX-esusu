@@ -73,61 +73,67 @@ export async function POST(req: NextRequest) {
       return error("Already contributed for this cycle", "05", 409);
     }
 
-    // Atomic balance deduction — check-and-decrement in one SQL statement
-    const [va] = await db
-      .update(virtualAccounts)
-      .set({ balanceKobo: sql`balance_kobo - ${amountKobo}` })
-      .where(
-        and(
-          eq(virtualAccounts.userId, auth.user?.userId),
-          eq(virtualAccounts.type, "personal"),
-          gte(virtualAccounts.balanceKobo, amountKobo),
-        ),
-      )
-      .returning();
+    // Atomic balance deduction + contribution + wallet tx in a single transaction
+    const result = await db.transaction(async (tx) => {
+      const [va] = await tx
+        .update(virtualAccounts)
+        .set({ balanceKobo: sql`balance_kobo - ${amountKobo}` })
+        .where(
+          and(
+            eq(virtualAccounts.userId, auth.user?.userId),
+            eq(virtualAccounts.type, "personal"),
+            gte(virtualAccounts.balanceKobo, amountKobo),
+          ),
+        )
+        .returning();
 
-    if (!va) {
+      if (!va) {
+        return { kind: "insufficient" as const };
+      }
+
+      const timestamp = Date.now().toString(36);
+      const ourReference = `CONTRIB_${circleId.slice(0, 8)}_${cycleNumber}_${auth.user?.userId.slice(0, 8)}_${timestamp}`;
+
+      const [contribution] = await tx
+        .insert(contributions)
+        .values({
+          memberCircleId: membership.id,
+          cycleId: currentCycle.id,
+          virtualAccountId: va.id,
+          amountKobo,
+          appliedKobo: amountKobo,
+          status: "fully_applied",
+          ourReference,
+          reconciledAt: new Date(),
+        })
+        .returning();
+
+      await tx
+        .insert(walletTransactions)
+        .values({
+          userId: auth.user?.userId,
+          type: "contribution",
+          amountKobo,
+          reference: ourReference,
+          status: "success",
+          metadata: {
+            circleId,
+            cycleId: currentCycle.id,
+            contributionId: contribution.id,
+          },
+        })
+        .onConflictDoNothing();
+
+      return { kind: "success" as const, contribution, ourReference };
+    });
+
+    if (result.kind === "insufficient") {
       return error("Insufficient balance. Top up your VA first.", "07");
     }
 
-    const timestamp = Date.now().toString(36);
-    const ourReference = `CONTRIB_${circleId.slice(0, 8)}_${cycleNumber}_${auth.user?.userId.slice(0, 8)}_${timestamp}`;
-
-    const [contribution] = await db
-      .insert(contributions)
-      .values({
-        memberCircleId: membership.id,
-        cycleId: currentCycle.id,
-        virtualAccountId: va.id,
-        amountKobo,
-        appliedKobo: amountKobo,
-        status: "fully_applied",
-        ourReference,
-        reconciledAt: new Date(),
-      })
-      .returning();
-
-    // Record the debit on the wallet ledger so it appears in the user's
-    // transaction history (the balance was already deducted above).
-    await db
-      .insert(walletTransactions)
-      .values({
-        userId: auth.user?.userId,
-        type: "contribution",
-        amountKobo,
-        reference: ourReference,
-        status: "success",
-        metadata: {
-          circleId,
-          cycleId: currentCycle.id,
-          contributionId: contribution.id,
-        },
-      })
-      .onConflictDoNothing();
-
     return success(
       {
-        ourReference,
+        ourReference: result.ourReference,
         amountKobo,
       },
       "Contribution recorded",
