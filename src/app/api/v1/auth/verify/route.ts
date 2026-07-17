@@ -13,7 +13,6 @@ import {
 import { nombaPost } from "@/lib/nomba";
 import { verifyOtp } from "@/lib/otp";
 
-const SANDBOX_URL = "https://sandbox.nomba.com/v1";
 const ALGO = "aes-256-gcm";
 
 function encryptBvn(plaintext: string): string {
@@ -35,49 +34,28 @@ async function provisionVirtualAccount(
   bvn?: string,
 ) {
   const subAccountId = process.env.NOMBA_SUB_ACCOUNT_ID || "";
-  const baseUrl = process.env.NOMBA_BASE_URL || "https://api.nomba.com/v1";
-  const isLive = !baseUrl.includes("sandbox");
-
-  async function createVA(url: string): Promise<Record<string, unknown>> {
-    const vaPath = subAccountId
-      ? `/v1/accounts/virtual/${subAccountId}`
-      : "/v1/accounts/virtual";
-    const result = await nombaPost(
-      vaPath,
-      {
-        accountRef: userId,
-        accountName,
-        bvn: bvn || "",
-        expiryDate: "2027-12-31",
-      },
-      url,
-    );
-    const vaBody = result?.data || result;
-    if (vaBody) {
-      await db.insert(virtualAccounts).values({
-        userId,
-        accountNumber: vaBody.bankAccountNumber || vaBody.accountNumber,
-        accountName: vaBody.bankAccountName || vaBody.accountName,
-        bankCode: vaBody.bankName || vaBody.bank || vaBody.bankCode,
-        accountRef: vaBody.accountRef,
-        type: "personal",
-      });
-    }
-    return vaBody;
+  const vaPath = subAccountId
+    ? `/v1/accounts/virtual/${subAccountId}`
+    : "/v1/accounts/virtual";
+  const result = await nombaPost(vaPath, {
+    accountRef: userId,
+    accountName,
+    bvn: bvn || "",
+    expiryDate: "2027-12-31",
+  });
+  const vaBody = result?.data || result;
+  if (!vaBody?.bankAccountNumber && !vaBody?.accountNumber) {
+    throw new Error("Nomba VA creation returned no account number");
   }
-
-  try {
-    return await createVA(baseUrl);
-  } catch (err) {
-    if (isLive) {
-      console.warn(
-        "Production VA creation failed, falling back to sandbox:",
-        (err as Error).message,
-      );
-      return await createVA(SANDBOX_URL);
-    }
-    throw err;
-  }
+  await db.insert(virtualAccounts).values({
+    userId,
+    accountNumber: vaBody.bankAccountNumber || vaBody.accountNumber,
+    accountName: vaBody.bankAccountName || vaBody.accountName,
+    bankCode: vaBody.bankCode || "",
+    accountRef: vaBody.accountRef,
+    type: "personal",
+  });
+  return vaBody;
 }
 
 export async function POST(req: NextRequest) {
@@ -149,9 +127,15 @@ export async function POST(req: NextRequest) {
     try {
       await provisionVirtualAccount(user.id, name, bvn);
     } catch (vaErr) {
+      await db.delete(users).where(eq(users.id, user.id));
       console.error(
-        "VA provisioning failed (non-fatal):",
+        "VA provisioning failed, user creation rolled back:",
         vaErr instanceof Error ? vaErr.message : vaErr,
+      );
+      return error(
+        "Account creation failed. Please try again.",
+        "01",
+        500,
       );
     }
 

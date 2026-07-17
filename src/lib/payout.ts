@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
-import { cycles, payoutTransactions } from "@/db/schema";
+import { cycles, payoutTransactions, walletTransactions } from "@/db/schema";
 
 export async function handlePayoutSuccess(payload: {
   event_type: string;
@@ -40,6 +40,19 @@ export async function handlePayoutSuccess(payload: {
     .update(cycles)
     .set({ status: "paid_out" })
     .where(eq(cycles.id, payout.cycleId));
+
+  // Record in wallet transaction history
+  await db
+    .insert(walletTransactions)
+    .values({
+      userId: payout.recipientUserId,
+      type: "credit",
+      amountKobo: payout.amountKobo,
+      reference: payout.nombaTransferRef || payout.id,
+      status: "success",
+      metadata: { payoutId: payout.id, cycleId: payout.cycleId },
+    })
+    .onConflictDoNothing();
 }
 
 export async function handlePayoutFailed(payload: {
