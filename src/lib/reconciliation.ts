@@ -633,7 +633,7 @@ export async function reconcileCycle(cycleId: string) {
       .where(eq(cycles.id, cycle.id));
 
     let nextCycle = null;
-    if (cycle.cycleNumber < circle.cycleCount) {
+    if (!circle.cycleCount || cycle.cycleNumber < circle.cycleCount) {
       const nextCycleNumber = cycle.cycleNumber + 1;
       const nextRecipientIndex = (nextCycleNumber - 1) % members.length;
       const nextRecipient = members[nextRecipientIndex];
@@ -712,7 +712,7 @@ export async function reconcileCycle(cycleId: string) {
       });
     }
 
-    const isLastCycle = cycle.cycleNumber >= circle.cycleCount;
+    const isLastCycle = circle.cycleCount !== null && cycle.cycleNumber >= circle.cycleCount;
     if (isLastCycle) {
       await tx
         .update(circles)

@@ -52,7 +52,7 @@ export const createCircleSchema = z.object({
     .min(10, "Minimum contribution is ₦10")
     .max(10_000_000),
   frequency: z.enum(["daily", "weekly", "monthly"]),
-  cycleCount: z.number().min(1).max(100),
+  cycleCount: z.number().min(1).max(100).optional(), // omit for continuous
   defaultResolutionRule: z
     .enum(["absorb", "shrink", "end_early"])
     .default("absorb"),

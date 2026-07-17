@@ -99,9 +99,9 @@ export async function POST(req: NextRequest) {
       capacityEnabled,
       maxMembers,
     } = await req.json();
-    if (!name || !contributionAmountKobo || !frequency || !cycleCount) {
+    if (!name || !contributionAmountKobo || !frequency) {
       return error(
-        "name, contributionAmountKobo, frequency, and cycleCount are required",
+        "name, contributionAmountKobo, and frequency are required",
       );
     }
 

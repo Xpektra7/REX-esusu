@@ -1352,7 +1352,7 @@ export const api = {
       name: string;
       contributionAmountKobo: number;
       frequency: string;
-      cycleCount: number;
+      cycleCount?: number;
     }) =>
       request<{ id: string; inviteCode: string }>("/circles", {
         method: "POST",

@@ -20,7 +20,7 @@ const initial = {
   name: "",
   contributionAmount: 0,
   frequency: "weekly" as const,
-  cycleCount: 0,
+  cycleCount: undefined as number | undefined,
 };
 
 export default function CreateCirclePage() {
@@ -34,7 +34,7 @@ export default function CreateCirclePage() {
       name: string;
       contributionAmountKobo: number;
       frequency: "daily" | "weekly" | "monthly";
-      cycleCount: number;
+      cycleCount?: number;
     }) => api.circles.create(data),
     onSuccess: (res: { data: { id: string } }) => {
       toast.success("Circle created!");
@@ -45,7 +45,7 @@ export default function CreateCirclePage() {
     },
   });
 
-  function handleChange(field: keyof typeof initial, value: string | number) {
+  function handleChange(field: keyof typeof initial, value: string | number | undefined) {
     setForm((prev) => ({ ...prev, [field]: value }));
     setErrors((prev) => ({ ...prev, [field]: undefined }));
   }
@@ -185,10 +185,13 @@ export default function CreateCirclePage() {
               type="number"
               min={1}
               max={100}
-              placeholder="12"
-              value={form.cycleCount || ""}
+              placeholder="12 (leave empty for continuous)"
+              value={form.cycleCount ?? ""}
               onChange={(e) =>
-                handleChange("cycleCount", Number(e.target.value))
+                handleChange(
+                  "cycleCount",
+                  e.target.value === "" ? undefined : Number(e.target.value),
+                )
               }
               aria-invalid={!!errors.cycleCount}
             />
