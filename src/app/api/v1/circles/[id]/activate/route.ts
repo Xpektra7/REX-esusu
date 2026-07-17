@@ -64,42 +64,43 @@ export async function POST(
       .where(eq(membersCircles.circleId, id))
       .orderBy(membersCircles.joinedAt);
 
-    // Update any members without a rotation order
-    for (let i = 0; i < members.length; i++) {
-      if (!members[i].rotationOrder) {
-        await db
-          .update(membersCircles)
-          .set({ rotationOrder: i + 1 })
-          .where(eq(membersCircles.id, members[i].id));
+    const cycle = await db.transaction(async (tx) => {
+      for (let i = 0; i < members.length; i++) {
+        if (!members[i].rotationOrder) {
+          await tx
+            .update(membersCircles)
+            .set({ rotationOrder: i + 1 })
+            .where(eq(membersCircles.id, members[i].id));
+        }
       }
-    }
 
-    // Create Cycle 1
-    const [cycle] = await db
-      .insert(cycles)
-      .values({
-        circleId: id,
-        recipientMemberId: members[0].id, // First member in rotation gets first payout
-        cycleNumber: 1,
-        expectedTotalKobo:
-          circle.contributionAmountKobo * Number(memberCount.count),
-        actualTotalKobo: 0,
-        status: "active",
-        startsAt: new Date(),
-        deadlineAt: new Date(
-          Date.now() + circle.cyclePeriodDays * 24 * 60 * 60 * 1000,
-        ),
-      })
-      .returning();
+      const [c] = await tx
+        .insert(cycles)
+        .values({
+          circleId: id,
+          recipientMemberId: members[0].id,
+          cycleNumber: 1,
+          expectedTotalKobo:
+            circle.contributionAmountKobo * Number(memberCount.count),
+          actualTotalKobo: 0,
+          status: "active",
+          startsAt: new Date(),
+          deadlineAt: new Date(
+            Date.now() + circle.cyclePeriodDays * 24 * 60 * 60 * 1000,
+          ),
+        })
+        .returning();
 
-    // Update circle status to active and set current cycle
-    await db
-      .update(circles)
-      .set({
-        status: "active",
-        currentCycle: 1,
-      })
-      .where(eq(circles.id, id));
+      await tx
+        .update(circles)
+        .set({
+          status: "active",
+          currentCycle: 1,
+        })
+        .where(eq(circles.id, id));
+
+      return c;
+    });
 
     return success(
       {
