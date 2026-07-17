@@ -202,43 +202,64 @@ async function getMemberCircleIds(userId: string): Promise<string[]> {
 async function getExpectedPerActiveCircle(
   mcIds: string[],
 ): Promise<Record<string, number>> {
+  if (mcIds.length === 0) return {};
+
+  const membersList = await db
+    .select()
+    .from(membersCircles)
+    .where(inArray(membersCircles.id, mcIds));
+
+  const circleIds = membersList.map((m) => m.circleId);
+  const circlesList = await db
+    .select()
+    .from(circles)
+    .where(inArray(circles.id, circleIds));
+  const circlesMap = new Map(circlesList.map((c) => [c.id, c]));
+
+  const activeCycles = await db
+    .select()
+    .from(cycles)
+    .where(
+      and(
+        inArray(cycles.circleId, circleIds),
+        eq(cycles.status, "active"),
+      ),
+    );
+  const activeCyclesByCircle = new Map(
+    activeCycles.map((c) => [c.circleId, c]),
+  );
+
+  const allContributions = await db
+    .select({
+      memberCircleId: contributions.memberCircleId,
+      cycleId: contributions.cycleId,
+      sum: sql<number>`coalesce(sum(amount_kobo), 0)`,
+    })
+    .from(contributions)
+    .where(
+      and(
+        inArray(contributions.memberCircleId, mcIds),
+        inArray(
+          contributions.cycleId,
+          activeCycles.map((c) => c.id),
+        ),
+      ),
+    )
+    .groupBy(contributions.memberCircleId, contributions.cycleId);
+  const paidMap = new Map(
+    allContributions.map((c) => [`${c.memberCircleId}:${c.cycleId}`, c.sum]),
+  );
+
   const result: Record<string, number> = {};
-  for (const mcId of mcIds) {
-    const [mc] = await db
-      .select({ circleId: membersCircles.circleId })
-      .from(membersCircles)
-      .where(eq(membersCircles.id, mcId))
-      .limit(1);
-    if (!mc) continue;
-
-    const [activeCycle] = await db
-      .select({ id: cycles.id })
-      .from(cycles)
-      .where(and(eq(cycles.circleId, mc.circleId), eq(cycles.status, "active")))
-      .limit(1);
-    if (!activeCycle) continue;
-
-    const [circle] = await db
-      .select({ contributionAmountKobo: circles.contributionAmountKobo })
-      .from(circles)
-      .where(eq(circles.id, mc.circleId))
-      .limit(1);
+  for (const mc of membersList) {
+    const circle = circlesMap.get(mc.circleId);
     if (!circle) continue;
 
-    const paid = await db
-      .select({ sum: sql<number>`coalesce(sum(amount_kobo), 0)` })
-      .from(contributions)
-      .where(
-        and(
-          eq(contributions.memberCircleId, mcId),
-          eq(contributions.cycleId, activeCycle.id),
-        ),
-      );
+    const activeCycle = activeCyclesByCircle.get(mc.circleId);
+    if (!activeCycle) continue;
 
-    result[mcId] = Math.max(
-      0,
-      circle.contributionAmountKobo - (Number(paid[0]?.sum) || 0),
-    );
+    const paid = paidMap.get(`${mc.id}:${activeCycle.id}`) || 0;
+    result[mc.id] = Math.max(0, circle.contributionAmountKobo - paid);
   }
   return result;
 }
@@ -486,20 +507,21 @@ export async function reconcileCycle(cycleId: string) {
 
   if (members.length === 0) throw new Error("No active members");
 
-  const memberInfo = await Promise.all(
-    members.map(async (mc) => {
-      const [user] = await db
-        .select({ name: users.name, userId: users.id })
-        .from(users)
-        .where(eq(users.id, mc.userId))
-        .limit(1);
-      return {
-        mcId: mc.id,
-        name: user?.name || "Unknown",
-        userId: user?.userId || mc.userId,
-      };
-    }),
-  );
+  const userIds = members.map((m) => m.userId);
+  const usersList = await db
+    .select({ id: users.id, name: users.name })
+    .from(users)
+    .where(inArray(users.id, userIds));
+  const usersById = new Map(usersList.map((u) => [u.id, u]));
+
+  const memberInfo = members.map((mc) => {
+    const user = usersById.get(mc.userId);
+    return {
+      mcId: mc.id,
+      name: user?.name || "Unknown",
+      userId: user?.id || mc.userId,
+    };
+  });
   const recipientName =
     memberInfo.find((m) => m.mcId === cycle.recipientMemberId)?.name ||
     "Unknown";
@@ -518,17 +540,25 @@ export async function reconcileCycle(cycleId: string) {
       amountKobo: number;
     }> = [];
 
+    const contribRows = await tx
+      .select({
+        memberCircleId: contributions.memberCircleId,
+        sum: sql<number>`coalesce(sum(amount_kobo), 0)`,
+      })
+      .from(contributions)
+      .where(
+        and(
+          inArray(contributions.memberCircleId, members.map((m) => m.id)),
+          eq(contributions.cycleId, cycle.id),
+        ),
+      )
+      .groupBy(contributions.memberCircleId);
+    const contribsByMember = new Map(
+      contribRows.map((r) => [r.memberCircleId, r.sum]),
+    );
+
     for (const mc of members) {
-      const memberContribs = await tx
-        .select({ sum: sql<number>`coalesce(sum(amount_kobo), 0)` })
-        .from(contributions)
-        .where(
-          and(
-            eq(contributions.memberCircleId, mc.id),
-            eq(contributions.cycleId, cycle.id),
-          ),
-        );
-      const paidKobo = Number(memberContribs[0]?.sum) || 0;
+      const paidKobo = contribsByMember.get(mc.id) || 0;
       totalPaid += paidKobo;
 
       const userName =
