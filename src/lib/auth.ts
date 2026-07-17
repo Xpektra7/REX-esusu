@@ -13,20 +13,59 @@ const JWT_SECRET = (() => {
   return secret;
 })();
 const JWT_EXPIRES_IN = (process.env.JWT_EXPIRES_IN || "30m") as StringValue;
+const PIN_JWT_EXPIRES_IN = "5m";
 
-type TokenPayload = { userId: string; email: string };
+export type TokenPayload = {
+  userId: string;
+  email: string;
+  sessionVersion: number;
+};
 
-export function signToken(userId: string, email: string): string {
-  return jwt.sign({ userId, email } satisfies TokenPayload, JWT_SECRET, {
-    expiresIn: JWT_EXPIRES_IN,
-  });
+export function signToken(
+  userId: string,
+  email: string,
+  sessionVersion: number,
+): string {
+  return jwt.sign(
+    {
+      userId,
+      email,
+      sessionVersion,
+      purpose: "auth",
+    } satisfies TokenPayload & { purpose: string },
+    JWT_SECRET,
+    { expiresIn: JWT_EXPIRES_IN },
+  );
 }
 
-export function verifyToken(token: string): TokenPayload | null {
+export function verifyToken(
+  token: string,
+): (TokenPayload & { purpose?: string }) | null {
   try {
     return jwt.verify(token, JWT_SECRET, {
       algorithms: ["HS256"],
-    }) as TokenPayload;
+    }) as TokenPayload & { purpose?: string };
+  } catch {
+    return null;
+  }
+}
+
+export function signPinToken(userId: string): string {
+  return jwt.sign({ userId, purpose: "pin_verification" }, JWT_SECRET, {
+    expiresIn: PIN_JWT_EXPIRES_IN,
+  });
+}
+
+export function verifyPinToken(token: string): { userId: string } | null {
+  try {
+    const payload = jwt.verify(token, JWT_SECRET, {
+      algorithms: ["HS256"],
+    }) as {
+      userId: string;
+      purpose: string;
+    };
+    if (payload.purpose !== "pin_verification") return null;
+    return { userId: payload.userId };
   } catch {
     return null;
   }
@@ -75,7 +114,7 @@ export function clearAuthCookie(response: Response): void {
 const REFRESH_EXPIRES_IN = "7d" as StringValue;
 
 export function signRefreshToken(userId: string, email: string): string {
-  return jwt.sign({ userId, email, type: "refresh" } satisfies TokenPayload & { type: string }, JWT_SECRET, {
+  return jwt.sign({ userId, email, type: "refresh" }, JWT_SECRET, {
     expiresIn: REFRESH_EXPIRES_IN,
   });
 }

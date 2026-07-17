@@ -16,7 +16,10 @@ function calcRemaining(deadlineAt: string, gracePeriodHours: number): number {
   return Math.max(0, deadline + graceMs - Date.now());
 }
 
-export function GraceCountdown({ deadlineAt, gracePeriodHours }: GraceCountdownProps) {
+export function GraceCountdown({
+  deadlineAt,
+  gracePeriodHours,
+}: GraceCountdownProps) {
   const [remaining, setRemaining] = useState(() =>
     calcRemaining(deadlineAt, gracePeriodHours),
   );
@@ -39,7 +42,9 @@ export function GraceCountdown({ deadlineAt, gracePeriodHours }: GraceCountdownP
       <span className="text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
         {isOverdue ? "Grace Period Ended" : "Grace Period"}
       </span>
-      <span className={`font-heading text-lg font-bold ${isOverdue ? "text-destructive" : "text-primary"}`}>
+      <span
+        className={`font-heading text-lg font-bold ${isOverdue ? "text-destructive" : "text-primary"}`}
+      >
         {isOverdue
           ? "Overdue"
           : `${String(totalHours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`}

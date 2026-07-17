@@ -7,7 +7,7 @@ import { requireAuth } from "@/lib/middleware";
 import { nombaPost } from "@/lib/nomba";
 
 export async function PATCH(req: NextRequest) {
-  const auth = requireAuth(req);
+  const auth = await requireAuth(req);
   if (auth.error) return auth.error;
 
   try {

@@ -14,9 +14,9 @@ export interface Circle {
   creatorId: string;
   name: string;
   contributionAmount: number;
-  frequency: "weekly" | "monthly";
+  frequency: "daily" | "weekly" | "monthly";
   cyclePeriodDays: number;
-  cycleCount: number;
+  cycleCount: number | null;
   currentCycle: number;
   defaultResolutionRule: "absorb" | "shrink" | "end_early";
   gracePeriodHours: number;
@@ -149,10 +149,10 @@ export interface CircleListItem {
   name: string;
   status: "active" | "inactive" | "pending" | "completed" | "dissolved";
   contributionAmount: number;
-  frequency: "weekly" | "monthly";
+  frequency: "daily" | "weekly" | "monthly";
   type: string;
   currentCycle: number;
-  cycleCount: number;
+  cycleCount: number | null;
   memberPosition?: number;
   totalMembers?: number;
   debtAmountKobo?: number;
@@ -225,7 +225,7 @@ export interface CirclePageData {
   role?: "admin" | "member" | null;
   contributionAmount: number;
   frequency: string;
-  cycleCount: number;
+  cycleCount: number | null;
   currentCycle: number;
   currentCycleId?: string | null;
   allowMidCycleJoin: boolean;

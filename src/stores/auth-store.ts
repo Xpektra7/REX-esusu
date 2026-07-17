@@ -113,7 +113,7 @@ export const useAuthStore = create<AuthState>()(
           refreshToken: null,
           user: null,
           isAuthenticated: false,
-      needsBvn: false,
+          needsBvn: false,
           pinSet: false,
           pinAttempts: 0,
         });

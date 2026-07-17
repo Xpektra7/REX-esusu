@@ -1,7 +1,15 @@
 import { cn } from "@/lib/utils";
 
 interface IllustrationProps {
-  name: "circles" | "empty" | "empty-mailbox" | "empty-wallet" | "no-data" | "not-found" | "referral" | "success";
+  name:
+    | "circles"
+    | "empty"
+    | "empty-mailbox"
+    | "empty-wallet"
+    | "no-data"
+    | "not-found"
+    | "referral"
+    | "success";
   className?: string;
 }
 

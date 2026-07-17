@@ -11,15 +11,24 @@ import {
 } from "@/db/schema";
 import { error, handleApiError, success } from "@/lib/api-response";
 import { requireAuth } from "@/lib/middleware";
+import { rateLimit } from "@/lib/rate-limit";
+import { contributionSchema } from "@/lib/validations";
+
+const contributeLimiter = rateLimit({ windowMs: 60_000, maxRequests: 5 });
 
 export async function POST(req: NextRequest) {
-  const auth = requireAuth(req);
+  const auth = await requireAuth(req);
   if (auth.error) return auth.error;
 
+  const limit = contributeLimiter.check(`contribute:${auth.user?.userId}`);
+  if (!limit.allowed) {
+    return error("Too many contribution attempts. Try again later.", "06", 429);
+  }
+
   try {
-    const { circleId, cycleNumber, amountKobo } = await req.json();
-    if (!circleId || !cycleNumber || !amountKobo)
-      return error("circleId, cycleNumber, and amountKobo are required");
+    const body = contributionSchema.safeParse(await req.json());
+    if (!body.success) return error(body.error.issues[0].message, "02");
+    const { circleId, cycleNumber, amountKobo } = body.data;
 
     const [circle] = await db
       .select()
@@ -73,7 +82,8 @@ export async function POST(req: NextRequest) {
       return error("Already contributed for this cycle", "05", 409);
     }
 
-    // Atomic balance deduction + contribution + wallet tx in a single transaction
+    // Wrap all financial mutations in a single transaction so a server crash
+    // cannot leave the wallet debited but the cycle total not updated.
     const result = await db.transaction(async (tx) => {
       const [va] = await tx
         .update(virtualAccounts)
@@ -88,7 +98,7 @@ export async function POST(req: NextRequest) {
         .returning();
 
       if (!va) {
-        return { kind: "insufficient" as const };
+        throw new Error("INSUFFICIENT_BALANCE");
       }
 
       const timestamp = Date.now().toString(36);
@@ -108,6 +118,13 @@ export async function POST(req: NextRequest) {
         })
         .returning();
 
+      // Issue 5 fix: update the cycle's actualTotalKobo so manual wallet
+      // contributions are reflected in the same way webhook payments are.
+      await tx
+        .update(cycles)
+        .set({ actualTotalKobo: sql`actual_total_kobo + ${amountKobo}` })
+        .where(eq(cycles.id, currentCycle.id));
+
       await tx
         .insert(walletTransactions)
         .values({
@@ -124,21 +141,14 @@ export async function POST(req: NextRequest) {
         })
         .onConflictDoNothing();
 
-      return { kind: "success" as const, contribution, ourReference };
+      return { ourReference, amountKobo };
     });
 
-    if (result.kind === "insufficient") {
+    return success(result, "Contribution recorded");
+  } catch (e) {
+    if (e instanceof Error && e.message === "INSUFFICIENT_BALANCE") {
       return error("Insufficient balance. Top up your VA first.", "07");
     }
-
-    return success(
-      {
-        ourReference: result.ourReference,
-        amountKobo,
-      },
-      "Contribution recorded",
-    );
-  } catch (e) {
     return handleApiError(e);
   }
 }

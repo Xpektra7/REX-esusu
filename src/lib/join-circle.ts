@@ -60,6 +60,9 @@ export async function resolveCircleFromCode(rawCode: string): Promise<{
  * the invite code, the circle's join-safety (mid-cycle, capacity), and the
  * caller's existing relationship to the circle, then creates (or reactivates)
  * the membership with an appended rotation order.
+ *
+ * The entire join is wrapped in a serializable transaction with FOR UPDATE
+ * locks to prevent TOCTOU races on capacity checks.
  */
 export async function performJoin(
   userId: string,
@@ -81,69 +84,92 @@ export async function performJoin(
     throw new JoinError("Joining mid-cycle is disabled for this circle");
   }
 
-  if (circle.capacityEnabled && circle.maxMembers != null) {
-    const [{ count }] = await db
-      .select({ count: sql<number>`count(*)::int` })
+  // Atomically check capacity and create membership in one transaction
+  const result = await db.transaction(async (tx) => {
+    // Lock the circle row to serialize concurrent joins
+    const [lockedCircle] = await tx
+      .select()
+      .from(circles)
+      .where(eq(circles.id, circle.id))
+      .for("update");
+
+    if (!lockedCircle) {
+      throw new JoinError("Circle not found", "04", 404);
+    }
+
+    if (lockedCircle.capacityEnabled && lockedCircle.maxMembers != null) {
+      const [{ count }] = await tx
+        .select({ count: sql<number>`count(*)::int` })
+        .from(membersCircles)
+        .where(
+          and(
+            eq(membersCircles.circleId, circle.id),
+            eq(membersCircles.status, "active"),
+          ),
+        )
+        .for("update");
+
+      if (count >= lockedCircle.maxMembers) {
+        throw new JoinError("This circle is at full capacity");
+      }
+    }
+
+    const [existing] = await tx
+      .select()
       .from(membersCircles)
       .where(
         and(
           eq(membersCircles.circleId, circle.id),
-          eq(membersCircles.status, "active"),
+          eq(membersCircles.userId, userId),
         ),
-      );
-    if (count >= circle.maxMembers) {
-      throw new JoinError("This circle is at full capacity");
-    }
-  }
+      )
+      .limit(1)
+      .for("update");
 
-  const [existing] = await db
-    .select()
-    .from(membersCircles)
-    .where(
-      and(
-        eq(membersCircles.circleId, circle.id),
-        eq(membersCircles.userId, userId),
-      ),
-    )
-    .limit(1);
+    const ordered = await tx
+      .select({ rotationOrder: membersCircles.rotationOrder })
+      .from(membersCircles)
+      .where(eq(membersCircles.circleId, circle.id))
+      .orderBy(membersCircles.rotationOrder);
+    const rotationOrder = (ordered.at(-1)?.rotationOrder ?? ordered.length) + 1;
 
-  const ordered = await db
-    .select({ rotationOrder: membersCircles.rotationOrder })
-    .from(membersCircles)
-    .where(eq(membersCircles.circleId, circle.id))
-    .orderBy(membersCircles.rotationOrder);
-  const rotationOrder = (ordered.at(-1)?.rotationOrder ?? ordered.length) + 1;
-
-  if (existing) {
-    if (existing.status === "active" || existing.status === "invited") {
-      throw new JoinError("You are already a member of this circle");
-    }
-    // Rejoin after leaving/being removed: reactivate the old membership.
-    await db
-      .update(membersCircles)
-      .set({
-        status: "active",
+    if (existing) {
+      if (existing.status === "active" || existing.status === "invited") {
+        throw new JoinError("You are already a member of this circle");
+      }
+      // Rejoin after leaving/being removed: reactivate the old membership.
+      await tx
+        .update(membersCircles)
+        .set({
+          status: "active",
+          role: "member",
+          rotationOrder,
+          joinedAtCycle: lockedCircle.currentCycle,
+          leftAt: null,
+        })
+        .where(eq(membersCircles.id, existing.id));
+    } else {
+      await tx.insert(membersCircles).values({
+        userId,
+        circleId: lockedCircle.id,
         role: "member",
+        status: "active",
         rotationOrder,
-        joinedAtCycle: circle.currentCycle,
-        leftAt: null,
-      })
-      .where(eq(membersCircles.id, existing.id));
-  } else {
-    await db.insert(membersCircles).values({
-      userId,
-      circleId: circle.id,
-      role: "member",
-      status: "active",
-      rotationOrder,
-      joinedAtCycle: circle.currentCycle,
-    });
-  }
+        joinedAtCycle: lockedCircle.currentCycle,
+      });
+    }
 
-  await db
-    .update(inviteCodes)
-    .set({ useCount: invite.useCount + 1 })
-    .where(eq(inviteCodes.id, invite.id));
+    await tx
+      .update(inviteCodes)
+      .set({ useCount: invite.useCount + 1 })
+      .where(eq(inviteCodes.id, invite.id));
+
+    return {
+      circleId: lockedCircle.id,
+      circleName: lockedCircle.name,
+      rotationOrder,
+    };
+  });
 
   // Notify the joiner and the circle's admins (non-fatal — a notification
   // failure must not roll back the join itself).
@@ -189,9 +215,5 @@ export async function performJoin(
     console.error("[performJoin] failed to send join notifications:", nErr);
   }
 
-  return {
-    circleId: circle.id,
-    circleName: circle.name,
-    rotationOrder,
-  };
+  return result;
 }

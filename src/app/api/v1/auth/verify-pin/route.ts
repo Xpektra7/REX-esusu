@@ -4,15 +4,26 @@ import type { NextRequest } from "next/server";
 import { db } from "@/db";
 import { users } from "@/db/schema";
 import { error, success } from "@/lib/api-response";
+import { signPinToken } from "@/lib/auth";
 import { requireAuth } from "@/lib/middleware";
+import { rateLimit } from "@/lib/rate-limit";
+import { pinSchema } from "@/lib/validations";
+
+const pinLimiter = rateLimit({ windowMs: 60_000, maxRequests: 5 });
 
 export async function POST(req: NextRequest) {
-  const auth = requireAuth(req);
+  const auth = await requireAuth(req);
   if (auth.error) return auth.error;
 
   try {
-    const { pin } = await req.json();
-    if (!pin) return error("PIN is required");
+    const body = pinSchema.safeParse(await req.json());
+    if (!body.success) return error(body.error.issues[0].message, "02");
+    const { pin } = body.data;
+
+    const limit = pinLimiter.check(`verify-pin:${auth.user.userId}`);
+    if (!limit.allowed) {
+      return error("Too many attempts. Try again later.", "06", 429);
+    }
 
     const [user] = await db
       .select()
@@ -49,7 +60,9 @@ export async function POST(req: NextRequest) {
       .set({ loginAttempts: 0, lockedUntil: null })
       .where(eq(users.id, auth.user?.userId));
 
-    return success({ verified: true });
+    const pinToken = signPinToken(auth.user.userId);
+
+    return success({ verified: true, pinToken });
   } catch (e) {
     console.error(e);
     return error("An unexpected error occurred", "01", 500);

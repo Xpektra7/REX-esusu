@@ -87,16 +87,19 @@ export default function DashboardPage() {
   const { data: walletRes, isLoading: walletLoading } = useQuery({
     queryKey: ["wallet"],
     queryFn: () => api.wallet.get(),
+    refetchInterval: 5_000,
   });
 
   const { data: circlesRes, isLoading: circlesLoading } = useQuery({
     queryKey: ["circles"],
     queryFn: () => api.circles.list(),
+    refetchInterval: 5_000,
   });
 
   const { data: activityRes, isLoading: activityLoading } = useQuery({
     queryKey: ["activity"],
     queryFn: () => api.activity.list(),
+    refetchInterval: 5_000,
   });
 
   const balance = walletRes?.data?.balanceKobo ?? 0;

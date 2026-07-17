@@ -17,7 +17,7 @@ export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string; cycleNumber: string }> },
 ) {
-  const auth = requireAuth(req);
+  const auth = await requireAuth(req);
   if (auth.error) return auth.error;
 
   try {
@@ -45,13 +45,27 @@ export async function POST(
     if (!membership || membership.role !== "admin")
       return error("Only admin can trigger payout", "03", 403);
 
+    // Atomic lock — claim this cycle for processing.
+    // Only succeeds if cycle is still 'active', preventing multi-payout draining.
+    const [locked] = await db
+      .update(cycles)
+      .set({ status: "processing", closedAt: new Date() })
+      .where(
+        and(
+          eq(cycles.circleId, id),
+          eq(cycles.cycleNumber, cycleNum),
+          eq(cycles.status, "active"),
+        ),
+      )
+      .returning();
+    if (!locked) return error("Cycle is not active or already being processed");
+
     const [cycle] = await db
       .select()
       .from(cycles)
-      .where(and(eq(cycles.circleId, id), eq(cycles.cycleNumber, cycleNum)))
+      .where(eq(cycles.id, locked.id))
       .limit(1);
     if (!cycle) return error("Cycle not found", "04", 404);
-    if (cycle.status !== "active") return error("Cycle is not active");
 
     const [recipient] = await db
       .select({
@@ -63,7 +77,14 @@ export async function POST(
       .innerJoin(users, eq(users.id, membersCircles.userId))
       .where(eq(membersCircles.id, cycle.recipientMemberId))
       .limit(1);
-    if (!recipient) return error("Recipient not found");
+    if (!recipient) {
+      // Release the lock
+      await db
+        .update(cycles)
+        .set({ status: "active", closedAt: null })
+        .where(eq(cycles.id, cycle.id));
+      return error("Recipient not found");
+    }
 
     const [recipientVA] = await db
       .select()
@@ -91,7 +112,7 @@ export async function POST(
     if (recipientVA) {
       try {
         nombaResp = await nombaPost("/v2/transfers/bank", {
-          amount: cycle.actualTotalKobo,
+          amount: cycle.actualTotalKobo / 100,
           bankCode: recipientVA.bankCode || "000",
           accountNumber: recipientVA.accountNumber,
           accountName: recipientVA.accountName,
@@ -108,33 +129,27 @@ export async function POST(
       }
     }
 
-    const payout = await db.transaction(async (tx) => {
-      const [p] = await tx
-        .insert(payoutTransactions)
-        .values({
-          cycleId: cycle.id,
-          recipientUserId: recipient.userId,
-          amountKobo: cycle.actualTotalKobo,
-          nombaTransferRef: transferRef,
-          status: "pending",
-          nombaResponse: nombaResp,
-        })
-        .returning();
+    const [payout] = await db
+      .insert(payoutTransactions)
+      .values({
+        cycleId: cycle.id,
+        recipientUserId: recipient.userId,
+        amountKobo: cycle.actualTotalKobo,
+        nombaTransferRef: transferRef,
+        status: "pending",
+        nombaResponse: nombaResp,
+      })
+      .returning();
 
-      await tx
-        .update(cycles)
-        .set({
-          status:
-            nombaResp?.status === "SUCCESS" ||
-            nombaResp?.data?.status === "SUCCESS"
-              ? "paid_out"
-              : "active",
-          closedAt: new Date(),
-        })
-        .where(eq(cycles.id, cycle.id));
-
-      return p;
-    });
+    // Update cycle status based on Nomba response
+    const nombaSuccess =
+      nombaResp?.status === "SUCCESS" || nombaResp?.data?.status === "SUCCESS";
+    await db
+      .update(cycles)
+      .set({
+        status: nombaSuccess ? "paid_out" : "processing",
+      })
+      .where(eq(cycles.id, cycle.id));
 
     return success(
       {

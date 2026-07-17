@@ -31,7 +31,7 @@ export function generateOtp(): string {
 export async function sendOtpEmail(email: string, otp: string): Promise<void> {
   const t = getTransporter();
   if (!t) {
-    console.log(`[DEV] OTP sent to ${email}`);
+    console.log(`[DEV] OTP requested for ${email} (SMTP not configured)`);
     return;
   }
   await t.sendMail({

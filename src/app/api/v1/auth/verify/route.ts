@@ -1,19 +1,24 @@
 import crypto from "node:crypto";
 import { eq } from "drizzle-orm";
 import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { users, virtualAccounts } from "@/db/schema";
-import { error, success } from "@/lib/api-response";
+import { error } from "@/lib/api-response";
 import {
   findUserByEmail,
   hashPassword,
-  setAuthCookie,
   signToken,
   verifyPassword,
 } from "@/lib/auth";
 import { nombaPost } from "@/lib/nomba";
 import { verifyOtp } from "@/lib/otp";
+import { rateLimit } from "@/lib/rate-limit";
+import { signupSchema } from "@/lib/validations";
 
+const verifyLimiter = rateLimit({ windowMs: 60_000, maxRequests: 10 });
+
+const SANDBOX_URL = "https://sandbox.nomba.com/v1";
 const ALGO = "aes-256-gcm";
 
 function encryptBvn(plaintext: string): string {
@@ -35,35 +40,63 @@ async function provisionVirtualAccount(
   bvn?: string,
 ) {
   const subAccountId = process.env.NOMBA_SUB_ACCOUNT_ID || "";
-  const vaPath = subAccountId
-    ? `/v1/accounts/virtual/${subAccountId}`
-    : "/v1/accounts/virtual";
-  const result = await nombaPost(vaPath, {
-    accountRef: userId,
-    accountName,
-    bvn: bvn || "",
-    expiryDate: "2027-12-31",
-  });
-  const vaBody = result?.data || result;
-  if (!vaBody?.bankAccountNumber && !vaBody?.accountNumber) {
-    throw new Error("Nomba VA creation returned no account number");
+  const baseUrl = process.env.NOMBA_BASE_URL || "https://api.nomba.com/v1";
+  const isLive = !baseUrl.includes("sandbox");
+
+  async function createVA(url: string): Promise<Record<string, unknown>> {
+    const vaPath = subAccountId
+      ? `/v1/accounts/virtual/${subAccountId}`
+      : "/v1/accounts/virtual";
+    const result = await nombaPost(
+      vaPath,
+      {
+        accountRef: userId,
+        accountName,
+        bvn: bvn || "",
+        expiryDate: "2027-12-31",
+      },
+      url,
+    );
+    const vaBody = result?.data || result;
+    if (vaBody) {
+      await db.insert(virtualAccounts).values({
+        userId,
+        accountNumber: vaBody.bankAccountNumber || vaBody.accountNumber,
+        accountName: vaBody.bankAccountName || vaBody.accountName,
+        bankCode: vaBody.bankName || vaBody.bank || vaBody.bankCode,
+        accountRef: vaBody.accountRef,
+        type: "personal",
+      });
+    }
+    return vaBody;
   }
-  await db.insert(virtualAccounts).values({
-    userId,
-    accountNumber: vaBody.bankAccountNumber || vaBody.accountNumber,
-    accountName: vaBody.bankAccountName || vaBody.accountName,
-    bankCode: vaBody.bankCode || "",
-    accountRef: vaBody.accountRef,
-    type: "personal",
-  });
-  return vaBody;
+
+  try {
+    return await createVA(baseUrl);
+  } catch (err) {
+    if (isLive) {
+      console.warn(
+        "Production VA creation failed, falling back to sandbox:",
+        (err as Error).message,
+      );
+      return await createVA(SANDBOX_URL);
+    }
+    throw err;
+  }
 }
 
 export async function POST(req: NextRequest) {
   try {
-    const { email, otp, password, name, bvn } = await req.json();
-    if (!email || !otp || !password)
-      return error("Email, OTP, and password are required");
+    const body = signupSchema
+      .partial({ name: true })
+      .safeParse(await req.json());
+    if (!body.success) return error(body.error.issues[0].message, "02");
+    const { email, otp, password, name, bvn } = body.data;
+
+    const limit = verifyLimiter.check(`verify:${email}`);
+    if (!limit.allowed) {
+      return error("Too many requests. Try again later.", "06", 429);
+    }
 
     if (!(await verifyOtp(email, otp))) return error("Invalid or expired OTP");
 
@@ -93,25 +126,38 @@ export async function POST(req: NextRequest) {
         return error("Invalid password");
       }
 
+      const sv = existing.sessionVersion;
+      const token = signToken(existing.id, existing.email, sv);
+      const refreshToken = signToken(existing.id, existing.email, sv);
+
       await db
         .update(users)
         .set({ loginAttempts: 0, lockedUntil: null })
         .where(eq(users.id, existing.id));
 
-      const token = signToken(existing.id, existing.email);
-      const res = success({
-        user: {
-          id: existing.id,
-          name: existing.name,
-          email: existing.email,
+      return NextResponse.json(
+        {
+          code: "00",
+          description: "Success",
+          data: {
+            user: {
+              id: existing.id,
+              name: existing.name,
+              email: existing.email,
+            },
+            token,
+            refreshToken,
+            needsBvn: false,
+            pinSet: !!existing.pinHash,
+          },
         },
-        token,
-        refreshToken: signToken(existing.id, existing.email),
-        needsBvn: false,
-        pinSet: !!existing.pinHash,
-      });
-      setAuthCookie(res, token);
-      return res;
+        {
+          headers: {
+            "Set-Cookie":
+              "esusu-auth=true; path=/; max-age=604800; HttpOnly; Secure; SameSite=Strict",
+          },
+        },
+      );
     }
 
     if (!name) return error("No account found with this email. Sign up first.");
@@ -131,35 +177,38 @@ export async function POST(req: NextRequest) {
     try {
       await provisionVirtualAccount(user.id, name, bvn);
     } catch (vaErr) {
-      await db.delete(users).where(eq(users.id, user.id));
       console.error(
-        "VA provisioning failed, user creation rolled back:",
+        "VA provisioning failed (non-fatal):",
         vaErr instanceof Error ? vaErr.message : vaErr,
-      );
-      return error(
-        "Account creation failed. Please try again.",
-        "01",
-        500,
       );
     }
 
-    const newToken = signToken(user.id, user.email);
-    const res2 = success(
+    const newToken = signToken(user.id, user.email, user.sessionVersion);
+    const newRefreshToken = signToken(user.id, user.email, user.sessionVersion);
+
+    return NextResponse.json(
       {
-        user: {
-          id: user.id,
-          name: user.name,
-          email: user.email,
+        code: "00",
+        description: "Account created",
+        data: {
+          user: {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+          },
+          token: newToken,
+          refreshToken: newRefreshToken,
+          needsBvn: false,
+          pinSet: false,
         },
-        token: newToken,
-        refreshToken: signToken(user.id, user.email),
-        needsBvn: false,
-        pinSet: false,
       },
-      "Account created",
+      {
+        headers: {
+          "Set-Cookie":
+            "esusu-auth=true; path=/; max-age=604800; HttpOnly; Secure; SameSite=Strict",
+        },
+      },
     );
-    setAuthCookie(res2, newToken);
-    return res2;
   } catch (e) {
     console.error(e);
     return error("An unexpected error occurred", "01", 500);

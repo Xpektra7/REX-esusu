@@ -37,7 +37,10 @@ export default function AuthPage() {
     onSubmit: async ({ value }) => {
       setError(null);
 
-      if (flow === "signup" && (!value.firstName.trim() || !value.lastName.trim())) {
+      if (
+        flow === "signup" &&
+        (!value.firstName.trim() || !value.lastName.trim())
+      ) {
         setError("First and last name are required");
         return;
       }
@@ -56,7 +59,10 @@ export default function AuthPage() {
 
       setLoading(true);
       try {
-        await api.auth.sendOtp(value.email, flow === "login" ? password : undefined);
+        await api.auth.sendOtp(
+          value.email,
+          flow === "login" ? password : undefined,
+        );
 
         sessionStorage.setItem("pending_password", password);
 
@@ -199,7 +205,12 @@ export default function AuthPage() {
 
           {error && <p className="text-sm text-destructive">{error}</p>}
 
-          <Button type="submit" size="lg" className="w-full py-4 text-base" disabled={loading}>
+          <Button
+            type="submit"
+            size="lg"
+            className="w-full py-4 text-base"
+            disabled={loading}
+          >
             {loading ? "Sending OTP..." : "Continue"}
           </Button>
         </form>

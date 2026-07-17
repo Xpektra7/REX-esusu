@@ -59,12 +59,13 @@ export default function WalletPage() {
   const { data: res, isLoading } = useQuery({
     queryKey: ["wallet"],
     queryFn: () => api.wallet.get(),
+    refetchInterval: 5_000,
   });
 
   const { data: txRes, isLoading: txLoading } = useQuery({
     queryKey: ["wallet-transactions"],
     queryFn: () => api.wallet.transactions(),
-    refetchInterval: 10_000,
+    refetchInterval: 5_000,
   });
 
   const wallet = res?.data as WalletData | undefined;

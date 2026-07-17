@@ -66,7 +66,7 @@ export function InstallPrompt() {
 
   if (state === "installed" || dismissed || !visible) return null;
 
-  const promptText = ({
+  const promptText = {
     promptable: {
       title: "Get Esusu on your phone",
       desc: "Install for the best experience — fast, offline, push notifications included.",
@@ -82,7 +82,7 @@ export function InstallPrompt() {
       desc: "Works in your browser. Open in Chrome on Android for install.",
       cta: null,
     },
-  })[state];
+  }[state];
 
   return (
     <div className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-background p-4 shadow-lg md:p-5">

@@ -116,7 +116,10 @@ export default function ContactPage() {
               />
             </div>
             <div>
-              <label htmlFor="subject" className="mb-1 block text-sm font-medium">
+              <label
+                htmlFor="subject"
+                className="mb-1 block text-sm font-medium"
+              >
                 Subject
               </label>
               <select
@@ -132,7 +135,10 @@ export default function ContactPage() {
               </select>
             </div>
             <div>
-              <label htmlFor="message" className="mb-1 block text-sm font-medium">
+              <label
+                htmlFor="message"
+                className="mb-1 block text-sm font-medium"
+              >
                 Message
               </label>
               <textarea

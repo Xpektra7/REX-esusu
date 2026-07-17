@@ -10,9 +10,10 @@ import {
 } from "@/db/schema";
 import { error, handleApiError, success } from "@/lib/api-response";
 import { requireAuth } from "@/lib/middleware";
+import { createCircleSchema } from "@/lib/validations";
 
 export async function GET(req: NextRequest) {
-  const auth = requireAuth(req);
+  const auth = await requireAuth(req);
   if (auth.error) return auth.error;
 
   const memberships = await db
@@ -85,28 +86,26 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const auth = requireAuth(req);
+  const auth = await requireAuth(req);
   if (auth.error) return auth.error;
 
   try {
+    const body = createCircleSchema.safeParse(await req.json());
+    if (!body.success) return error(body.error.issues[0].message, "02");
     const {
       name,
-      contributionAmountKobo,
+      contributionAmount,
       frequency,
       cycleCount,
       defaultResolutionRule,
       gracePeriodHours,
       capacityEnabled,
       maxMembers,
-    } = await req.json();
-    if (!name || !contributionAmountKobo || !frequency) {
-      return error(
-        "name, contributionAmountKobo, and frequency are required",
-      );
-    }
+    } = body.data;
+    const contributionAmountKobo = Math.round(contributionAmount * 100);
 
     const cyclePeriodDays = frequency === "daily" ? 1 : frequency === "weekly" ? 7 : 30;
-    const grace = gracePeriodHours || (frequency === "weekly" ? 24 : 72);
+    const grace = gracePeriodHours || (frequency === "daily" ? 6 : frequency === "weekly" ? 24 : 72);
     const code = Math.random().toString(36).substring(2, 10).toUpperCase();
 
     const [circle] = await db
@@ -118,7 +117,7 @@ export async function POST(req: NextRequest) {
         frequency,
         cyclePeriodDays,
         cycleCount,
-        defaultResolutionRule: defaultResolutionRule || "absorb",
+        defaultResolutionRule,
         gracePeriodHours: grace,
         capacityEnabled: capacityEnabled === true,
         maxMembers:

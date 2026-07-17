@@ -43,7 +43,7 @@ export function paginated<T>(
   return NextResponse.json({
     code: "00",
     description,
-    data: items,
+    data: { items },
     pagination: {
       page,
       limit,

@@ -96,6 +96,7 @@ export default function NotificationsPage() {
   const { data: res, isLoading } = useQuery({
     queryKey: ["notifications"],
     queryFn: () => api.notifications.list(),
+    refetchInterval: 5_000,
   });
 
   const readAllMutation = useMutation({

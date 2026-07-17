@@ -19,7 +19,10 @@ interface DeleteAccountDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogProps) {
+export function DeleteAccountDialog({
+  open,
+  onOpenChange,
+}: DeleteAccountDialogProps) {
   const clearAuth = useAuthStore((s) => s.clearAuth);
   const [confirm, setConfirm] = useState("");
   const [password, setPassword] = useState("");
@@ -62,7 +65,8 @@ export function DeleteAccountDialog({ open, onOpenChange }: DeleteAccountDialogP
           <DialogHeader>
             <DialogTitle>Delete Account</DialogTitle>
             <DialogDescription>
-              This action is irreversible. All your data, circles, and contributions will be permanently removed.
+              This action is irreversible. All your data, circles, and
+              contributions will be permanently removed.
             </DialogDescription>
           </DialogHeader>
 

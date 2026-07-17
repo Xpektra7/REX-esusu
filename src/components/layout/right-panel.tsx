@@ -72,11 +72,13 @@ export function RightPanel() {
   const { data: notifRes, isLoading: notifsLoading } = useQuery({
     queryKey: ["notifications-mini"],
     queryFn: () => api.notifications.list(),
+    refetchInterval: 5_000,
   });
 
   const { data: txRes, isLoading: txsLoading } = useQuery({
     queryKey: ["wallet-transactions-mini"],
     queryFn: () => api.wallet.transactions(),
+    refetchInterval: 5_000,
   });
 
   const notifications = (
