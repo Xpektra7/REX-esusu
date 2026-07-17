@@ -10,12 +10,13 @@ import {
 } from "@/db/schema";
 import { error, handleApiError, success } from "@/lib/api-response";
 import { requireAuth } from "@/lib/middleware";
+import { reconcileCycle } from "@/lib/reconciliation";
 
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const auth = requireAuth(req);
+  const auth = await requireAuth(req);
   if (auth.error) return auth.error;
 
   try {
@@ -27,6 +28,22 @@ export async function GET(
       .where(eq(cycles.id, id))
       .limit(1);
     if (!cycle) return error("Cycle not found", "04", 404);
+
+    // Self-healing: if cycle is active and past deadline, auto-close it
+    // then re-fetch so the response reflects the updated state.
+    if (cycle.status === "active" && new Date() > new Date(cycle.deadlineAt)) {
+      try {
+        await reconcileCycle(cycle.id);
+        const [updated] = await db
+          .select()
+          .from(cycles)
+          .where(eq(cycles.id, id))
+          .limit(1);
+        if (updated) Object.assign(cycle, updated);
+      } catch {
+        // Non-blocking — if auto-close fails, still return current state
+      }
+    }
 
     const [circle] = await db
       .select()

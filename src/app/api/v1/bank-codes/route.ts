@@ -4,7 +4,7 @@ import { requireAuth } from "@/lib/middleware";
 import { nombaGet } from "@/lib/nomba";
 
 export async function GET(req: NextRequest) {
-  const auth = requireAuth(req);
+  const auth = await requireAuth(req);
   if (auth.error) return auth.error;
 
   try {

@@ -5,12 +5,20 @@ import { users } from "@/db/schema";
 import { error, success } from "@/lib/api-response";
 import { hashPassword, verifyPassword } from "@/lib/auth";
 import { requireAuth } from "@/lib/middleware";
+import { rateLimit } from "@/lib/rate-limit";
+
+const changePwLimiter = rateLimit({ windowMs: 60_000, maxRequests: 5 });
 
 export async function POST(req: NextRequest) {
-  const auth = requireAuth(req);
+  const auth = await requireAuth(req);
   if (auth.error) return auth.error;
 
   try {
+    const limit = changePwLimiter.check(`change-pw:${auth.user.userId}`);
+    if (!limit.allowed) {
+      return error("Too many attempts. Try again later.", "06", 429);
+    }
+
     const { currentPassword, newPassword } = await req.json();
     if (!currentPassword || !newPassword) {
       return error("currentPassword and newPassword are required");

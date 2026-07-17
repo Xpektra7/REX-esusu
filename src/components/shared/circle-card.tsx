@@ -27,7 +27,9 @@ export function CircleCard({ circle }: { circle: CircleData }) {
   const idx = circle.name.length % iconSet.length;
   const Icon = iconSet[idx].icon;
   const progress =
-    circle.cycleCount > 0 ? (circle.currentCycle / circle.cycleCount) * 100 : 0;
+    circle.cycleCount != null && circle.cycleCount > 0
+      ? (circle.currentCycle / circle.cycleCount) * 100
+      : 50;
 
   return (
     <Link
@@ -86,7 +88,7 @@ export function CircleCard({ circle }: { circle: CircleData }) {
           <Progress value={progress} className="mt-4">
             <div className="flex w-full items-center justify-between text-[10px] text-muted-foreground">
               <span className="font-semibold tracking-wider uppercase">
-                Cycle {circle.currentCycle} of {circle.cycleCount}
+                Cycle {circle.currentCycle}{circle.cycleCount !== null ? ` of ${circle.cycleCount}` : " (Continuous)"}
               </span>
               <span>{Math.round(progress)}%</span>
             </div>

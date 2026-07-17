@@ -51,13 +51,10 @@ function isRepeated(pin: string): boolean {
   return /^(\d)\1+$/.test(pin);
 }
 
-/** Returns an error string if the 4-digit PIN is weak, otherwise null. */
+/** Returns an error string if the PIN is weak, otherwise null. */
 export function validatePin(pin: string): string | null {
-  if (!/^\d{4}$/.test(pin)) {
-    return "PIN must be exactly 4 digits";
-  }
-  if (pin === "0000" || pin === "1234") {
-    return "Choose a PIN that isn't easy to guess";
+  if (!/^\d{4,6}$/.test(pin)) {
+    return "PIN must be 4-6 digits";
   }
   if (isRepeated(pin) || isSequential(pin)) {
     return "Avoid repeated or sequential digits";

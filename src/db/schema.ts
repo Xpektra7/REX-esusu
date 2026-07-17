@@ -24,6 +24,7 @@ export const users = pgTable(
     trustScore: integer("trust_score").default(50).notNull(),
     loginAttempts: integer("login_attempts").default(0).notNull(),
     lockedUntil: timestamp("locked_until"),
+    sessionVersion: integer("session_version").default(0).notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
@@ -44,7 +45,7 @@ export const circles = pgTable(
     contributionAmountKobo: integer("contribution_amount_kobo").notNull(),
     frequency: varchar("frequency", { length: 20 }).notNull(),
     cyclePeriodDays: integer("cycle_period_days").notNull(),
-    cycleCount: integer("cycle_count").notNull(),
+    cycleCount: integer("cycle_count"),
     currentCycle: integer("current_cycle").default(0).notNull(),
     defaultResolutionRule: varchar("default_resolution_rule", { length: 20 })
       .default("absorb")
@@ -269,6 +270,26 @@ export const notifications = pgTable(
     index("idx_notifications_user_read").on(table.userId, table.read),
     index("idx_notifications_user_created").on(table.userId, table.createdAt),
   ],
+);
+
+export const orphanPayments = pgTable(
+  "orphan_payments",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    nombaRequestId: varchar("nomba_request_id", { length: 255 })
+      .unique()
+      .notNull(),
+    transactionId: varchar("transaction_id", { length: 255 }).notNull(),
+    accountNumber: varchar("account_number", { length: 20 }),
+    amountKobo: integer("amount_kobo").notNull(),
+    senderName: varchar("sender_name", { length: 255 }),
+    senderAccount: varchar("sender_account", { length: 20 }),
+    senderBank: varchar("sender_bank", { length: 100 }),
+    narration: text("narration"),
+    rawPayload: jsonb("raw_payload"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [index("idx_orphan_nomba_request_id").on(table.nombaRequestId)],
 );
 
 export const inviteCodes = pgTable(

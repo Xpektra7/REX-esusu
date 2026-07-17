@@ -35,11 +35,7 @@ export function CycleActions({ circleId }: { circleId: string }) {
 
   return (
     <div className="flex flex-col gap-3">
-      <Button
-        className="w-full"
-        onClick={handleRemind}
-        disabled={reminding}
-      >
+      <Button className="w-full" onClick={handleRemind} disabled={reminding}>
         <Notification03Icon className="size-4" />
         {reminding ? "Sending..." : "Remind Pending Members"}
       </Button>

@@ -45,7 +45,7 @@ const ACCOUNT_PREFIX_MAP: Record<string, string[]> = {
 };
 
 export async function POST(req: NextRequest) {
-  const auth = requireAuth(req);
+  const auth = await requireAuth(req);
   if (auth.error) return auth.error;
 
   try {

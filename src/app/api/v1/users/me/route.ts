@@ -14,7 +14,7 @@ import { hashPassword, verifyPassword } from "@/lib/auth";
 import { requireAuth } from "@/lib/middleware";
 
 export async function GET(req: NextRequest) {
-  const auth = requireAuth(req);
+  const auth = await requireAuth(req);
   if (auth.error) return auth.error;
 
   const userId = auth.user?.userId;
@@ -74,7 +74,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
-  const auth = requireAuth(req);
+  const auth = await requireAuth(req);
   if (auth.error) return auth.error;
 
   try {
@@ -103,7 +103,7 @@ export async function PATCH(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-  const auth = requireAuth(req);
+  const auth = await requireAuth(req);
   if (auth.error) return auth.error;
 
   try {

@@ -1,4 +1,5 @@
 import { and, asc, eq, inArray, sql } from "drizzle-orm";
+import type { PgDatabase } from "drizzle-orm/pg-core";
 import { db } from "@/db";
 import {
   circles,
@@ -7,10 +8,14 @@ import {
   debts,
   membersCircles,
   notifications,
+  orphanPayments,
   users,
   virtualAccounts,
   walletTransactions,
 } from "@/db/schema";
+
+// biome-ignore lint/suspicious/noExplicitAny: PgTransaction and PostgresJsDatabase share PgDatabase base
+type TxOrDb = PgDatabase<any, any, any>;
 
 type WebhookPayload = {
   event_type: string;
@@ -59,28 +64,40 @@ export function classifyPayment(
   return "exact";
 }
 
+// ---------------------------------------------------------------------------
+// reconcilePayment — wraps all financial mutations in a single transaction
+// ---------------------------------------------------------------------------
+
 export async function reconcilePayment(payload: WebhookPayload) {
+  return db.transaction(async (tx) => {
+    return reconcilePaymentInTx(tx, payload);
+  });
+}
+
+// Exposed for the webhook handler to compose within its own transaction
+// alongside the webhookEvent status update (atomic idempotency fix).
+export async function reconcilePaymentInTx(
+  tx: TxOrDb,
+  payload: WebhookPayload,
+) {
   const txn = payload.data.transaction;
-  const va = await db
+  const nombaTransactionRef = txn.transactionRef || null;
+
+  const va = await tx
     .select()
     .from(virtualAccounts)
     .where(eq(virtualAccounts.accountNumber, txn.aliasAccountNumber || ""))
     .limit(1);
 
-  if (!va[0]) return handleOrphan(payload);
+  if (!va[0]) return handleOrphan(tx, payload);
 
   const actual = Math.round((txn.transactionAmount || 0) * 100);
-
-  // Funds are NOT credited up front. Debt clearing (FIFO) and cycle allocation
-  // run below; only the unallocated remainder is credited to the wallet balance
-  // as a top-up at the end. This prevents the double-credit bug where the full
-  // amount was added to the balance AND allocated to contributions/debts.
 
   const ourRef = extractReference(txn.narration || "");
 
   let _contribution: typeof contributions.$inferSelect | null = null;
   if (ourRef) {
-    const results = await db
+    const results = await tx
       .select()
       .from(contributions)
       .where(eq(contributions.ourReference, ourRef))
@@ -88,19 +105,15 @@ export async function reconcilePayment(payload: WebhookPayload) {
     _contribution = results[0] || null;
   }
 
-  const mcIds = await getMemberCircleIds(va[0].userId);
-  const perCircleExpected = await getExpectedPerActiveCircle(mcIds);
+  const mcIds = await getMemberCircleIds(tx, va[0].userId);
+  const perCircleExpected = await getExpectedPerActiveCircle(tx, mcIds);
   const baseExpectedTotal = Object.values(perCircleExpected).reduce(
     (s, v) => s + v,
     0,
   );
-  // Case 4: include outstanding debts so classification reflects true obligation
-  const outstandingDebts = await getOutstandingDebtsForMemberCircles(mcIds);
+  const outstandingDebts = await getOutstandingDebtsForMemberCircles(tx, mcIds);
   const totalExpected = baseExpectedTotal + outstandingDebts;
 
-  // A payment with no contribution reference AND no outstanding dues is a plain
-  // wallet top-up. Credit it without flagging for review — "misdirected" is now
-  // reserved for when dues exist but the amount doesn't match (ratio out of range).
   let classification: Classification;
   if (totalExpected <= 0 && !ourRef) {
     classification = "topup";
@@ -109,33 +122,35 @@ export async function reconcilePayment(payload: WebhookPayload) {
   }
 
   if (classification === "misdirected") {
-    // Non-blocking: flag for review but still credit/allocate the funds below
-    // so legitimate payments are not rejected.
-    await flagForReview(va[0], actual);
+    await flagForReview(tx, va[0], actual);
   }
 
-  let remaining = await applyFifoDebtClearing(va[0].userId, actual, va[0].id);
+  // Pure top-ups skip debt clearing and cycle allocation entirely.
+  // They go straight to balance_kobo.
+  let remaining = actual;
+  if (classification !== "topup") {
+    remaining = await applyFifoDebtClearing(tx, va[0].userId, actual, va[0].id);
 
-  if (remaining > 0) {
-    remaining = await allocateToCycle(
-      va[0].userId,
-      remaining,
-      va[0].id,
-      classification,
-      perCircleExpected,
-    );
+    if (remaining > 0) {
+      remaining = await allocateToCycle(
+        tx,
+        va[0].userId,
+        remaining,
+        va[0].id,
+        classification,
+        perCircleExpected,
+        nombaTransactionRef,
+      );
+    }
   }
 
-  // Credit any unallocated remainder to the wallet balance as a top-up.
-  // Covers pure top-ups (no dues), overpayment excess, and any amount not
-  // consumed by debts + cycle contributions.
   if (remaining > 0) {
-    await db
+    await tx
       .update(virtualAccounts)
       .set({ balanceKobo: sql`balance_kobo + ${remaining}` })
       .where(eq(virtualAccounts.id, va[0].id));
 
-    await db
+    await tx
       .insert(walletTransactions)
       .values({
         userId: va[0].userId,
@@ -152,7 +167,7 @@ export async function reconcilePayment(payload: WebhookPayload) {
       .onConflictDoNothing();
 
     if (classification === "topup") {
-      await db.insert(notifications).values({
+      await tx.insert(notifications).values({
         userId: va[0].userId,
         title: "Top-up received",
         body: `₦${(remaining / 100).toLocaleString()} has been added to your wallet.`,
@@ -167,7 +182,7 @@ export async function reconcilePayment(payload: WebhookPayload) {
       const expectedAmt = perCircleExpected[mcId];
       if (actual < expectedAmt) {
         contributionShortfallNotified = true;
-        await db.insert(notifications).values({
+        await tx.insert(notifications).values({
           userId: va[0].userId,
           title: "Underpayment detected",
           body: `You paid ₦${(actual / 100).toLocaleString()} but ₦${(expectedAmt / 100).toLocaleString()} was expected. Grace period started.`,
@@ -175,9 +190,8 @@ export async function reconcilePayment(payload: WebhookPayload) {
         });
       }
     }
-    // Gap A: underpayment due to debt, not contribution shortfall
     if (!contributionShortfallNotified && outstandingDebts > 0) {
-      await db.insert(notifications).values({
+      await tx.insert(notifications).values({
         userId: va[0].userId,
         title: "Debt deducted from payment",
         body: `₦${(outstandingDebts / 100).toLocaleString()} debt was cleared from your payment. Your cycle contribution was reduced.`,
@@ -201,8 +215,11 @@ function extractReference(narration: string): string | null {
   return match ? match[0] : null;
 }
 
-async function getMemberCircleIds(userId: string): Promise<string[]> {
-  const mcList = await db
+async function getMemberCircleIds(
+  tx: TxOrDb,
+  userId: string,
+): Promise<string[]> {
+  const mcList = await tx
     .select({ id: membersCircles.id })
     .from(membersCircles)
     .where(
@@ -215,32 +232,33 @@ async function getMemberCircleIds(userId: string): Promise<string[]> {
 }
 
 async function getExpectedPerActiveCircle(
+  tx: TxOrDb,
   mcIds: string[],
 ): Promise<Record<string, number>> {
   const result: Record<string, number> = {};
   for (const mcId of mcIds) {
-    const [mc] = await db
+    const [mc] = await tx
       .select({ circleId: membersCircles.circleId })
       .from(membersCircles)
       .where(eq(membersCircles.id, mcId))
       .limit(1);
     if (!mc) continue;
 
-    const [activeCycle] = await db
+    const [activeCycle] = await tx
       .select({ id: cycles.id })
       .from(cycles)
       .where(and(eq(cycles.circleId, mc.circleId), eq(cycles.status, "active")))
       .limit(1);
     if (!activeCycle) continue;
 
-    const [circle] = await db
+    const [circle] = await tx
       .select({ contributionAmountKobo: circles.contributionAmountKobo })
       .from(circles)
       .where(eq(circles.id, mc.circleId))
       .limit(1);
     if (!circle) continue;
 
-    const paid = await db
+    const paid = await tx
       .select({ sum: sql<number>`coalesce(sum(amount_kobo), 0)` })
       .from(contributions)
       .where(
@@ -259,10 +277,11 @@ async function getExpectedPerActiveCircle(
 }
 
 async function getOutstandingDebtsForMemberCircles(
+  tx: TxOrDb,
   mcIds: string[],
 ): Promise<number> {
   if (mcIds.length === 0) return 0;
-  const rows = await db
+  const rows = await tx
     .select({
       remaining: sql<number>`coalesce(sum(amount_kobo - paid_kobo), 0)`,
     })
@@ -273,21 +292,29 @@ async function getOutstandingDebtsForMemberCircles(
   return Number(rows[0]?.remaining) || 0;
 }
 
+// ---------------------------------------------------------------------------
+// applyFifoDebtClearing — uses FOR UPDATE + atomic SQL to prevent races
+// ---------------------------------------------------------------------------
+
 async function applyFifoDebtClearing(
+  tx: TxOrDb,
   userId: string,
   amountKobo: number,
   _vaId: string,
 ): Promise<number> {
-  const mcIds = await getMemberCircleIds(userId);
+  const mcIds = await getMemberCircleIds(tx, userId);
   if (mcIds.length === 0) return amountKobo;
 
-  const activeDebts = await db
+  // FOR UPDATE locks the selected debt rows so concurrent webhook events
+  // for the same user cannot read stale paidKobo values.
+  const activeDebts = await tx
     .select()
     .from(debts)
     .where(
       and(inArray(debts.debtorMemberId, mcIds), eq(debts.status, "active")),
     )
-    .orderBy(asc(debts.createdAt));
+    .orderBy(asc(debts.createdAt))
+    .for("update");
 
   let remaining = amountKobo;
 
@@ -295,7 +322,8 @@ async function applyFifoDebtClearing(
     const debtRemaining = debt.amountKobo - debt.paidKobo;
     if (remaining >= debtRemaining) {
       remaining -= debtRemaining;
-      await db
+      // Atomic: full clear in one statement
+      await tx
         .update(debts)
         .set({
           paidKobo: debt.amountKobo,
@@ -304,9 +332,10 @@ async function applyFifoDebtClearing(
         })
         .where(eq(debts.id, debt.id));
     } else {
-      await db
+      // Atomic: use SQL addition to prevent read-modify-write race
+      await tx
         .update(debts)
-        .set({ paidKobo: debt.paidKobo + remaining })
+        .set({ paidKobo: sql`paid_kobo + ${remaining}` })
         .where(eq(debts.id, debt.id));
       remaining = 0;
       break;
@@ -316,12 +345,18 @@ async function applyFifoDebtClearing(
   return remaining;
 }
 
+// ---------------------------------------------------------------------------
+// allocateToCycle — populates nombaTransactionRef for DB-level dedup
+// ---------------------------------------------------------------------------
+
 async function allocateToCycle(
+  tx: TxOrDb,
   _userId: string,
   amountKobo: number,
   vaId: string,
   classification: Classification,
   expected: Record<string, number>,
+  nombaTransactionRef?: string | null,
 ): Promise<number> {
   let remaining = amountKobo;
   const sortedEntries = Object.entries(expected).sort(([a], [b]) =>
@@ -330,14 +365,14 @@ async function allocateToCycle(
   for (const [mcId, expectedAmt] of sortedEntries) {
     if (remaining <= 0) break;
 
-    const [mc] = await db
+    const [mc] = await tx
       .select({ circleId: membersCircles.circleId })
       .from(membersCircles)
       .where(eq(membersCircles.id, mcId))
       .limit(1);
     if (!mc) continue;
 
-    const [activeCycle] = await db
+    const [activeCycle] = await tx
       .select()
       .from(cycles)
       .where(and(eq(cycles.circleId, mc.circleId), eq(cycles.status, "active")))
@@ -347,17 +382,23 @@ async function allocateToCycle(
     const alloc = Math.min(remaining, expectedAmt);
     if (alloc <= 0) continue;
 
-    await db.insert(contributions).values({
-      memberCircleId: mcId,
-      cycleId: activeCycle.id,
-      virtualAccountId: vaId,
-      amountKobo: alloc,
-      appliedKobo: alloc,
-      status: classification === "underpayment" ? "partial" : "fully_applied",
-      reconciledAt: new Date(),
-    });
+    // Insert contribution WITH nombaTransactionRef so the DB UNIQUE constraint
+    // prevents double-allocation even if the webhook handler retries.
+    await tx
+      .insert(contributions)
+      .values({
+        memberCircleId: mcId,
+        cycleId: activeCycle.id,
+        virtualAccountId: vaId,
+        amountKobo: alloc,
+        appliedKobo: alloc,
+        status: classification === "underpayment" ? "partial" : "fully_applied",
+        nombaTransactionRef: nombaTransactionRef || undefined,
+        reconciledAt: new Date(),
+      })
+      .onConflictDoNothing({ target: contributions.nombaTransactionRef });
 
-    await db
+    await tx
       .update(cycles)
       .set({
         actualTotalKobo: sql`actual_total_kobo + ${alloc}`,
@@ -374,7 +415,13 @@ async function allocateToCycle(
 // ---------------------------------------------------------------------------
 
 export async function reconcileCycle(cycleId: string) {
-  const [cycle] = await db
+  return db.transaction(async (tx) => {
+    return reconcileCycleInTx(tx, cycleId);
+  });
+}
+
+async function reconcileCycleInTx(tx: TxOrDb, cycleId: string) {
+  const [cycle] = await tx
     .select()
     .from(cycles)
     .where(eq(cycles.id, cycleId))
@@ -383,14 +430,14 @@ export async function reconcileCycle(cycleId: string) {
   if (cycle.status === "closed" || cycle.status === "paid_out")
     throw new Error("Cycle already closed");
 
-  const [circle] = await db
+  const [circle] = await tx
     .select()
     .from(circles)
     .where(eq(circles.id, cycle.circleId))
     .limit(1);
   if (!circle) throw new Error("Circle not found");
 
-  const members = await db
+  const members = await tx
     .select()
     .from(membersCircles)
     .where(
@@ -403,10 +450,9 @@ export async function reconcileCycle(cycleId: string) {
 
   if (members.length === 0) throw new Error("No active members");
 
-  // Pre-fetch member names once
   const memberInfo = await Promise.all(
     members.map(async (mc) => {
-      const [user] = await db
+      const [user] = await tx
         .select({ name: users.name, userId: users.id })
         .from(users)
         .where(eq(users.id, mc.userId))
@@ -435,9 +481,8 @@ export async function reconcileCycle(cycleId: string) {
     amountKobo: number;
   }> = [];
 
-  // Single pass: compute contributions, insert debts, build response, create notifications
   for (const mc of members) {
-    const memberContribs = await db
+    const memberContribs = await tx
       .select({ sum: sql<number>`coalesce(sum(amount_kobo), 0)` })
       .from(contributions)
       .where(
@@ -455,16 +500,18 @@ export async function reconcileCycle(cycleId: string) {
     if (paidKobo < circle.contributionAmountKobo) {
       const deficit = circle.contributionAmountKobo - paidKobo;
 
-      await db.insert(debts).values({
+      const fineKobo = 50000;
+      await tx.insert(debts).values({
         cycleId: cycle.id,
         debtorMemberId: mc.id,
         creditorMemberId: cycle.recipientMemberId,
-        amountKobo: deficit,
+        amountKobo: deficit + fineKobo,
         paidKobo: 0,
+        fineKobo,
         status: "active",
       });
 
-      await db
+      await tx
         .update(membersCircles)
         .set({
           missedCycles: sql`missed_cycles + 1`,
@@ -479,17 +526,17 @@ export async function reconcileCycle(cycleId: string) {
         amountKobo: deficit,
       });
 
-      await db.insert(notifications).values({
+      await tx.insert(notifications).values({
         userId: mc.userId,
         title: "Debt recorded for missed contribution",
-        body: `Cycle ${cycle.cycleNumber} shortfall of ₦${(deficit / 100).toLocaleString()} recorded. This amount carries forward.`,
+        body: `Cycle ${cycle.cycleNumber} shortfall of ₦${(deficit / 100).toLocaleString()} + ₦500 fine recorded. This amount carries forward.`,
         type: "payment",
       });
     }
 
     if (paidKobo > circle.contributionAmountKobo) {
       const excess = paidKobo - circle.contributionAmountKobo;
-      const [va] = await db
+      const [va] = await tx
         .select()
         .from(virtualAccounts)
         .where(
@@ -500,7 +547,7 @@ export async function reconcileCycle(cycleId: string) {
         )
         .limit(1);
       if (va) {
-        await db
+        await tx
           .update(virtualAccounts)
           .set({
             balanceKobo: sql`balance_kobo + ${excess}`,
@@ -510,8 +557,7 @@ export async function reconcileCycle(cycleId: string) {
     }
   }
 
-  // Close the cycle
-  await db
+  await tx
     .update(cycles)
     .set({
       actualTotalKobo: totalPaid,
@@ -520,16 +566,15 @@ export async function reconcileCycle(cycleId: string) {
     })
     .where(eq(cycles.id, cycle.id));
 
-  // Advance to next cycle
   let nextCycle = null;
-  if (cycle.cycleNumber < circle.cycleCount) {
+  if (circle.cycleCount === null || cycle.cycleNumber < circle.cycleCount) {
     const nextCycleNumber = cycle.cycleNumber + 1;
     const nextRecipientIndex = (nextCycleNumber - 1) % members.length;
     const nextRecipient = members[nextRecipientIndex];
     if (nextRecipient) {
       const deadlineHours =
-        circle.gracePeriodHours || (circle.frequency === "weekly" ? 24 : 72);
-      [nextCycle] = await db
+        circle.gracePeriodHours || (circle.frequency === "daily" ? 6 : circle.frequency === "weekly" ? 24 : 72);
+      [nextCycle] = await tx
         .insert(cycles)
         .values({
           circleId: circle.id,
@@ -543,14 +588,13 @@ export async function reconcileCycle(cycleId: string) {
         })
         .returning();
 
-      await db
+      await tx
         .update(circles)
         .set({ currentCycle: nextCycleNumber })
         .where(eq(circles.id, circle.id));
 
-      // Case 4: gather active debts per member for the next-cycle notification
       const memberDebtMap = new Map<string, number>();
-      const allActiveDebts = await db
+      const allActiveDebts = await tx
         .select({
           debtorMemberId: debts.debtorMemberId,
           remaining: sql<number>`amount_kobo - paid_kobo`,
@@ -580,7 +624,7 @@ export async function reconcileCycle(cycleId: string) {
             ? `Contribute ₦${(totalRequired / 100).toLocaleString()} (${formattedContribution} + ₦${(outstandingDebt / 100).toLocaleString()} debt) by ${deadline}.`
             : `Contribute ${formattedContribution} by ${deadline}.`;
 
-        await db.insert(notifications).values({
+        await tx.insert(notifications).values({
           userId: mc.userId,
           title: `Cycle ${nextCycleNumber} started`,
           body,
@@ -590,12 +634,11 @@ export async function reconcileCycle(cycleId: string) {
     }
   }
 
-  // Notify recipient
   const recipientInfo = memberInfo.find(
     (m) => m.mcId === cycle.recipientMemberId,
   );
   if (recipientInfo) {
-    await db.insert(notifications).values({
+    await tx.insert(notifications).values({
       userId: recipientInfo.userId,
       title: `Cycle ${cycle.cycleNumber} payout`,
       body: `₦${(totalPaid / 100).toLocaleString()} collected for your cycle.${totalPaid < cycle.expectedTotalKobo ? ` Shortfall ₦${((cycle.expectedTotalKobo - totalPaid) / 100).toLocaleString()} tracked as debts.` : ""}`,
@@ -603,9 +646,9 @@ export async function reconcileCycle(cycleId: string) {
     });
   }
 
-  const isLastCycle = cycle.cycleNumber >= circle.cycleCount;
+  const isLastCycle = circle.cycleCount !== null && cycle.cycleNumber >= circle.cycleCount;
   if (isLastCycle) {
-    await db
+    await tx
       .update(circles)
       .set({ status: "completed" })
       .where(eq(circles.id, circle.id));
@@ -629,18 +672,36 @@ export async function reconcileCycle(cycleId: string) {
   };
 }
 
-async function handleOrphan(payload: WebhookPayload) {
+async function handleOrphan(tx: TxOrDb, payload: WebhookPayload) {
   const txn = payload.data.transaction;
+  const customer = payload.data.customer;
+
+  await tx
+    .insert(orphanPayments)
+    .values({
+      nombaRequestId: payload.requestId,
+      transactionId: txn.transactionId,
+      accountNumber: txn.aliasAccountNumber || null,
+      amountKobo: Math.round((txn.transactionAmount || 0) * 100),
+      senderName: customer?.senderName || null,
+      senderAccount: customer?.accountNumber || null,
+      senderBank: customer?.bankName || null,
+      narration: txn.narration || null,
+      rawPayload: payload,
+    })
+    .onConflictDoNothing();
+
   console.error(
-    `Orphan payment: ${txn.aliasAccountNumber}, amount: ${txn.transactionAmount}`,
+    `[Orphan] ${txn.aliasAccountNumber} — ₦${(txn.transactionAmount || 0).toLocaleString()} — no matching VA. Logged to orphan_payments.`,
   );
 }
 
 async function flagForReview(
+  tx: TxOrDb,
   va: typeof virtualAccounts.$inferSelect,
   actual: number,
 ) {
-  await db.insert(notifications).values({
+  await tx.insert(notifications).values({
     userId: va.userId,
     title: "Misdirected payment flagged",
     body: `₦${(actual / 100).toLocaleString()} received — doesn't match expected amounts.`,

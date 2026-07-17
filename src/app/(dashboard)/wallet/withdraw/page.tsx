@@ -122,7 +122,7 @@ export default function WithdrawPage() {
         <div className="flex flex-col gap-2">
           <span className="text-[10px] font-semibold tracking-[0.05em] text-muted-foreground uppercase flex items-center gap-1.5">
             <BankIcon className="size-3" />
-          Bank Account
+            Bank Account
           </span>
           <BankSearchInput
             value={accountNumber}

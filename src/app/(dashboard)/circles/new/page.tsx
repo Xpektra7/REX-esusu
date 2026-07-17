@@ -21,6 +21,7 @@ const initial = {
   contributionAmount: 0,
   frequency: "weekly" as const,
   cycleCount: 0,
+  continuous: false,
 };
 
 export default function CreateCirclePage() {
@@ -33,8 +34,8 @@ export default function CreateCirclePage() {
     mutationFn: (data: {
       name: string;
       contributionAmountKobo: number;
-      frequency: "weekly" | "monthly";
-      cycleCount: number;
+      frequency: "daily" | "weekly" | "monthly";
+      cycleCount?: number;
     }) => api.circles.create(data),
     onSuccess: (res: { data: { id: string } }) => {
       toast.success("Circle created!");
@@ -45,7 +46,7 @@ export default function CreateCirclePage() {
     },
   });
 
-  function handleChange(field: keyof typeof initial, value: string | number) {
+  function handleChange(field: keyof typeof initial, value: string | number | boolean) {
     setForm((prev) => ({ ...prev, [field]: value }));
     setErrors((prev) => ({ ...prev, [field]: undefined }));
   }
@@ -66,9 +67,10 @@ export default function CreateCirclePage() {
   }
 
   function doCreate() {
-    const parsed = createCircleSchema.safeParse(form);
+    const data = form.continuous ? { ...form, cycleCount: undefined } : form;
+    const parsed = createCircleSchema.safeParse(data);
     if (!parsed.success) return;
-    const { defaultResolutionRule: _, ...apiData } = parsed.data;
+    const { defaultResolutionRule: _, continuous, ...apiData } = parsed.data;
     mutation.mutate({
       ...apiData,
       contributionAmountKobo: apiData.contributionAmount * 100,
@@ -76,6 +78,7 @@ export default function CreateCirclePage() {
   }
 
   const freqOptions = [
+    { value: "daily" as const, label: "Daily" },
     { value: "weekly" as const, label: "Weekly" },
     { value: "monthly" as const, label: "Monthly" },
   ];
@@ -190,11 +193,32 @@ export default function CreateCirclePage() {
                 handleChange("cycleCount", Number(e.target.value))
               }
               aria-invalid={!!errors.cycleCount}
+              disabled={form.continuous}
             />
             {errors.cycleCount && (
               <p className="text-sm text-destructive">{errors.cycleCount}</p>
             )}
           </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => handleChange("continuous", !form.continuous)}
+            className={cn(
+              "flex items-center gap-2 rounded-full px-4 py-2.5 text-xs font-bold tracking-wider transition-colors",
+              form.continuous
+                ? "bg-primary text-card-foreground"
+                : "bg-muted text-muted-foreground hover:bg-muted/80",
+            )}
+          >
+            ∞ Continuous Circle
+          </button>
+          {form.continuous && (
+            <span className="text-xs text-muted-foreground">
+              Circle auto-renews — no end date
+            </span>
+          )}
         </div>
 
         {/* Tip Card */}

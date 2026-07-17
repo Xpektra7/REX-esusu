@@ -4,9 +4,9 @@ import { useQuery } from "@tanstack/react-query";
 import { Key01Icon, PlusSignIcon } from "hugeicons-react";
 import Link from "next/link";
 import { useState } from "react";
-import { PageBreadcrumbs } from "@/components/shared/page-breadcrumbs";
 import { JoinByCodeDialog } from "@/components/circles/join-by-code-dialog";
 import { CircleCard, type CircleData } from "@/components/shared/circle-card";
+import { PageBreadcrumbs } from "@/components/shared/page-breadcrumbs";
 import { Button } from "@/components/ui/button";
 import {
   Empty,
@@ -71,7 +71,11 @@ export default function CirclesPage() {
           </EmptyHeader>
           <EmptyContent>
             <div className="flex flex-col gap-2">
-              <Button size="sm" variant="outline" onClick={() => setDialogOpen(true)}>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setDialogOpen(true)}
+              >
                 <Key01Icon data-icon="inline-start" />
                 Join with code
               </Button>
