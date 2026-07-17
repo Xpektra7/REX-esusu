@@ -1,6 +1,74 @@
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { cycles, payoutTransactions, walletTransactions } from "@/db/schema";
+import { cycles, payoutTransactions, walletTransactions, virtualAccounts } from "@/db/schema";
+import { nombaPost } from "./nomba";
+
+export async function initiatePayout(
+  cycleId: string,
+  recipientUserId: string,
+  recipientName: string,
+  amountKobo: number,
+): Promise<{ id: string; status: string }> {
+  const merchantTxRef = `PO_${cycleId.slice(0, 8)}_${Date.now()}`;
+
+  const [va] = await db
+    .select()
+    .from(virtualAccounts)
+    .where(eq(virtualAccounts.userId, recipientUserId))
+    .limit(1);
+
+  if (!va?.bankCode || !va?.accountNumber) {
+    throw new Error("Recipient has no bank details on file");
+  }
+
+  const [pt] = await db
+    .insert(payoutTransactions)
+    .values({
+      cycleId,
+      recipientUserId,
+      amountKobo,
+      nombaTransferRef: merchantTxRef,
+      status: "pending",
+    })
+    .returning();
+
+  try {
+    const nombaResp = await nombaPost("/v2/transfers/bank", {
+      amount: amountKobo,
+      bankCode: va.bankCode,
+      accountNumber: va.accountNumber,
+      accountName: va.accountName,
+      senderName: "Esusu",
+      merchantTxRef,
+      narration: `Payout for cycle ${cycleId.slice(0, 8)}`,
+    });
+
+    const ref =
+      nombaResp?.data?.meta?.merchantTxRef ||
+      nombaResp?.data?.id ||
+      merchantTxRef;
+
+    await db
+      .update(payoutTransactions)
+      .set({
+        status: "processing",
+        nombaTransferRef: ref,
+        nombaResponse: nombaResp as unknown,
+      })
+      .where(eq(payoutTransactions.id, pt.id));
+
+    return { id: pt.id, status: "processing" };
+  } catch (err) {
+    await db
+      .update(payoutTransactions)
+      .set({
+        status: "failed",
+        nombaResponse: err as unknown,
+      })
+      .where(eq(payoutTransactions.id, pt.id));
+    throw err;
+  }
+}
 
 export async function handlePayoutSuccess(payload: {
   event_type: string;

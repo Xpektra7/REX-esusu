@@ -1,5 +1,6 @@
 import { and, asc, eq, inArray, sql } from "drizzle-orm";
 import { db } from "@/db";
+import { initiatePayout } from "./payout";
 import {
   circles,
   contributions,
@@ -693,6 +694,32 @@ export async function reconcileCycle(cycleId: string) {
 
   const isLastCycle = result.isLastCycle;
 
+  // Initiate payout to the cycle recipient after the transaction commits
+  const recipientMember = members.find(
+    (m) => m.id === cycle.recipientMemberId,
+  );
+  let payoutStatus: string | null = null;
+  if (recipientMember && result.totalPaid > 0) {
+    const feeKobo = Math.min(5000, Math.ceil(result.totalPaid * 0.01));
+    const payoutAmount = result.totalPaid - feeKobo;
+    if (payoutAmount > 0) {
+      try {
+        const p = await initiatePayout(
+          cycleId,
+          recipientMember.userId,
+          recipientName,
+          payoutAmount,
+        );
+        payoutStatus = p.status;
+      } catch (e) {
+        console.error(
+          `[reconcileCycle] Payout initiation failed for cycle ${cycleId}:`,
+          e,
+        );
+      }
+    }
+  }
+
   return {
     cycleNumber: cycle.cycleNumber,
     totalExpectedKobo: cycle.expectedTotalKobo,
@@ -708,6 +735,7 @@ export async function reconcileCycle(cycleId: string) {
         }
       : null,
     circleCompleted: isLastCycle,
+    payoutStatus,
   };
 }
 
