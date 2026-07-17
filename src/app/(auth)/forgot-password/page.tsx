@@ -56,7 +56,7 @@ export default function ForgotPasswordPage() {
     e.preventDefault();
     setError(null);
 
-    if (otp.length < 4) {
+    if (otp.length !== 6) {
       setError("Enter the full reset code");
       return;
     }
@@ -193,7 +193,7 @@ export default function ForgotPasswordPage() {
             </div>
 
             <InputOTP
-              maxLength={4}
+              maxLength={6}
               value={otp}
               onChange={setOtp}
               required
@@ -202,11 +202,13 @@ export default function ForgotPasswordPage() {
               <InputOTPGroup className="flex-1 *:data-[slot=input-otp-slot]:flex-1 *:data-[slot=input-otp-slot]:h-10 *:data-[slot=input-otp-slot]:text-xl">
                 <InputOTPSlot index={0} />
                 <InputOTPSlot index={1} />
+                <InputOTPSlot index={2} />
               </InputOTPGroup>
               <InputOTPSeparator className="mx-3" />
               <InputOTPGroup className="flex-1 *:data-[slot=input-otp-slot]:flex-1 *:data-[slot=input-otp-slot]:h-10 *:data-[slot=input-otp-slot]:text-xl">
-                <InputOTPSlot index={2} />
                 <InputOTPSlot index={3} />
+                <InputOTPSlot index={4} />
+                <InputOTPSlot index={5} />
               </InputOTPGroup>
             </InputOTP>
           </div>
@@ -257,7 +259,7 @@ export default function ForgotPasswordPage() {
             type="submit"
             size="lg"
             className="w-full py-4 text-base"
-            disabled={loading || otp.length < 4}
+            disabled={loading || otp.length !== 6}
           >
             {loading ? "Resetting..." : "Reset password"}
           </Button>

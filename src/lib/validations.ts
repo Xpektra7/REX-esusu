@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const otpSchema = z.object({
-  otp: z.string().length(4, "OTP must be 4 digits"),
+  otp: z.string().length(6, "OTP must be 6 digits"),
 });
 
 export const passwordSchema = z.object({
@@ -17,7 +17,7 @@ export const pinSchema = z.object({
 
 export const signupSchema = z.object({
   email: z.string().email("Enter a valid email address"),
-  otp: z.string().length(4, "OTP must be 4 digits"),
+  otp: z.string().length(6, "OTP must be 6 digits"),
   password: z.string().min(8, "Password must be at least 8 characters").max(128),
   name: z.string().min(2, "Name must be at least 2 characters"),
   bvn: z
@@ -38,7 +38,7 @@ export const forgotPasswordSchema = z.object({
 
 export const resetPasswordSchema = z.object({
   email: z.string().email("Enter a valid email address"),
-  otp: z.string().length(4, "OTP must be 4 digits"),
+  otp: z.string().length(6, "OTP must be 6 digits"),
   newPassword: z
     .string()
     .min(8, "Password must be at least 8 characters")

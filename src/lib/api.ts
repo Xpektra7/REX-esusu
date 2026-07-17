@@ -914,7 +914,7 @@ async function mockRequest<T>(
   }
 
   if (path === "/auth/reset-password" && method === "POST") {
-    if (!body.otp || String(body.otp).length < 4) {
+    if (!body.otp || String(body.otp).length !== 6) {
       throw new Error("Invalid or expired OTP");
     }
     if (!body.newPassword || body.newPassword.length < 8) {
