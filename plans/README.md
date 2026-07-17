@@ -12,14 +12,14 @@ the current session addressing critical auth, correctness, and performance gaps.
 | Plan | Title | Priority | Effort | Depends on | Status |
 |------|-------|----------|--------|------------|--------|
 | 001  | Auth middleware — protect dashboard routes | P1 | M | — | **REWRITE** — plan was based on incorrect assumption that proxy.ts is dead code. Use Plan 010 instead. |
-| 002  | Non-atomic circle activation fix | P1 | M | — | TODO |
-| 003  | Env var alignment + .env.example + validation | P1 | S | — | TODO |
+| 002  | Non-atomic circle activation fix | P1 | M | — | DONE |
+| 003  | Env var alignment + .env.example + validation | P1 | S | — | DONE |
 | 004  | Batch N+1 queries in reconciliation engine | P1 | M | 011 | Superseded by Plan 014 |
-| 005  | Fix API double-prefix + Input export | P1 | S | — | TODO (verify double-prefix first — callers use `request("/circles")`) |
-| 006  | Add daily frequency support | P2 | S | — | TODO |
-| 007  | Enforce ₦500 default penalty | P2 | M | 011 | TODO |
-| 008  | Support continuous (multi-cycle) circles | P2 | M | — | TODO |
-| 009  | React hygiene improvements | P2 | S | — | TODO |
+| 005  | Fix API double-prefix + Input export | P1 | S | — | Already resolved — no double prefix existed, Input is in own file |
+| 006  | Add daily frequency support | P2 | S | — | DONE |
+| 007  | Enforce ₦500 default penalty | P2 | M | 011 | DONE |
+| 008  | Support continuous (multi-cycle) circles | P2 | M | — | DONE |
+| 009  | React hygiene improvements | P2 | S | — | DONE |
 | 010  | Harden proxy.ts auth with HttpOnly cookie + JWT verification | P1 | M | — | DONE |
 | 011  | Wrap all money-path writes in database transactions | P1 | M | — | DONE |
 | 012  | Wire up payout transfer after cycle close | P1 | M | 011 | DONE |
