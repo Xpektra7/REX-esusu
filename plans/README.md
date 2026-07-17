@@ -20,11 +20,12 @@ the current session addressing critical auth, correctness, and performance gaps.
 | 007  | Enforce ₦500 default penalty | P2 | M | 011 | TODO |
 | 008  | Support continuous (multi-cycle) circles | P2 | M | — | TODO |
 | 009  | React hygiene improvements | P2 | S | — | TODO |
-| **010** | **Harden proxy.ts auth with HttpOnly cookie + JWT verification** | **P1** | **M** | — | **TODO** |
-| **011** | **Wrap all money-path writes in database transactions** | **P1** | **M** | — | **TODO** |
-| **012** | **Wire up payout transfer after cycle close** | **P1** | **M** | 011 | **TODO** |
-| **013** | **Fix OTP length mismatch (4 vs 6 digits)** | **P1** | **S** | — | **TODO** |
-| **014** | **Batch N+1 queries in reconciliation engine** | **P1** | **M** | 011 | **TODO** |
+| 010  | Harden proxy.ts auth with HttpOnly cookie + JWT verification | P1 | M | — | TODO |
+| 011  | Wrap all money-path writes in database transactions | P1 | M | — | TODO |
+| 012  | Wire up payout transfer after cycle close | P1 | M | 011 | TODO |
+| 013  | Fix OTP length mismatch (4 vs 6 digits) | P1 | S | — | TODO |
+| 014  | Batch N+1 queries in reconciliation engine | P1 | M | 011 | TODO |
+| **015** | **Wallet/Nomba VA gap fixes** | **P1** | **M** | — | **DONE** (see plan for details) |
 
 ## Recommended execution order
 
