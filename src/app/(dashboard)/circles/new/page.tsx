@@ -33,7 +33,7 @@ export default function CreateCirclePage() {
     mutationFn: (data: {
       name: string;
       contributionAmountKobo: number;
-      frequency: "weekly" | "monthly";
+      frequency: "daily" | "weekly" | "monthly";
       cycleCount: number;
     }) => api.circles.create(data),
     onSuccess: (res: { data: { id: string } }) => {
@@ -76,6 +76,7 @@ export default function CreateCirclePage() {
   }
 
   const freqOptions = [
+    { value: "daily" as const, label: "Daily" },
     { value: "weekly" as const, label: "Weekly" },
     { value: "monthly" as const, label: "Monthly" },
   ];

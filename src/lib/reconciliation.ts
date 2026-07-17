@@ -638,7 +638,7 @@ export async function reconcileCycle(cycleId: string) {
       const nextRecipient = members[nextRecipientIndex];
       if (nextRecipient) {
         const deadlineHours =
-          circle.gracePeriodHours || (circle.frequency === "weekly" ? 24 : 72);
+          circle.gracePeriodHours || (circle.frequency === "daily" ? 6 : circle.frequency === "weekly" ? 24 : 72);
         [nextCycle] = await tx
           .insert(cycles)
           .values({
