@@ -6,7 +6,7 @@ interface HeroPotCardProps {
   totalPot: number;
   progress: number;
   currentCycle: number;
-  cycleCount: number;
+  cycleCount: number | null;
   contributionAmount: number;
   frequency: string;
   memberCount: number;
@@ -41,7 +41,7 @@ export function HeroPotCard({
           </div>
           <div className="flex items-center justify-between text-[10px] text-card-foreground/70">
             <span className="font-semibold tracking-wider uppercase">
-              Rotation {rl.rotation} of {rl.totalRotations} · Round {rl.round}{" "}
+              Rotation {rl.rotation}{rl.totalRotations !== null ? ` of ${rl.totalRotations}` : ""} · Round {rl.round}{" "}
               of {memberCount}
             </span>
             <span>{Math.round(progress)}%</span>

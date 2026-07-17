@@ -45,10 +45,10 @@ export function getGreeting(name: string): string {
 
 export function rotationLabel(
   currentCycle: number,
-  totalCycles: number,
+  totalCycles: number | null,
   memberCount: number,
-): { rotation: number; totalRotations: number; round: number } {
-  const totalRotations = Math.ceil(totalCycles / memberCount);
+): { rotation: number; totalRotations: number | null; round: number } {
+  const totalRotations = totalCycles === null ? null : Math.ceil(totalCycles / memberCount);
   const rotation = Math.ceil(currentCycle / memberCount);
   const round = ((currentCycle - 1) % memberCount) + 1;
   return { rotation, totalRotations, round };

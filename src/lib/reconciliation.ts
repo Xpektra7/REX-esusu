@@ -500,12 +500,14 @@ async function reconcileCycleInTx(tx: TxOrDb, cycleId: string) {
     if (paidKobo < circle.contributionAmountKobo) {
       const deficit = circle.contributionAmountKobo - paidKobo;
 
+      const fineKobo = 50000;
       await tx.insert(debts).values({
         cycleId: cycle.id,
         debtorMemberId: mc.id,
         creditorMemberId: cycle.recipientMemberId,
-        amountKobo: deficit,
+        amountKobo: deficit + fineKobo,
         paidKobo: 0,
+        fineKobo,
         status: "active",
       });
 
@@ -527,7 +529,7 @@ async function reconcileCycleInTx(tx: TxOrDb, cycleId: string) {
       await tx.insert(notifications).values({
         userId: mc.userId,
         title: "Debt recorded for missed contribution",
-        body: `Cycle ${cycle.cycleNumber} shortfall of ₦${(deficit / 100).toLocaleString()} recorded. This amount carries forward.`,
+        body: `Cycle ${cycle.cycleNumber} shortfall of ₦${(deficit / 100).toLocaleString()} + ₦500 fine recorded. This amount carries forward.`,
         type: "payment",
       });
     }
@@ -565,13 +567,13 @@ async function reconcileCycleInTx(tx: TxOrDb, cycleId: string) {
     .where(eq(cycles.id, cycle.id));
 
   let nextCycle = null;
-  if (cycle.cycleNumber < circle.cycleCount) {
+  if (circle.cycleCount === null || cycle.cycleNumber < circle.cycleCount) {
     const nextCycleNumber = cycle.cycleNumber + 1;
     const nextRecipientIndex = (nextCycleNumber - 1) % members.length;
     const nextRecipient = members[nextRecipientIndex];
     if (nextRecipient) {
       const deadlineHours =
-        circle.gracePeriodHours || (circle.frequency === "weekly" ? 24 : 72);
+        circle.gracePeriodHours || (circle.frequency === "daily" ? 6 : circle.frequency === "weekly" ? 24 : 72);
       [nextCycle] = await tx
         .insert(cycles)
         .values({
@@ -644,7 +646,7 @@ async function reconcileCycleInTx(tx: TxOrDb, cycleId: string) {
     });
   }
 
-  const isLastCycle = cycle.cycleNumber >= circle.cycleCount;
+  const isLastCycle = circle.cycleCount !== null && cycle.cycleNumber >= circle.cycleCount;
   if (isLastCycle) {
     await tx
       .update(circles)

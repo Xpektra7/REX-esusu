@@ -104,8 +104,8 @@ export async function POST(req: NextRequest) {
     } = body.data;
     const contributionAmountKobo = Math.round(contributionAmount * 100);
 
-    const cyclePeriodDays = frequency === "weekly" ? 7 : 30;
-    const grace = gracePeriodHours || (frequency === "weekly" ? 24 : 72);
+    const cyclePeriodDays = frequency === "daily" ? 1 : frequency === "weekly" ? 7 : 30;
+    const grace = gracePeriodHours || (frequency === "daily" ? 6 : frequency === "weekly" ? 24 : 72);
     const code = Math.random().toString(36).substring(2, 10).toUpperCase();
 
     const [circle] = await db

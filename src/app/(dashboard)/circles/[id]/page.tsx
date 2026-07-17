@@ -108,7 +108,9 @@ export default function CircleDetailPage(props: {
   const members = circle.members ?? [];
   const totalPot = circle.contributionAmount * members.length;
   const progress =
-    circle.cycleCount > 0 ? (circle.currentCycle / circle.cycleCount) * 100 : 0;
+    circle.cycleCount != null && circle.cycleCount > 0
+      ? (circle.currentCycle / circle.cycleCount) * 100
+      : 50;
   const daysLeft = circle.deadlineAt ? daysUntil(circle.deadlineAt) : null;
   const isAdmin = circle.role === "admin";
 

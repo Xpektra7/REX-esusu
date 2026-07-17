@@ -45,7 +45,7 @@ export const circles = pgTable(
     contributionAmountKobo: integer("contribution_amount_kobo").notNull(),
     frequency: varchar("frequency", { length: 20 }).notNull(),
     cyclePeriodDays: integer("cycle_period_days").notNull(),
-    cycleCount: integer("cycle_count").notNull(),
+    cycleCount: integer("cycle_count"),
     currentCycle: integer("current_cycle").default(0).notNull(),
     defaultResolutionRule: varchar("default_resolution_rule", { length: 20 })
       .default("absorb")
