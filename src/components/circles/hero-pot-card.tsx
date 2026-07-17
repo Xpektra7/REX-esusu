@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import { formatNaira, rotationLabel } from "@/lib/utils";
 
 interface HeroPotCardProps {
@@ -12,7 +13,7 @@ interface HeroPotCardProps {
   memberCount: number;
 }
 
-export function HeroPotCard({
+export const HeroPotCard = memo(function HeroPotCard({
   totalPot,
   progress,
   currentCycle,
@@ -53,4 +54,4 @@ export function HeroPotCard({
       </div>
     </section>
   );
-}
+});

@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft01Icon } from "hugeicons-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { use, useEffect, useState } from "react";
+import { use, useState } from "react";
 import { toast } from "sonner";
 import { ActionPinDialog } from "@/components/shared/action-pin-dialog";
 import { PageBreadcrumbs } from "@/components/shared/page-breadcrumbs";
@@ -24,8 +24,6 @@ export default function CircleSettingsPage(props: {
   const [pinDialogOpen, setPinDialogOpen] = useState(false);
   const [capacityPinOpen, setCapacityPinOpen] = useState(false);
   const [namePinOpen, setNamePinOpen] = useState(false);
-  const [name, setName] = useState("");
-
   const { data: res, isLoading } = useQuery({
     queryKey: ["circle", id],
     queryFn: () => api.circles.get(id),
@@ -34,10 +32,7 @@ export default function CircleSettingsPage(props: {
   const circle = res?.data as CirclePageData | undefined;
   const isAdmin = circle?.role === "admin";
 
-  // Keep the editable name in sync with the loaded circle.
-  useEffect(() => {
-    if (circle) setName(circle.name);
-  }, [circle]);
+  const [name, setName] = useState(circle?.name ?? "");
 
   const updateMutation = useMutation({
     mutationFn: (payload: {

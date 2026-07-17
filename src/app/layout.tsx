@@ -1,9 +1,12 @@
 import type { Metadata, Viewport } from "next";
+import dynamic from "next/dynamic";
 import { Inter, Manrope } from "next/font/google";
+import { preconnect } from "react-dom";
 import "./globals.css";
-import { Toaster } from "sonner";
 import { PwaRegister } from "@/components/pwa-register";
 import { cn } from "@/lib/utils";
+
+const Toaster = dynamic(() => import("sonner").then((m) => ({ default: m.Toaster })), { ssr: false });
 
 const inter = Inter({
   subsets: ["latin"],
@@ -44,14 +47,13 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  preconnect("https://api.dicebear.com");
   return (
     <html
       lang="en"
       className={cn("h-full", "antialiased", inter.variable, manrope.variable)}
     >
-      <head>
-        <link rel="preconnect" href="https://api.dicebear.com" />
-      </head>
+      <head></head>
       <body className="min-h-full relative flex flex-col">
         {children}
         <Toaster />

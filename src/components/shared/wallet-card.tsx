@@ -7,10 +7,10 @@ import {
   ViewOffIcon,
 } from "hugeicons-react";
 import Link from "next/link";
-import { useState } from "react";
+import { memo, useState } from "react";
 import { cn, formatNaira } from "@/lib/utils";
 
-export function WalletCard({ balance }: { balance: number }) {
+export const WalletCard = memo(function WalletCard({ balance }: { balance: number }) {
   const [hidden, setHidden] = useState(false);
 
   return (
@@ -65,4 +65,4 @@ export function WalletCard({ balance }: { balance: number }) {
       </div>
     </section>
   );
-}
+});

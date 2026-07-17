@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { UserGroupIcon } from "hugeicons-react";
 import { DiceBearAvatar } from "@/components/shared/dicebear-avatar";
 import { MEMBER_STATUS } from "@/lib/status";
@@ -27,7 +28,7 @@ function MemberStatusBadge({ status }: { status: string }) {
   );
 }
 
-export function MemberList({ members }: { members: MemberItem[] }) {
+export const MemberList = memo(function MemberList({ members }: { members: MemberItem[] }) {
   if (members.length === 0) {
     return (
       <Empty>
@@ -74,4 +75,4 @@ export function MemberList({ members }: { members: MemberItem[] }) {
       })}
     </div>
   );
-}
+});

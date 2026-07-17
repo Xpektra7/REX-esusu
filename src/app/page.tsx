@@ -1,14 +1,16 @@
+import dynamic from "next/dynamic";
 import { Compare } from "@/components/landing/compare";
 import { Cta } from "@/components/landing/cta";
 import { Features } from "@/components/landing/features";
 import { Footer } from "@/components/landing/footer";
-import { Hero } from "@/components/landing/hero";
 import { HowItWorks } from "@/components/landing/how-it-works";
 import { Nav } from "@/components/landing/nav";
 import { Security } from "@/components/landing/security";
 import { Testimonial } from "@/components/landing/testimonial";
 import WhoItsFor from "@/components/landing/who-its-for";
 import { InstallPrompt } from "@/components/shared/install-prompt";
+
+const Hero = dynamic(() => import("@/components/landing/hero").then((m) => ({ default: m.Hero })));
 
 export default function Home() {
   return (
