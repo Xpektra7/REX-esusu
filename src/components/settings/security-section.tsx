@@ -61,7 +61,7 @@ export function SecuritySection() {
         type="button"
         onClick={() => {
           sessionStorage.setItem("pending_pin_mode", "change");
-          router.push("/auth/pin");
+          router.push("/pin");
         }}
         className={cn(
           "flex items-center justify-between rounded-xl card-interactive px-4 py-3 w-full text-left",

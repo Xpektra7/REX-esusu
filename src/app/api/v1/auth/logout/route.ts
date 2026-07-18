@@ -19,7 +19,7 @@ export async function POST(req: Request) {
     {
       headers: {
         "Set-Cookie":
-          "esusu-auth=; path=/; max-age=0; HttpOnly; Secure; SameSite=Strict",
+          "esusu-token=; path=/; max-age=0; HttpOnly; Secure; SameSite=Strict",
       },
     },
   );

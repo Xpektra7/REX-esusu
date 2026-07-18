@@ -1164,7 +1164,7 @@ async function mockRequest<T>(
 
 function redirectToAuth() {
   if (typeof window !== "undefined") {
-    window.location.href = "/auth";
+    window.location.href = "/signin";
   }
 }
 

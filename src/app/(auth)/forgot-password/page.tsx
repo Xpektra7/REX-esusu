@@ -72,7 +72,7 @@ export default function ForgotPasswordPage() {
     setLoading(true);
     try {
       await api.auth.resetPassword({ email, otp, newPassword });
-      window.location.href = "/auth";
+      window.location.href = "/signin";
     } catch (err) {
       setError(err instanceof Error ? err.message : "Reset failed");
     } finally {
@@ -145,7 +145,7 @@ export default function ForgotPasswordPage() {
             )}
 
             <Link
-              href="/auth"
+              href="/signin"
               className="text-sm text-muted-foreground hover:text-foreground"
             >
               Back to login

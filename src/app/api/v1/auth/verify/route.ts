@@ -135,6 +135,8 @@ export async function POST(req: NextRequest) {
         .set({ loginAttempts: 0, lockedUntil: null })
         .where(eq(users.id, existing.id));
 
+      const commonCookie = `esusu-token=${token}; path=/; max-age=604800; HttpOnly; Secure; SameSite=Strict`;
+
       return NextResponse.json(
         {
           code: "00",
@@ -153,8 +155,7 @@ export async function POST(req: NextRequest) {
         },
         {
           headers: {
-            "Set-Cookie":
-              "esusu-auth=true; path=/; max-age=604800; HttpOnly; Secure; SameSite=Strict",
+            "Set-Cookie": commonCookie,
           },
         },
       );
@@ -192,6 +193,8 @@ export async function POST(req: NextRequest) {
     const newToken = signToken(user.id, user.email, user.sessionVersion);
     const newRefreshToken = signToken(user.id, user.email, user.sessionVersion);
 
+    const signupCookie = `esusu-token=${newToken}; path=/; max-age=604800; HttpOnly; Secure; SameSite=Strict`;
+
     return NextResponse.json(
       {
         code: "00",
@@ -210,8 +213,7 @@ export async function POST(req: NextRequest) {
       },
       {
         headers: {
-          "Set-Cookie":
-            "esusu-auth=true; path=/; max-age=604800; HttpOnly; Secure; SameSite=Strict",
+          "Set-Cookie": signupCookie,
         },
       },
     );

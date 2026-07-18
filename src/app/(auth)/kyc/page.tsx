@@ -23,7 +23,7 @@ import { useAuthStore } from "@/stores/auth-store";
  *   2. verifying — calls api.auth.verifyBvn() server-side
  *   3. confirm   — shows the returned name and asks "Is this you?"
  *
- * On confirm → marks BVN as verified in the store, redirects to /auth/pin?mode=set.
+ * On confirm → marks BVN as verified in the store, redirects to /pin?mode=set.
  */
 export default function KycPage() {
   const router = useRouter();
@@ -35,13 +35,13 @@ export default function KycPage() {
   const [error, setError] = useState<string | null>(null);
 
   if (!accessToken) {
-    router.replace("/auth");
+    router.replace("/signin");
     return null;
   }
 
   if (!needsBvn) {
     sessionStorage.setItem("pending_pin_mode", "set");
-    router.replace("/auth/pin");
+    router.replace("/pin");
     return null;
   }
 
@@ -71,7 +71,7 @@ export default function KycPage() {
   const handleConfirm = () => {
     setBvnVerified();
     sessionStorage.setItem("pending_pin_mode", "set");
-    router.push("/auth/pin");
+    router.push("/pin");
   };
 
   // ------------------------------------------------------------------

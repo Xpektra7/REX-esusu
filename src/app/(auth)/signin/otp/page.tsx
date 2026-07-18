@@ -71,9 +71,10 @@ function OtpForm() {
       });
 
       if (data.needsBvn) {
-        router.push("/auth/kyc");
+        router.push("/kyc");
       } else if (!data.pinSet) {
-        router.push("/auth/pin");
+        sessionStorage.setItem("pending_pin_mode", "set");
+        router.push("/pin");
       } else {
         router.push("/dashboard");
       }
