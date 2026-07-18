@@ -82,7 +82,8 @@ export default function SetPinPage() {
         <CardContent className="flex flex-col gap-4">
           <InputOTP
             maxLength={4}
-            type="password"
+            mask
+            autoComplete="off"
             className="flex justify-center"
             value={step === "confirm" ? confirmPin : pin}
             onChange={(val) => {

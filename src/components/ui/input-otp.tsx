@@ -6,24 +6,30 @@ import { OTPInput, OTPInputContext } from "input-otp";
 import * as React from "react";
 import { cn } from "@/lib/utils";
 
+const InputOTPMaskContext = React.createContext(false);
+
 function InputOTP({
   className,
   containerClassName,
+  mask,
   ...props
 }: React.ComponentProps<typeof OTPInput> & {
   containerClassName?: string;
+  mask?: boolean;
 }) {
   return (
-    <OTPInput
-      data-slot="input-otp"
-      containerClassName={cn(
-        "cn-input-otp flex items-center has-disabled:opacity-50",
-        containerClassName,
-      )}
-      spellCheck={false}
-      className={cn("disabled:cursor-not-allowed", className)}
-      {...props}
-    />
+    <InputOTPMaskContext.Provider value={!!mask}>
+      <OTPInput
+        data-slot="input-otp"
+        containerClassName={cn(
+          "cn-input-otp flex items-center has-disabled:opacity-50",
+          containerClassName,
+        )}
+        spellCheck={false}
+        className={cn("disabled:cursor-not-allowed", className)}
+        {...props}
+      />
+    </InputOTPMaskContext.Provider>
   );
 }
 
@@ -49,6 +55,7 @@ function InputOTPSlot({
 }) {
   const inputOTPContext = React.useContext(OTPInputContext);
   const { char, hasFakeCaret, isActive } = inputOTPContext?.slots[index] ?? {};
+  const masked = React.useContext(InputOTPMaskContext);
 
   return (
     <div
@@ -60,7 +67,7 @@ function InputOTPSlot({
       )}
       {...props}
     >
-      {char}
+      {masked && char ? "•" : char}
       {hasFakeCaret && (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
           <div className="h-4 w-px animate-caret-blink bg-foreground duration-1000" />

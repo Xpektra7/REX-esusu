@@ -203,7 +203,8 @@ function PinForm() {
         <CardContent className="flex flex-col gap-4">
           <InputOTP
             maxLength={4}
-            type="password"
+            mask
+            autoComplete="off"
             className="flex justify-center4"
             value={
               mode === "change" && step === "current"

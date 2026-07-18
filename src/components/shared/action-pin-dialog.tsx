@@ -130,7 +130,8 @@ export function ActionPinDialog({
 
             <InputOTP
               maxLength={4}
-              type="password"
+              mask
+              autoComplete="off"
               value={pin}
               onChange={(val) => {
                 setPin(val);
