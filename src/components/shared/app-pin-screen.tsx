@@ -110,6 +110,7 @@ export function AppPinScreen({ children }: { children: React.ReactNode }) {
           >
             <InputOTP
               maxLength={4}
+              type="password"
               value={pin}
               onChange={(val) => {
                 setPin(val);
