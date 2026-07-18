@@ -168,10 +168,13 @@ export async function reconcilePaymentInTx(
       .onConflictDoNothing();
 
     if (classification === "topup") {
+      const senderName = payload.data.customer?.senderName;
       await tx.insert(notifications).values({
         userId: va[0].userId,
         title: "Top-up received",
-        body: `₦${(remaining / 100).toLocaleString()} has been added to your wallet.`,
+        body: senderName
+          ? `₦${(remaining / 100).toLocaleString()} received from ${senderName}.`
+          : `₦${(remaining / 100).toLocaleString()} has been added to your wallet.`,
         type: "payment",
       });
     }
