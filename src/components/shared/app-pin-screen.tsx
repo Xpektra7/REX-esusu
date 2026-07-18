@@ -24,15 +24,12 @@ import { usePinSessionStore } from "@/stores/pin-session-store";
 export function AppPinScreen({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const { isAuthenticated, pinSet, clearAuth } = useAuthStore();
-  const appUnlocked = usePinSessionStore((s) => s.appUnlocked);
-  const hydrated = usePinSessionStore((s) => s._hydrated);
-  const unlock = usePinSessionStore((s) => s.unlock);
+  const { appUnlocked, unlock } = usePinSessionStore();
   const [pin, setPin] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [locked, setLocked] = useState(false);
 
-  if (!hydrated) return null;
   if (!isAuthenticated || !pinSet || appUnlocked) return children;
 
   const handleSubmit = async (e: React.FormEvent) => {
