@@ -116,7 +116,7 @@ export async function reconcilePaymentInTx(
   const totalExpected = baseExpectedTotal + outstandingDebts;
 
   let classification: Classification;
-  if (totalExpected <= 0 && !ourRef) {
+  if (!ourRef) {
     classification = "topup";
   } else {
     classification = classifyPayment(actual, totalExpected);
@@ -438,7 +438,7 @@ export async function reconcileCycle(cycleId: string) {
     return reconcileCycleInTx(tx, cycleId);
   });
 
-  // Initiate payout after the transaction commits
+  let payoutSucceeded = false;
   if (result.totalPaidKobo > 0) {
     const feeKobo = Math.min(5000, Math.ceil(result.totalPaidKobo * 0.01));
     const payoutAmount = result.totalPaidKobo - feeKobo;
@@ -451,6 +451,7 @@ export async function reconcileCycle(cycleId: string) {
           payoutAmount,
         );
         result.payoutStatus = p.status;
+        payoutSucceeded = true;
       } catch (e) {
         console.error(
           `[reconcileCycle] Payout initiation failed for cycle ${cycleId}:`,
@@ -458,6 +459,39 @@ export async function reconcileCycle(cycleId: string) {
         );
       }
     }
+  }
+
+  // Send notifications after payout attempt so users don't get false hope
+  const formattedAmount = `₦${(result.totalPaidKobo / 100).toLocaleString()}`;
+  const shortfallText =
+    result.totalPaidKobo < result.totalExpectedKobo
+      ? ` Shortfall ₦${((result.totalExpectedKobo - result.totalPaidKobo) / 100).toLocaleString()} tracked as debts.`
+      : "";
+
+  if (payoutSucceeded) {
+    await db.insert(notifications).values({
+      userId: result.recipientUserId,
+      title: `Payout from ${result.circleName}`,
+      body: `${formattedAmount} paid out to you for ${result.circleName} Cycle ${result.cycleNumber}.${shortfallText}`,
+      type: "payout",
+    });
+
+    for (const m of result.memberInfo) {
+      if (m.userId === result.recipientUserId) continue;
+      await db.insert(notifications).values({
+        userId: m.userId,
+        title: `Payout from ${result.circleName}`,
+        body: `${formattedAmount} paid out to ${result.recipientName} for ${result.circleName} Cycle ${result.cycleNumber}.`,
+        type: "payout",
+      });
+    }
+  } else if (result.totalPaidKobo > 0) {
+    await db.insert(notifications).values({
+      userId: result.recipientUserId,
+      title: `Payout pending for ${result.circleName}`,
+      body: `${formattedAmount} collected for ${result.circleName} Cycle ${result.cycleNumber} but payout is being processed. You'll be notified once it lands.${shortfallText}`,
+      type: "payout",
+    });
   }
 
   return result;
@@ -685,28 +719,6 @@ async function reconcileCycleInTx(tx: TxOrDb, cycleId: string) {
     }
   }
 
-  const recipientInfo = memberInfo.find(
-    (m) => m.mcId === cycle.recipientMemberId,
-  );
-  if (recipientInfo) {
-    await tx.insert(notifications).values({
-      userId: recipientInfo.userId,
-      title: `Payout from ${circle.name}`,
-      body: `₦${(totalPaid / 100).toLocaleString()} paid out to you for ${circle.name} Cycle ${cycle.cycleNumber}.${totalPaid < cycle.expectedTotalKobo ? ` Shortfall ₦${((cycle.expectedTotalKobo - totalPaid) / 100).toLocaleString()} tracked as debts.` : ""}`,
-      type: "payout",
-    });
-  }
-
-  for (const m of memberInfo) {
-    if (m.userId === recipientInfo?.userId) continue;
-    await tx.insert(notifications).values({
-      userId: m.userId,
-      title: `Payout from ${circle.name}`,
-      body: `₦${(totalPaid / 100).toLocaleString()} paid out to ${recipientInfo?.name ?? "a member"} for ${circle.name} Cycle ${cycle.cycleNumber}.`,
-      type: "payout",
-    });
-  }
-
   const isLastCycle = circle.cycleCount !== null && cycle.cycleNumber >= circle.cycleCount;
   if (isLastCycle) {
     await tx
@@ -721,6 +733,8 @@ async function reconcileCycleInTx(tx: TxOrDb, cycleId: string) {
 
   return {
     cycleNumber: cycle.cycleNumber,
+    circleId: circle.id,
+    circleName: circle.name,
     totalExpectedKobo: cycle.expectedTotalKobo,
     totalPaidKobo: totalPaid,
     shortfallKobo: cycle.expectedTotalKobo - totalPaid,
@@ -728,6 +742,7 @@ async function reconcileCycleInTx(tx: TxOrDb, cycleId: string) {
     missedPayers,
     recipientUserId: recipientInfoForPayout?.userId || "",
     recipientName,
+    memberInfo,
     payoutStatus: null as string | null,
     nextCycle: nextCycle
       ? {

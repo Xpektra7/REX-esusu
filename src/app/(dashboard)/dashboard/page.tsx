@@ -213,7 +213,7 @@ export default function DashboardPage() {
           </div>
         ) : activityItems.length > 0 ? (
           <ItemGroup className="bg-card gap-0! py-2">
-            {activityItems.map((item, i) => {
+            {activityItems.slice(0,4).map((item, i) => {
               const meta = activityMeta(item.type);
               return (
                 <div key={item.id}>
