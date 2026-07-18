@@ -163,6 +163,7 @@ export async function reconcilePaymentInTx(
           nombaRequestId: payload.requestId,
           originalAmount: actual,
           classification,
+          senderName: payload.data.customer?.senderName ?? null,
         },
       })
       .onConflictDoNothing();

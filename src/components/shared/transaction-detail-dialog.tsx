@@ -32,6 +32,8 @@ export function TransactionDetailDialog({
   onOpenChange,
   tx,
 }: TransactionDetailDialogProps) {
+  const senderName = tx?.metadata?.senderName as string | undefined | null;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-sm">
@@ -42,6 +44,15 @@ export function TransactionDetailDialog({
 
         {tx ? (
           <div className="flex flex-col gap-3 py-2 text-sm">
+            {senderName && (
+              <div className="rounded-lg bg-muted p-3">
+                <p className="text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
+                  From
+                </p>
+                <p className="font-heading text-lg font-bold">{senderName}</p>
+              </div>
+            )}
+
             <div className="rounded-lg bg-muted p-3">
               <p className="text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
                 Amount
