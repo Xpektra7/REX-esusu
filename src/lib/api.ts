@@ -238,7 +238,7 @@ async function mockRequest<T>(
     return {
       code: "00",
       description: "PIN verified",
-      data: { verified: true } as T,
+      data: { verified: true, pinToken: "mock_pin_token" } as T,
     };
   }
 
@@ -1504,6 +1504,7 @@ export const api = {
       amountKobo: number;
       bankCode: string;
       accountNumber: string;
+      pinToken: string;
     }) =>
       request<{ ref: string }>("/wallet/withdraw", {
         method: "POST",

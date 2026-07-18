@@ -23,7 +23,7 @@ import { useAuthStore } from "@/stores/auth-store";
 interface ActionPinDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSuccess: () => void;
+  onSuccess: (pinToken: string) => void;
 }
 
 export function ActionPinDialog({
@@ -46,11 +46,12 @@ export function ActionPinDialog({
 
     try {
       const res = await api.auth.verifyPin(pin);
-      if (res.data?.verified) {
+      const data = res.data as { verified?: boolean; pinToken?: string } | undefined;
+      if (data?.verified) {
         useAuthStore.getState().resetPinAttempts();
         setPin("");
         onOpenChange(false);
-        onSuccess();
+        onSuccess(data.pinToken ?? "");
         return;
       }
     } catch {

@@ -24,12 +24,14 @@ export default function WithdrawPage() {
   } | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [pinDialogOpen, setPinDialogOpen] = useState(false);
+  const [pinToken, setPinToken] = useState("");
 
   const mutation = useMutation({
     mutationFn: (data: {
       amountKobo: number;
       bankCode: string;
       accountNumber: string;
+      pinToken: string;
     }) => api.wallet.withdraw(data),
     onSuccess: () => {
       toast.success("Withdrawal initiated!");
@@ -69,13 +71,14 @@ export default function WithdrawPage() {
     setPinDialogOpen(true);
   }
 
-  function doWithdraw() {
+  function doWithdraw(token: string) {
     if (!selectedBank) return;
     const amountKobo = Math.round(parseFloat(amount) * 100);
     mutation.mutate({
       amountKobo,
       bankCode: selectedBank.bankCode,
       accountNumber,
+      pinToken: token,
     });
   }
 
