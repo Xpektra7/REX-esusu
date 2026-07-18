@@ -691,8 +691,18 @@ async function reconcileCycleInTx(tx: TxOrDb, cycleId: string) {
   if (recipientInfo) {
     await tx.insert(notifications).values({
       userId: recipientInfo.userId,
-      title: `Cycle ${cycle.cycleNumber} payout`,
-      body: `₦${(totalPaid / 100).toLocaleString()} collected for your cycle.${totalPaid < cycle.expectedTotalKobo ? ` Shortfall ₦${((cycle.expectedTotalKobo - totalPaid) / 100).toLocaleString()} tracked as debts.` : ""}`,
+      title: `Payout from ${circle.name}`,
+      body: `₦${(totalPaid / 100).toLocaleString()} paid out to you for ${circle.name} Cycle ${cycle.cycleNumber}.${totalPaid < cycle.expectedTotalKobo ? ` Shortfall ₦${((cycle.expectedTotalKobo - totalPaid) / 100).toLocaleString()} tracked as debts.` : ""}`,
+      type: "payout",
+    });
+  }
+
+  for (const m of memberInfo) {
+    if (m.userId === recipientInfo?.userId) continue;
+    await tx.insert(notifications).values({
+      userId: m.userId,
+      title: `Payout from ${circle.name}`,
+      body: `₦${(totalPaid / 100).toLocaleString()} paid out to ${recipientInfo?.name ?? "a member"} for ${circle.name} Cycle ${cycle.cycleNumber}.`,
       type: "payout",
     });
   }
