@@ -23,19 +23,8 @@ import {
 } from "@/components/ui/empty";
 import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/lib/api";
-import { cn, formatNaira } from "@/lib/utils";
-import type { TransferReceipt } from "@/types";
-
-interface WalletTransaction {
-  id: string;
-  type: "credit" | "debit";
-  amountKobo: number;
-  reference: string;
-  status: string;
-  description: string;
-  metadata: unknown;
-  createdAt: string;
-}
+import { cn, formatNaira, formatDate } from "@/lib/utils";
+import type { TransferReceipt, WalletTransaction } from "@/types";
 
 interface WalletData {
   balanceKobo: number;
@@ -171,11 +160,11 @@ export default function WalletPage() {
                   className="flex items-center justify-between rounded-xl bg-card  px-4 py-3"
                 >
                   <div className="flex items-center gap-3">
-                    <DiceBearAvatar name={tx.description} />
+                    <DiceBearAvatar name={tx.description ?? ""} />
                     <div>
                       <p className="text-sm font-medium">{tx.description}</p>
                       <p className="text-xs text-muted-foreground">
-                        {new Date(tx.createdAt).toLocaleDateString("en-NG", {
+                        {formatDate(tx.createdAt, {
                           day: "numeric",
                           month: "short",
                         })}

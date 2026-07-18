@@ -1,12 +1,13 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { LOCALE } from "./constants";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
 export function formatNaira(kobo: number, fractionDigits = 0): string {
-  return (kobo / 100).toLocaleString("en-NG", {
+  return (kobo / 100).toLocaleString(LOCALE, {
     style: "currency",
     currency: "NGN",
     minimumFractionDigits: fractionDigits,
@@ -30,10 +31,25 @@ export function timeAgo(dateStr: string): string {
   if (hours < 24) return `${hours}h ago`;
   const days = Math.floor(hours / 24);
   if (days < 7) return `${days}d ago`;
-  return new Date(dateStr).toLocaleDateString("en-NG", {
+  return new Date(dateStr).toLocaleDateString(LOCALE, {
     day: "numeric",
     month: "short",
   });
+}
+
+export function formatDate(
+  dateStr: string,
+  opts: Intl.DateTimeFormatOptions = {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  },
+) {
+  return new Date(dateStr).toLocaleDateString(LOCALE, opts);
+}
+
+export function formatDateTime(dateStr: string) {
+  return new Date(dateStr).toLocaleString(LOCALE);
 }
 
 export function getGreeting(name: string): string {

@@ -9,14 +9,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { formatNaira } from "@/lib/utils";
+import { formatNaira, formatDateTime } from "@/lib/utils";
 
 interface TransactionDetail {
   id: string;
   amountKobo: number;
   reference: string;
   status: string;
-  description: string;
+  description?: string;
   metadata: Record<string, unknown> | null;
   createdAt: string;
 }
@@ -98,7 +98,7 @@ export function TransactionDetailDialog({
             )}
 
             <div className="text-xs text-muted-foreground">
-              {new Date(tx.createdAt).toLocaleString("en-NG")}
+              {formatDateTime(tx.createdAt)}
             </div>
           </div>
         ) : (

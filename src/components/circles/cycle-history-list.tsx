@@ -9,7 +9,7 @@ import {
   EmptyHeader,
   EmptyMedia,
 } from "@/components/ui/empty";
-import { formatNaira } from "@/lib/utils";
+import { formatNaira, formatDate } from "@/lib/utils";
 
 interface CycleItem {
   cycleNumber: number;
@@ -52,10 +52,9 @@ export function CycleHistoryList({ cycles, circleId }: CycleHistoryListProps) {
               {cycle.completedAt && (
                 <>
                   {" · "}
-                  {new Date(cycle.completedAt).toLocaleDateString("en-NG", {
+                  {formatDate(cycle.completedAt, {
                     day: "numeric",
                     month: "short",
-                    year: "numeric",
                   })}
                 </>
               )}

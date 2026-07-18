@@ -1,18 +1,6 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-  Alert02Icon,
-  Coins02Icon,
-  MoneyAdd01Icon,
-  Notification01Icon,
-  Shield02Icon,
-  Tick02Icon,
-  UserAdd01Icon,
-  UserCircleIcon,
-  UserGroupIcon,
-  Wallet01Icon,
-} from "hugeicons-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { PageBreadcrumbs } from "@/components/shared/page-breadcrumbs";
@@ -34,60 +22,12 @@ import {
 } from "@/components/ui/item";
 import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/lib/api";
+import {
+  NOTIFICATION_ICONS,
+  NOTIFICATION_ICON_FALLBACK,
+} from "@/lib/icons";
 import { cn } from "@/lib/utils";
-
-interface NotificationItem {
-  id: string;
-  title: string;
-  body: string;
-  type: string;
-  read: boolean;
-  createdAt: string;
-  data?: { route?: string } | null;
-}
-
-const notifIcons: Record<string, { icon: React.ReactNode; bg: string }> = {
-  payout: {
-    icon: <MoneyAdd01Icon className="symbol-width" />,
-    bg: "bg-foreground text-primary",
-  },
-  contribution_due: {
-    icon: <Coins02Icon className="symbol-width" />,
-    bg: "bg-primary text-foreground",
-  },
-  reminder: {
-    icon: <Notification01Icon className="symbol-width" />,
-    bg: "bg-primary text-foreground",
-  },
-  member_join: {
-    icon: <UserAdd01Icon className="symbol-width" />,
-    bg: "bg-foreground text-primary",
-  },
-  circle_completed: {
-    icon: <UserGroupIcon className="symbol-width" />,
-    bg: "bg-primary text-foreground",
-  },
-  circle_invite: {
-    icon: <UserCircleIcon className="symbol-width" />,
-    bg: "bg-foreground text-primary",
-  },
-  default_alert: {
-    icon: <Alert02Icon className="symbol-width" />,
-    bg: "bg-destructive/10 text-destructive",
-  },
-  trust_score_changed: {
-    icon: <Shield02Icon className="symbol-width" />,
-    bg: "bg-primary text-foreground",
-  },
-  withdrawal_status: {
-    icon: <Wallet01Icon className="symbol-width" />,
-    bg: "bg-foreground text-primary",
-  },
-  debt_cleared: {
-    icon: <Tick02Icon className="symbol-width" />,
-    bg: "bg-primary text-foreground",
-  },
-};
+import type { Notification } from "@/types";
 
 export default function NotificationsPage() {
   const queryClient = useQueryClient();
@@ -115,12 +55,13 @@ export default function NotificationsPage() {
     },
   });
 
-  const handleOpen = (n: NotificationItem) => {
+  const handleOpen = (n: Notification) => {
     if (!n.read) markReadMutation.mutate(n.id);
-    if (n.data?.route) router.push(n.data.route);
+    const route = (n.data as { route?: string } | null)?.route;
+    if (route) router.push(route);
   };
 
-  const notifications = ((res?.data as { items: NotificationItem[] } | undefined)?.items ?? []) as NotificationItem[];
+  const notifications = ((res?.data as { items: Notification[] } | undefined)?.items ?? []) as Notification[];
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   return (
@@ -177,10 +118,8 @@ export default function NotificationsPage() {
       ) : (
         <ItemGroup className="gap-0! py-2 bg-card">
           {notifications.map((n, i) => {
-            const meta = notifIcons[n.type] ?? {
-              icon: <Notification01Icon className="symbol-width" />,
-              bg: "bg-primary text-foreground",
-            };
+            const def = NOTIFICATION_ICONS[n.type] ?? NOTIFICATION_ICON_FALLBACK;
+            const Icon = def.icon;
             return (
               <div key={n.id}>
                 <ItemSeparator className={i === 0 ? "hidden" : ""} />
@@ -197,9 +136,9 @@ export default function NotificationsPage() {
                 >
                   <ItemMedia
                     variant="icon"
-                    className={cn("symbol-container p-0!", meta.bg)}
+                    className={cn("symbol-container p-0!", def.bg)}
                   >
-                    {meta.icon}
+                    <Icon className="symbol-width" />
                   </ItemMedia>
                   <ItemContent
                     className={cn(n.read && "text-muted-foreground")}

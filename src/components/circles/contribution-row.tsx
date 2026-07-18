@@ -3,7 +3,7 @@
 import { ContributionStatusBadge } from "@/components/circles/status-badge";
 import { DiceBearAvatar } from "@/components/shared/dicebear-avatar";
 import { Badge } from "@/components/ui/badge";
-import { cn, formatNaira } from "@/lib/utils";
+import { cn, formatNaira, formatDate } from "@/lib/utils";
 
 interface ContributionRowProps {
   memberName: string;
@@ -48,7 +48,7 @@ export function ContributionRow({
             {paidAt && (
               <>
                 {" · "}
-                {new Date(paidAt).toLocaleDateString("en-NG", {
+                {formatDate(paidAt, {
                   day: "numeric",
                   month: "short",
                 })}

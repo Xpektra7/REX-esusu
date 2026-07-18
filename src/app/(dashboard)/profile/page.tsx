@@ -28,15 +28,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth-store";
-
-interface UserProfile {
-  id: string;
-  name: string;
-  phone: string;
-  email: string;
-  bvnLast4: string;
-  trustScore: number;
-}
+import type { UserProfile } from "@/types";
 
 function SettingsRow({
   icon,

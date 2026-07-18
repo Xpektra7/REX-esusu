@@ -20,39 +20,14 @@ import {
 } from "@/components/ui/item";
 import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/lib/api";
-import { cn, formatNaira } from "@/lib/utils";
+import { cn, formatNaira, formatDate } from "@/lib/utils";
+import type { Payout, PayoutStatus } from "@/types";
 
-interface PayoutItem {
-  id: string;
-  amountKobo: number;
-  status: "pending" | "initiated" | "completed" | "failed";
-  createdAt: string;
-  completedAt: string | null;
-  nombaTransferRef: string | null;
-  cycleNumber: number;
-  circleName: string;
-}
-
-const statusMeta: Record<
-  string,
-  { label: string; className: string }
-> = {
-  completed: {
-    label: "Completed",
-    className: "bg-primary/10 text-primary",
-  },
-  initiated: {
-    label: "Initiated",
-    className: "bg-foreground/10 text-foreground",
-  },
-  pending: {
-    label: "Pending",
-    className: "bg-muted text-muted-foreground",
-  },
-  failed: {
-    label: "Failed",
-    className: "bg-destructive/10 text-destructive",
-  },
+const PAYOUT_STATUS_META: Record<PayoutStatus, { label: string; className: string }> = {
+  completed: { label: "Completed", className: "bg-primary/10 text-primary" },
+  initiated: { label: "Initiated", className: "bg-foreground/10 text-foreground" },
+  pending: { label: "Pending", className: "bg-muted text-muted-foreground" },
+  failed: { label: "Failed", className: "bg-destructive/10 text-destructive" },
 };
 
 export default function PayoutsPage() {
@@ -62,8 +37,8 @@ export default function PayoutsPage() {
     refetchInterval: 5_000,
   });
 
-  const payouts = ((res?.data as { payouts: PayoutItem[] } | undefined)
-    ?.payouts ?? []) as PayoutItem[];
+  const payouts = ((res?.data as { payouts: Payout[] } | undefined)
+    ?.payouts ?? []) as Payout[];
 
   return (
     <div className="flex flex-col gap-6">
@@ -105,7 +80,7 @@ export default function PayoutsPage() {
       ) : (
         <ItemGroup className="gap-0! py-2 bg-card">
           {payouts.map((p, i) => {
-            const meta = statusMeta[p.status] ?? statusMeta.pending;
+            const meta = PAYOUT_STATUS_META[p.status] ?? PAYOUT_STATUS_META.pending;
             return (
               <div key={p.id}>
                 <ItemSeparator className={i === 0 ? "hidden" : ""} />
@@ -120,11 +95,7 @@ export default function PayoutsPage() {
                     <ItemTitle>{p.circleName}</ItemTitle>
                     <ItemDescription>
                       Cycle {p.cycleNumber} &middot;{" "}
-                      {new Date(p.createdAt).toLocaleDateString("en-NG", {
-                        day: "numeric",
-                        month: "short",
-                        year: "numeric",
-                      })}
+                      {formatDate(p.createdAt)}
                     </ItemDescription>
                   </ItemContent>
                   <div className="flex flex-col items-end gap-0.5">

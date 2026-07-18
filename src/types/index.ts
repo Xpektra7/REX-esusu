@@ -1,3 +1,31 @@
+import type {
+  FREQUENCIES,
+  RESOLUTION_RULES,
+  CYCLE_STATUSES,
+  PAYOUT_STATUSES,
+  TRANSACTION_TYPES,
+  CLASSIFICATIONS,
+  CONTRIBUTION_DISPLAY_STATUSES,
+} from "@/lib/constants";
+
+export type Frequency = (typeof FREQUENCIES)[number];
+export type ResolutionRule = (typeof RESOLUTION_RULES)[number];
+export type TransactionType = (typeof TRANSACTION_TYPES)[number];
+export type Classification = (typeof CLASSIFICATIONS)[number];
+export type CycleStatus = (typeof CYCLE_STATUSES)[number];
+export type CircleStatus = "pending" | "active" | "completed" | "dissolved";
+export type MemberRole = "admin" | "member";
+export type MemberStatus =
+  | "invited" | "active" | "defaulted" | "removed" | "left" | "completed";
+export type DebtStatus = "active" | "cleared" | "redirected";
+export type PayoutStatus = (typeof PAYOUT_STATUSES)[number];
+export type ContributionStatus =
+  | "pending" | "reconciled" | "partial" | "fully_applied";
+export type ContributionDisplayStatus =
+  (typeof CONTRIBUTION_DISPLAY_STATUSES)[number];
+export type ActivityType =
+  | "contribution" | "payout" | "circle_join" | "circle_create" | "topup";
+
 export interface User {
   id: string;
   email: string;
@@ -14,11 +42,11 @@ export interface Circle {
   creatorId: string;
   name: string;
   contributionAmount: number;
-  frequency: "daily" | "weekly" | "monthly";
+  frequency: Frequency;
   cyclePeriodDays: number;
   cycleCount: number | null;
   currentCycle: number;
-  defaultResolutionRule: "absorb" | "shrink" | "end_early";
+  defaultResolutionRule: ResolutionRule;
   gracePeriodHours: number;
   allowMidCycleJoin: boolean;
   capacityEnabled: boolean;
@@ -32,8 +60,8 @@ export interface CircleMember {
   id: string;
   userId: string;
   circleId: string;
-  role: "admin" | "member";
-  status: "invited" | "active" | "defaulted" | "removed" | "left" | "completed";
+  role: MemberRole;
+  status: MemberStatus;
   rotationOrder: number | null;
   missedCycles: number;
   joinedAt: string;
@@ -63,7 +91,7 @@ export interface Cycle {
   cycleNumber: number;
   expectedTotalKobo: number;
   actualTotalKobo: number;
-  status: "pending" | "active" | "settling" | "paid_out" | "closed";
+  status: CycleStatus;
   startsAt: string;
   deadlineAt: string;
   closedAt: string | null;
@@ -77,12 +105,7 @@ export interface Contribution {
   amountKobo: number;
   appliedKobo: number;
   status: "pending" | "reconciled" | "partial" | "fully_applied";
-  classification:
-    | "exact"
-    | "underpayment"
-    | "overpayment"
-    | "misdirected"
-    | null;
+  classification: Classification | null;
   nombaTransactionRef: string | null;
   ourReference: string;
   createdAt: string;
@@ -97,7 +120,7 @@ export interface Debt {
   amountKobo: number;
   paidKobo: number;
   fineKobo: number;
-  status: "active" | "cleared" | "redirected";
+  status: DebtStatus;
   createdAt: string;
   clearedAt: string | null;
 }
@@ -107,8 +130,11 @@ export interface Payout {
   cycleId: string;
   memberId: string;
   amountKobo: number;
-  status: "pending" | "initiated" | "completed" | "failed";
+  status: PayoutStatus;
   nombaTransactionRef: string | null;
+  nombaTransferRef: string | null;
+  cycleNumber: number;
+  circleName: string;
   createdAt: string;
   completedAt: string | null;
 }
@@ -127,10 +153,11 @@ export interface Notification {
 export interface WalletTransaction {
   id: string;
   userId: string;
-  type: "credit" | "debit";
+  type: TransactionType;
   amountKobo: number;
   reference: string;
-  status: "pending" | "completed" | "failed";
+  status: string;
+  description?: string;
   metadata: Record<string, unknown> | null;
   createdAt: string;
 }
@@ -147,9 +174,9 @@ export interface Referral {
 export interface CircleListItem {
   id: string;
   name: string;
-  status: "active" | "inactive" | "pending" | "completed" | "dissolved";
+  status: string;
   contributionAmount: number;
-  frequency: "daily" | "weekly" | "monthly";
+  frequency: Frequency;
   type: string;
   currentCycle: number;
   cycleCount: number | null;
@@ -167,7 +194,7 @@ export interface CycleContribution {
   memberId: string;
   memberName: string;
   amountKobo: number;
-  status: "paid" | "pending" | "defaulted";
+  status: ContributionDisplayStatus;
   paidAt?: string;
 }
 
@@ -275,7 +302,7 @@ export interface TransferReceipt {
 
 export interface ActivityItem {
   id: string;
-  type: "contribution" | "payout" | "circle_join" | "circle_create" | "topup";
+  type: ActivityType | string;
   description: string;
   amountKobo?: number;
   createdAt: string;

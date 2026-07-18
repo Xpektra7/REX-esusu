@@ -4,11 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import {
   ArrowDown01Icon,
   ArrowUp01Icon,
-  Coins02Icon,
-  MoneyAdd01Icon,
   Notification01Icon,
-  UserAdd01Icon,
-  UserGroupIcon,
   Wallet01Icon,
 } from "hugeicons-react";
 import Link from "next/link";
@@ -30,43 +26,12 @@ import {
 } from "@/components/ui/item";
 import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/lib/api";
+import {
+  NOTIFICATION_ICONS,
+  NOTIFICATION_ICON_FALLBACK,
+} from "@/lib/icons";
 import { cn, formatNaira, timeAgo } from "@/lib/utils";
-
-interface NotificationItem {
-  id: string;
-  title: string;
-  body: string;
-  type: string;
-  read: boolean;
-  createdAt: string;
-}
-
-interface TransactionItem {
-  id: string;
-  type: "credit" | "debit";
-  amountKobo: number;
-  description: string;
-  createdAt: string;
-}
-
-const notifIcons: Record<string, { icon: React.ReactNode; bg: string }> = {
-  payout: {
-    icon: <MoneyAdd01Icon className="symbol-width" />,
-    bg: "bg-foreground text-primary",
-  },
-  contribution_due: {
-    icon: <Coins02Icon className="symbol-width" />,
-    bg: "bg-primary text-foreground",
-  },
-  member_join: {
-    icon: <UserAdd01Icon className="symbol-width" />,
-    bg: "bg-foreground text-primary",
-  },
-  circle_completed: {
-    icon: <UserGroupIcon className="symbol-width" />,
-    bg: "bg-primary text-foreground",
-  },
-};
+import type { Notification, WalletTransaction } from "@/types";
 
 export function RightPanel() {
   const { data: notifRes, isLoading: notifsLoading } = useQuery({
@@ -82,10 +47,10 @@ export function RightPanel() {
   });
 
   const notifications = (
-    ((notifRes?.data as { items: NotificationItem[] } | undefined)?.items ?? []) as NotificationItem[]
+    ((notifRes?.data as { items: Notification[] } | undefined)?.items ?? []) as Notification[]
   ).slice(0, 5);
   const transactions = (
-    (txRes?.data as { transactions?: TransactionItem[] } | undefined)
+    (txRes?.data as { transactions?: WalletTransaction[] } | undefined)
       ?.transactions ?? []
   ).slice(0, 5);
 
@@ -123,19 +88,17 @@ export function RightPanel() {
           ) : notifications.length > 0 ? (
             <ItemGroup className="bg-transparent gap-0! py-2">
               {notifications.map((n, i) => {
-                const meta = notifIcons[n.type] ?? {
-                  icon: <Notification01Icon className="size-6" />,
-                  bg: "bg-primary text-foreground",
-                };
+                const def = NOTIFICATION_ICONS[n.type] ?? NOTIFICATION_ICON_FALLBACK;
+                const Icon = def.icon;
                 return (
                   <div key={n.id}>
                     <ItemSeparator className={i === 0 ? "hidden" : ""} />
                     <Item variant="muted" size="xs">
                       <ItemMedia
                         variant="icon"
-                        className={`symbol-container ${meta.bg} p-0!`}
+                        className={`symbol-container ${def.bg} p-0!`}
                       >
-                        {meta.icon}
+                        <Icon className="symbol-width" />
                       </ItemMedia>
                       <ItemContent
                         className={cn(

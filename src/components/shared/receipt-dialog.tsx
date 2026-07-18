@@ -11,7 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { formatNaira } from "@/lib/utils";
+import { formatNaira, formatDateTime } from "@/lib/utils";
 import type { TransferReceipt } from "@/types";
 
 interface ReceiptDialogProps {
@@ -161,7 +161,7 @@ export function ReceiptDialog({
                 </div>
 
                 <div className="text-xs text-muted-foreground">
-                  {new Date(receipt.createdAt).toLocaleString("en-NG")}
+                  {formatDateTime(receipt.createdAt)}
                 </div>
               </div>
             ) : (

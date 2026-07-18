@@ -1,27 +1,30 @@
 import { z } from "zod";
+import { FREQUENCIES, RESOLUTION_RULES } from "./constants";
+
+export const emailField = () =>
+  z.string().email("Enter a valid email address");
+export const passwordField = () =>
+  z.string().min(8, "Password must be at least 8 characters").max(128);
+export const otpField = () => z.string().length(6, "OTP must be 6 digits");
+export const pinField = () =>
+  z.string().regex(/^\d{4,6}$/, "PIN must be 4-6 digits");
 
 export const otpSchema = z.object({
-  otp: z.string().length(6, "OTP must be 6 digits"),
+  otp: otpField(),
 });
 
 export const passwordSchema = z.object({
-  password: z
-    .string()
-    .min(8, "Password must be at least 8 characters")
-    .max(128),
+  password: passwordField(),
 });
 
 export const pinSchema = z.object({
-  pin: z.string().regex(/^\d{4,6}$/, "PIN must be 4-6 digits"),
+  pin: pinField(),
 });
 
 export const signupSchema = z.object({
-  email: z.string().email("Enter a valid email address"),
-  otp: z.string().length(6, "OTP must be 6 digits"),
-  password: z
-    .string()
-    .min(8, "Password must be at least 8 characters")
-    .max(128),
+  email: emailField(),
+  otp: otpField(),
+  password: passwordField(),
   name: z.string().min(2, "Name must be at least 2 characters"),
   bvn: z
     .string()
@@ -31,31 +34,28 @@ export const signupSchema = z.object({
 });
 
 export const loginSchema = z.object({
-  email: z.string().email("Enter a valid email address"),
+  email: emailField(),
   password: z.string().min(1, "Password is required"),
 });
 
 export const sendOtpSchema = z.object({
-  email: z.string().email("Enter a valid email address"),
+  email: emailField(),
   password: z.string().optional(),
 });
 
 export const changePinSchema = z.object({
-  currentPin: z.string().regex(/^\d{4,6}$/, "PIN must be 4-6 digits"),
-  newPin: z.string().regex(/^\d{4,6}$/, "PIN must be 4-6 digits"),
+  currentPin: pinField(),
+  newPin: pinField(),
 });
 
 export const forgotPasswordSchema = z.object({
-  email: z.string().email("Enter a valid email address"),
+  email: emailField(),
 });
 
 export const resetPasswordSchema = z.object({
-  email: z.string().email("Enter a valid email address"),
-  otp: z.string().length(6, "OTP must be 6 digits"),
-  newPassword: z
-    .string()
-    .min(8, "Password must be at least 8 characters")
-    .max(128),
+  email: emailField(),
+  otp: otpField(),
+  newPassword: passwordField(),
 });
 
 export const createCircleSchema = z.object({
@@ -64,10 +64,10 @@ export const createCircleSchema = z.object({
     .number()
     .min(10, "Minimum contribution is ₦10")
     .max(10_000_000),
-  frequency: z.enum(["daily", "weekly", "monthly"]),
+  frequency: z.enum(FREQUENCIES),
   cycleCount: z.number().min(1).max(100).optional(),
   defaultResolutionRule: z
-    .enum(["absorb", "shrink", "end_early"])
+    .enum(RESOLUTION_RULES)
     .default("absorb"),
   gracePeriodHours: z.number().positive().optional(),
   capacityEnabled: z.boolean().optional(),

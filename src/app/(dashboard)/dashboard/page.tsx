@@ -2,13 +2,9 @@
 
 import { useQuery } from "@tanstack/react-query";
 import {
-  Coins02Icon,
   Key01Icon,
-  MoneyAdd01Icon,
   Notification01Icon,
   PlusSignIcon,
-  UserAdd01Icon,
-  UserGroupIcon,
   Wallet01Icon,
 } from "hugeicons-react";
 import Link from "next/link";
@@ -38,51 +34,23 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/lib/api";
 import { formatNaira, timeAgo } from "@/lib/utils";
+import { ACTIVITY_ICONS } from "@/lib/icons";
 import type { ActivityItem } from "@/types";
+
+const activityIconFallback = {
+  icon: Notification01Icon,
+  bg: "bg-primary text-foreground",
+};
+function activityMeta(type: string) {
+  const key = type.startsWith("wallet_")
+    ? type.slice("wallet_".length)
+    : type;
+  const def = ACTIVITY_ICONS[key as ActivityItem["type"]] ?? activityIconFallback;
+  return def;
+}
 
 export default function DashboardPage() {
   const [joinDialogOpen, setJoinDialogOpen] = useState(false);
-
-  const iconMap: Record<string, { icon: React.ReactNode; bg: string }> = {
-    contribution: {
-      icon: <Coins02Icon className="size-6" />,
-      bg: "bg-primary text-foreground",
-    },
-    payout: {
-      icon: <MoneyAdd01Icon className="size-6" />,
-      bg: "bg-foreground text-primary",
-    },
-    circle_join: {
-      icon: <UserAdd01Icon className="size-6" />,
-      bg: "bg-foreground text-primary",
-    },
-    circle_create: {
-      icon: <UserGroupIcon className="size-6" />,
-      bg: "bg-foreground text-primary",
-    },
-    topup: {
-      icon: <Coins02Icon className="size-6" />,
-      bg: "bg-primary text-foreground",
-    },
-    withdrawal: {
-      icon: <Wallet01Icon className="symbol-width" />,
-      bg: "bg-foreground text-primary",
-    },
-  };
-
-  // Live activity types are prefixed with `wallet_` (e.g. `wallet_topup`); the
-  // mock returns the bare type. Normalize so both resolve, and fall back to a
-  // default icon for any unknown type instead of crashing on `meta.bg`.
-  const activityIconFallback = {
-    icon: <Notification01Icon className="symbol-width" />,
-    bg: "bg-primary text-foreground",
-  };
-  function activityMeta(type: string) {
-    const key = type.startsWith("wallet_")
-      ? type.slice("wallet_".length)
-      : type;
-    return iconMap[key as ActivityItem["type"]] ?? activityIconFallback;
-  }
 
   const { data: walletRes, isLoading: walletLoading } = useQuery({
     queryKey: ["wallet"],
@@ -214,16 +182,17 @@ export default function DashboardPage() {
         ) : activityItems.length > 0 ? (
           <ItemGroup className="bg-card gap-0! py-2">
             {activityItems.slice(0,4).map((item, i) => {
-              const meta = activityMeta(item.type);
+              const def = activityMeta(item.type);
+              const Icon = def.icon;
               return (
                 <div key={item.id}>
                   <ItemSeparator className={i === 0 ? "hidden" : ""} />
                   <Item variant="muted" size="xs">
                     <ItemMedia
                       variant="icon"
-                      className={`symbol-container ${meta.bg} p-0!`}
+                      className={`symbol-container ${def.bg} p-0!`}
                     >
-                      {meta.icon}
+                      <Icon className="symbol-width" />
                     </ItemMedia>
                     <ItemContent>
                       <ItemTitle className="line-clamp-1">
