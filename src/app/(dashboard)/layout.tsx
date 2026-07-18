@@ -1,6 +1,7 @@
 import dynamic from "next/dynamic";
 import { BottomNav } from "@/components/layout/bottom-nav";
 import { AppPinScreen } from "@/components/shared/app-pin-screen";
+import { NotificationWatcher } from "@/components/shared/notification-watcher";
 import { Providers } from "@/components/shared/providers";
 
 const SideNav = dynamic(() =>
@@ -18,6 +19,7 @@ export default function DashboardLayout({
 }) {
   return (
     <Providers>
+      <NotificationWatcher />
       <AppPinScreen>
         <div className="mx-auto flex min-h-screen w-full max-w-6xl flex-col bg-background md:flex-row">
           <div className="hidden md:block md:w-64 lg:w-60 xl:w-68 shrink-0">
